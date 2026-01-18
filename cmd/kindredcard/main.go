@@ -37,14 +37,12 @@ var ReleaseVersion = "v0.0.0-dev"
 //	@title			KindredCard API
 //	@version		1.0
 //	@description	Personal CRM for managing contacts, relationships, and important dates
-//	@termsOfService	https://kindredcard.com/terms
 
 //	@contact.name	API Support
-//	@contact.url	https://kindredcard.com/support
-//	@contact.email	support@kindredcard.com
+//	@contact.url	https://github.com/steveredden/KindredCard/issues
 
-//	@license.name	MIT
-//	@license.url	https://opensource.org/licenses/MIT
+//	@license.name	AGPLv3
+//	@license.url	https://www.gnu.org/licenses/agpl-3.0.txt
 
 //	@securityDefinitions.apikey	ApiTokenAuth
 //	@in							header

@@ -386,14 +386,12 @@ definitions:
     type: object
 info:
   contact:
-    email: support@kindredcard.com
     name: API Support
-    url: https://kindredcard.com/support
+    url: https://github.com/steveredden/KindredCard/issues
   description: Personal CRM for managing contacts, relationships, and important dates
   license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-  termsOfService: https://kindredcard.com/terms
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.txt
   title: KindredCard API
   version: "1.0"
 paths:

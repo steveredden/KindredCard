@@ -9,15 +9,13 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://kindredcard.com/terms",
         "contact": {
             "name": "API Support",
-            "url": "https://kindredcard.com/support",
-            "email": "support@kindredcard.com"
+            "url": "https://github.com/steveredden/KindredCard/issues"
         },
         "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
+            "name": "AGPLv3",
+            "url": "https://www.gnu.org/licenses/agpl-3.0.txt"
         },
         "version": "{{.Version}}"
     },

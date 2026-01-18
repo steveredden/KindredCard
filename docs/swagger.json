@@ -3,15 +3,13 @@
     "info": {
         "description": "Personal CRM for managing contacts, relationships, and important dates",
         "title": "KindredCard API",
-        "termsOfService": "https://kindredcard.com/terms",
         "contact": {
             "name": "API Support",
-            "url": "https://kindredcard.com/support",
-            "email": "support@kindredcard.com"
+            "url": "https://github.com/steveredden/KindredCard/issues"
         },
         "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
+            "name": "AGPLv3",
+            "url": "https://www.gnu.org/licenses/agpl-3.0.txt"
         },
         "version": "1.0"
     },
