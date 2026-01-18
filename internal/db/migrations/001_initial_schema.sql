@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- =============================================================================
 
 -- Users table for authentication
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE users (
 );
 
 -- Sessions table for authentication
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) UNIQUE NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE sessions (
 );
 
 -- API Tokens for authentication
-CREATE TABLE api_tokens (
+CREATE TABLE IF NOT EXISTS api_tokens (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_hash VARCHAR(64) NOT NULL UNIQUE,   -- SHA-256 hash
@@ -67,7 +67,7 @@ CREATE TABLE api_tokens (
 );
 
 -- Notification settings for Discord webhooks
-CREATE TABLE notification_settings (
+CREATE TABLE IF NOT EXISTS notification_settings (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -86,7 +86,7 @@ CREATE TABLE notification_settings (
 );
 
 -- Relationship types (predefined and custom)
-CREATE TABLE relationship_types (
+CREATE TABLE IF NOT EXISTS relationship_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     reverse_name_male VARCHAR(100),
@@ -100,7 +100,7 @@ CREATE TABLE relationship_types (
 -- =============================================================================
 
 -- Main contacts table
-CREATE TABLE contacts (
+CREATE TABLE IF NOT EXISTS contacts (
     id SERIAL PRIMARY KEY,
     uid VARCHAR(255) UNIQUE NOT NULL,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -153,7 +153,7 @@ CREATE TABLE contacts (
 );
 
 -- Other Dates table
-CREATE TABLE other_dates (
+CREATE TABLE IF NOT EXISTS other_dates (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     event_name VARCHAR(255),
@@ -165,7 +165,7 @@ CREATE TABLE other_dates (
 );
 
 -- Email addresses
-CREATE TABLE emails (
+CREATE TABLE IF NOT EXISTS emails (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE emails (
 );
 
 -- Phone numbers
-CREATE TABLE phones (
+CREATE TABLE IF NOT EXISTS phones (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     phone VARCHAR(50) NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE phones (
 );
 
 -- Physical addresses
-CREATE TABLE addresses (
+CREATE TABLE IF NOT EXISTS addresses (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     street TEXT,
@@ -196,7 +196,7 @@ CREATE TABLE addresses (
 );
 
 -- Organizations/Companies
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     name VARCHAR(255),
@@ -206,7 +206,7 @@ CREATE TABLE organizations (
 );
 
 -- URLs/Websites
-CREATE TABLE urls (
+CREATE TABLE IF NOT EXISTS urls (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
@@ -214,7 +214,7 @@ CREATE TABLE urls (
 );
 
 -- Relationships between contacts
-CREATE TABLE relationships (
+CREATE TABLE IF NOT EXISTS relationships (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     related_contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
@@ -224,7 +224,7 @@ CREATE TABLE relationships (
 );
 
 -- Other Relationships that came from a CardDAV server and didn't match KindredCard relationship_types and/or contact full_names
-CREATE TABLE other_relationships (
+CREATE TABLE IF NOT EXISTS other_relationships (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     related_contact_name VARCHAR(255),
@@ -237,52 +237,52 @@ CREATE TABLE other_relationships (
 -- =============================================================================
 
 -- Contact indexes
-CREATE INDEX idx_contacts_uid ON contacts(uid);
-CREATE INDEX idx_contacts_full_name ON contacts(full_name);
-CREATE INDEX idx_contacts_given_name ON contacts(given_name);
-CREATE INDEX idx_contacts_family_name ON contacts(family_name);
-CREATE INDEX idx_contacts_birthday ON contacts(birthday);
-CREATE INDEX idx_contacts_anniversary ON contacts(anniversary);
-CREATE INDEX idx_contacts_exclude_from_sync ON contacts(exclude_from_sync);
-CREATE INDEX idx_contacts_sync_check ON contacts (user_id, last_modified_token);
-CREATE INDEX idx_contacts_active ON contacts (user_id, deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_contacts_uid ON contacts(uid);
+CREATE INDEX IF NOT EXISTS idx_contacts_full_name ON contacts(full_name);
+CREATE INDEX IF NOT EXISTS idx_contacts_given_name ON contacts(given_name);
+CREATE INDEX IF NOT EXISTS idx_contacts_family_name ON contacts(family_name);
+CREATE INDEX IF NOT EXISTS idx_contacts_birthday ON contacts(birthday);
+CREATE INDEX IF NOT EXISTS idx_contacts_anniversary ON contacts(anniversary);
+CREATE INDEX IF NOT EXISTS idx_contacts_exclude_from_sync ON contacts(exclude_from_sync);
+CREATE INDEX IF NOT EXISTS idx_contacts_sync_check ON contacts (user_id, last_modified_token);
+CREATE INDEX IF NOT EXISTS idx_contacts_active ON contacts (user_id, deleted_at) WHERE deleted_at IS NULL;
 
 -- Partial date indexes for event queries
-CREATE INDEX idx_contacts_birthday_month_day ON contacts(birthday_month, birthday_day) 
+CREATE INDEX IF NOT EXISTS idx_contacts_birthday_month_day ON contacts(birthday_month, birthday_day) 
     WHERE birthday_month IS NOT NULL AND birthday_day IS NOT NULL;
-CREATE INDEX idx_contacts_anniversary_month_day ON contacts(anniversary_month, anniversary_day)
+CREATE INDEX IF NOT EXISTS idx_contacts_anniversary_month_day ON contacts(anniversary_month, anniversary_day)
     WHERE anniversary_month IS NOT NULL AND anniversary_day IS NOT NULL;
-CREATE INDEX idx_contacts_event_month_day ON other_dates(event_date_month, event_date_day)
+CREATE INDEX IF NOT EXISTS idx_contacts_event_month_day ON other_dates(event_date_month, event_date_day)
     WHERE event_date_month IS NOT NULL AND event_date_day IS NOT NULL;
 
 -- Related data indexes
-CREATE INDEX idx_emails_contact_id ON emails(contact_id);
-CREATE INDEX idx_emails_email ON emails(email);
-CREATE INDEX idx_phones_contact_id ON phones(contact_id);
-CREATE INDEX idx_addresses_contact_id ON addresses(contact_id);
-CREATE INDEX idx_organizations_contact_id ON organizations(contact_id);
-CREATE INDEX idx_urls_contact_id ON urls(contact_id);
-CREATE INDEX idx_other_dates_contact_id ON other_dates(contact_id);
+CREATE INDEX IF NOT EXISTS idx_emails_contact_id ON emails(contact_id);
+CREATE INDEX IF NOT EXISTS idx_emails_email ON emails(email);
+CREATE INDEX IF NOT EXISTS idx_phones_contact_id ON phones(contact_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_contact_id ON addresses(contact_id);
+CREATE INDEX IF NOT EXISTS idx_organizations_contact_id ON organizations(contact_id);
+CREATE INDEX IF NOT EXISTS idx_urls_contact_id ON urls(contact_id);
+CREATE INDEX IF NOT EXISTS idx_other_dates_contact_id ON other_dates(contact_id);
 
 -- Relationship indexes
-CREATE INDEX idx_relationships_contact_id ON relationships(contact_id);
-CREATE INDEX idx_relationships_related_contact_id ON relationships(related_contact_id);
-CREATE INDEX idx_relationships_type ON relationships(relationship_type_id);
-CREATE INDEX idx_other_relationships_contact_id ON other_relationships(contact_id);
+CREATE INDEX IF NOT EXISTS idx_relationships_contact_id ON relationships(contact_id);
+CREATE INDEX IF NOT EXISTS idx_relationships_related_contact_id ON relationships(related_contact_id);
+CREATE INDEX IF NOT EXISTS idx_relationships_type ON relationships(relationship_type_id);
+CREATE INDEX IF NOT EXISTS idx_other_relationships_contact_id ON other_relationships(contact_id);
 
 -- Session indexes
-CREATE INDEX idx_sessions_token ON sessions(token);
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
-CREATE INDEX idx_sessions_user_expires ON sessions(user_id, expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_expires ON sessions(user_id, expires_at);
 
 -- Notification settings indexes
-CREATE INDEX idx_notification_settings_user_id ON notification_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_settings_user_id ON notification_settings(user_id);
 
 -- API Tokens
-CREATE INDEX idx_api_tokens_token_hash ON api_tokens(token_hash);
-CREATE INDEX idx_api_tokens_user_id ON api_tokens(user_id);
-CREATE INDEX idx_api_tokens_active ON api_tokens(token_hash) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_api_tokens_token_hash ON api_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_user_id ON api_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_active ON api_tokens(token_hash) WHERE is_active = true;
 
 -- =============================================================================
 -- TRIGGERS AND FUNCTIONS
@@ -298,12 +298,15 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers to automatically update updated_at
+DROP TRIGGER IF EXISTS update_contacts_updated_at ON contacts;
 CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON contacts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_notification_settings_updated_at ON notification_settings;
 CREATE TRIGGER update_notification_settings_updated_at BEFORE UPDATE ON notification_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
