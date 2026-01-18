@@ -12,8 +12,6 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../migrations/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ../migrations:/docker-entrypoint-initdb.d/migrations
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kindredcard}"]
       interval: 5s
@@ -24,7 +22,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: kindredcard:latest
+    image: ghcr.io/steveredden/kindredcard:latest
     ports:
       - "8081:8080"
     env_file:
