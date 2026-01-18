@@ -9,7 +9,7 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "v0.
 
 GH_USER ?= $(GITHUB_USERNAME)
 REGISTRY := ghcr.io
-IMAGE_NAME := $(GH_USER)/kindredcard
+IMAGE_NAME := $(REGISTRY)/$(GH_USER)/kindredcard
 
 # Default target - show help
 help:
@@ -143,6 +143,19 @@ docker-run:
 	@echo "   Stop: docker stop kindredcard"
 	@echo "   Remove: docker rm kindredcard"
 
+setup-buildx:
+	@docker buildx create --name kindred-builder --use || true
+	@docker buildx inspect --bootstrap
+
+build-universal: setup-buildx docker-login
+	@echo "🌎 Building and pushing universal images for $(VERSION)..."
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		-t $(IMAGE_NAME):$(VERSION) \
+		-t $(IMAGE_NAME):latest \
+		-f docker/Dockerfile \
+		--push .
+
 # Quick restart (for development)
 restart:
 	@echo "🔄 Restarting..."
@@ -158,8 +171,8 @@ docker-login:
 # EXAMPLE:  make docker-push VERSION=v0.0.1
 docker-push: docker-login docker-build
 	@echo "🚀 Pushing images to $(REGISTRY)..."
-	docker tag kindredcard:latest $(REGISTRY)/$(IMAGE_NAME):latest
-	docker tag kindredcard:latest $(REGISTRY)/$(IMAGE_NAME):$(VERSION)
-	docker push $(REGISTRY)/$(IMAGE_NAME):latest
-	docker push $(REGISTRY)/$(IMAGE_NAME):$(VERSION)
+	docker tag kindredcard:latest $(IMAGE_NAME):latest
+	docker tag kindredcard:latest $(IMAGE_NAME):$(VERSION)
+	docker push $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):$(VERSION)
 	@echo "✅ Images pushed successfully!"

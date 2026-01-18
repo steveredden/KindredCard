@@ -19,8 +19,9 @@ COPY tailwind.config.js ./
 RUN npm run build:css:prod
 
 # Stage 2: Build Go binary
-FROM golang:1.25-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS go-builder
 
+ARG TARGETARCH
 WORKDIR /app
 
 # Install build dependencies
@@ -38,7 +39,7 @@ COPY --from=css-builder /app/web/static/css/output.css ./web/static/css/
 
 # Build the application
 ARG VERSION=v0.0.0-dev
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-s -w -X 'main.ReleaseVersion=${VERSION}'" -o kindredcard cmd/kindredcard/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -ldflags="-s -w -X 'main.ReleaseVersion=${VERSION}'" -o kindredcard cmd/kindredcard/main.go
 
 # Stage 3: Final runtime image
 FROM alpine:latest
