@@ -1,0 +1,58 @@
+{{define "new_contact_modal"}}
+
+<!--
+    Requires: None
+-->
+
+<!-- Add Contact Modal (Simplified) -->
+<div id="addContactModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Add New Contact</h3>
+        <form id="addContactForm">
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">First Name *</span>
+                </label>
+                <input type="text" name="given_name" class="input input-bordered" required>
+            </div>
+            
+            <!--
+            <div class="form-control mt-2">
+                <label class="label">
+                    <span class="label-text">Middle Name</span>
+                </label>
+                <input type="text" name="middle_name" class="input input-bordered">
+            </div>
+            -->
+            
+            <div class="form-control mt-2">
+                <label class="label">
+                    <span class="label-text">Last Name</span>
+                </label>
+                <input type="text" name="family_name" class="input input-bordered">
+            </div>
+            
+            <div class="form-control mt-2">
+                <label class="label">
+                    <span class="label-text">Gender</span>
+                </label>
+                <select name="gender" class="select select-bordered">
+                    <option value="">Not specified</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                    <option value="O">Other</option>
+                    <option value="N">Prefer not to say</option>
+                </select>
+            </div>
+            
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('addContactModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Contact</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="closeModal('addContactModal')">close</button>
+    </form>
+</div>
+{{end}}

@@ -1,0 +1,669 @@
+{{define "content"}}
+<div class="max-w-6xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Settings</h1>
+        <p class="text-base-content/70">Manage your account, contacts, and notifications</p>
+    </div>
+
+    <!-- Settings Tabs -->
+    <div class="tabs tabs-boxed bg-base-100 shadow-lg mb-6">
+        <a class="tab tab-active" data-tab="contacts">Contacts</a>
+        <a class="tab" data-tab="notifications">Notifications</a>
+        <a class="tab" data-tab="api">API Tokens</a>
+        <a class="tab" data-tab="security">Security</a>
+    </div>
+
+    <!-- Contacts Tab -->
+    <div id="contactsTab" class="tab-content" style="display: block">
+        <!-- Contact Management Options -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <h2 class="card-title">Import & Export</h2>
+                <p class="text-sm text-base-content/70 mb-4">Manage your contact data</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Import vCard -->
+                    <div class="card bg-base-200 shadow-md">
+                        <div class="card-body">
+                            <h3 class="font-bold flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                Import Contacts
+                            </h3>
+                            <p class="text-sm text-base-content/70 mb-3">Upload vCard (.vcf) file</p>
+                            <input type="file" id="vcardImport" accept=".vcf" class="file-input file-input-bordered file-input-sm w-full">
+                            <button class="btn btn-primary btn-sm mt-2" onclick="importVCard()">
+                                Import
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Export All -->
+                    <div class="card bg-base-200 shadow-md">
+                        <div class="card-body">
+                            <h3 class="font-bold flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                                </svg>
+                                Export All Contacts
+                            </h3>
+                            <p class="text-sm text-base-content/70 mb-3">Download all contacts as vCard or JSON</p>
+                            <button class="btn btn-primary btn-sm" onclick="exportAllContacts(false)">
+                                Export all as vCard
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="exportAllContacts(true)">
+                                Export all as JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Statistics -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <h2 class="card-title">Statistics</h2>
+                <div class="stats stats-vertical lg:stats-horizontal shadow w-full mt-4">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Total Contacts</div>
+                        <div class="stat-value text-primary">{{if .Stats.TotalContacts}}{{.Stats.TotalContacts}}{{else}}0{{end}}</div>
+                        <div class="stat-desc">All contacts in system</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">Added This Month</div>
+                        <div class="stat-value text-secondary">{{if .Stats.AddedThisMonth}}{{.Stats.AddedThisMonth}}{{else}}0{{end}}</div>
+                        <div class="stat-desc">New contacts recently added</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                        <div class="stat-title">With Birthdays</div>
+                        <div class="stat-value text-accent">{{if .Stats.AddedThisMonth}}{{.Stats.WithBirthdays}}{{else}}0{{end}}</div>
+                        <div class="stat-desc">Birthday data available</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone / Bulk Operations -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-error">Danger Zone</h2>
+                <p class="text-sm text-base-content/70 mb-4">Irreversible operations - use with caution</p>
+                
+                <div class="space-y-4">
+                    <!-- Delete All Contacts -->
+                    <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
+                        <div>
+                            <h3 class="font-bold">Delete All Contacts</h3>
+                            <p class="text-sm text-base-content/70">Permanently remove all contacts and their data</p>
+                        </div>
+                        <button class="btn btn-error btn-sm" onclick="deleteAllContacts()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Tab -->
+    <div id="notificationsTab" class="tab-content hidden">
+        <!-- Discord Webhooks -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="card-title flex items-center gap-2">
+                            <svg class="h-6 w-6" viewBox="0 0 71 55" fill="currentColor">
+                                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+                            </svg>
+                            Discord Webhooks
+                        </h2>
+                        <p class="text-sm text-base-content/70">Configure Discord notifications for birthdays and anniversaries</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openAddWebhookModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Webhook
+                    </button>
+                </div>
+
+                <!-- Webhook List -->
+                <div class="space-y-4">
+                    {{range .NotificationSettings}}
+                    <div class="card bg-base-200 shadow-md">
+                        <div class="card-body p-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <h3 class="font-bold text-lg">{{.Name}}</h3>
+                                        <div class="badge badge-sm {{if .Enabled}}badge-success{{else}}badge-ghost{{end}}">
+                                            {{if .Enabled}}Enabled{{else}}Disabled{{end}}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-sm text-base-content/70 space-y-1">
+                                        <p>Webhook: <code class="text-xs">{{truncateWebhook .WebhookURL}}</code></p>
+                                        {{if eq .DaysLookAhead 0}}<p>Notifies about events ocurring today</p>
+                                        {{else}}<p>Notifies about events ocurring in the next {{.DaysLookAhead}} day(s)</p>{{end}}
+                                        <p>Executes daily at {{.NotificationTime}}</p>
+                                        {{if eq .IncludeBirthdays true}}<p>✓ Includes 🎂 Birthdays</p>{{else}}<p>✗ Does not include 🎂 Birthdays</p>{{end}}
+                                        {{if eq .IncludeAnniversaries true}}<p>✓ Includes 💍 Anniversaries</p>{{else}}<p>✗ Does not include 💍 Anniversaries</p>{{end}}
+                                        {{if eq .IncludeEventDates true}}<p>✓ Includes 📅 Other Dates{{if .EventRegex}} with names matching regex: <code>{{.EventRegex}}</code>{{end}}</p>{{else}}<p>✗ Does not include 📅 Other Dates</p>{{end}}
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button class="btn btn-sm btn-ghost" onclick="testWebhook({{.ID}})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Test
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" onclick="editWebhook({{.ID}})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-error btn-ghost" onclick="deleteWebhook({{.ID}})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{else}}
+                    <!-- Empty State -->
+                    <div class="text-center py-12">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <h3 class="text-lg font-bold mb-2">No webhooks configured</h3>
+                        <p class="text-base-content/70 mb-4">Add your first Discord webhook to receive notifications</p>
+                        <button class="btn btn-primary" onclick="openAddWebhookModal()">Add Webhook</button>
+                    </div>
+                    {{end}}
+                </div>
+
+                <!-- Info Box -->
+                <div class="alert alert-info mt-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-bold">How to get a Discord webhook URL:</p>
+                        <p>Server Settings → Integrations → Webhooks → New Webhook → Copy URL</p>
+                    </div>
+                    <div class="text-xs link">
+                    <a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks">https://support.discord.com/hc/en-us/articles/Intro-to-Webhooks</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Tab -->
+    <div id="apiTab" class="tab-content hidden">
+        <!-- Tokens List -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h2 class="card-title flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            API Tokens
+                        </h2>
+                        <p class="text-sm text-base-content/70">Create Tokens to interact with KindredCard via API</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateTokenModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Token
+                    </button>
+                </div>
+                <div id="tokensList" class="space-y-3 mt-4">
+                    {{if .APITokens}}
+                        {{range .APITokens}}
+                        <div class="card bg-base-200 shadow">
+                            <div class="card-body p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <h3 class="font-bold text-lg">{{.Name}}</h3>
+                                            {{if .IsExpired}}
+                                            <span class="badge badge-error">Expired</span>
+                                            {{else if .IsActive}}
+                                            <span class="badge badge-success">Active</span>
+                                            {{else}}
+                                            <span class="badge badge-warning">Revoked</span>
+                                            {{end}}
+                                        </div>
+                                        <div class="text-sm space-y-1">
+                                            <div class="font-mono text-xs bg-base-300 px-2 py-1 rounded inline-block">
+                                                {{.Prefix}}
+                                            </div>
+                                            <p class="text-gray-600">
+                                                <strong>Created:</strong> {{formatDateTime .CreatedAt}}
+                                            </p>
+                                            {{if .LastUsedAt}}
+                                            <p class="text-gray-600">
+                                                <strong>Last used:</strong> {{formatDateTime .LastUsedAt}}
+                                            </p>
+                                            {{else}}
+                                            <p class="text-gray-600">Never used</p>
+                                            {{end}}
+                                            {{if .ExpiresAt}}
+                                            <p class="text-gray-600">
+                                                <strong>Expires:</strong> {{formatDateTime .ExpiresAt}}
+                                            </p>
+                                            {{else}}
+                                            <p class="text-gray-600"><strong>Expires:</strong> Never</p>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        {{if and .IsActive (not .IsExpired)}}
+                                        <button class="btn btn-sm btn-warning" onclick="revokeToken({{.ID}}, '{{.Name}}')">
+                                            Revoke
+                                        </button>
+                                        {{end}}
+                                        <button class="btn btn-sm btn-error" onclick="deleteToken({{.ID}}, '{{.Name}}')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    {{else}}
+                    <!-- Empty State -->
+                    <div class="text-center py-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold mb-2">No API Tokens configured</h3>
+                        <p class="text-base-content/70 mb-4">Create your first token to interact with KindredCard via API</p>
+                        <button class="btn btn-primary" onclick="showCreateTokenModal()">Create Token</button>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Swagger Reference -->
+        <div class="card bg-base-100 shadow-xl mt-6">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Swagger</h2>
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body p-4">
+                        <h4>Swagger API Documentation is available here: <a href="/swagger/index.html" class="font-bold link">/swagger/index.html</a></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Instructions -->
+        <div class="card bg-base-100 shadow-xl mt-6">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Usage Instructions</h2>
+                <div class="card bg-base-200 shadow space-y-4">
+                    <div class="p-3">
+                        <h3 class="font-semibold">Using cURL:</h3>
+                        <div class="mockup-code mt-2">
+                            <pre data-prefix="$"><code>curl -H "session: YOUR_TOKEN_HERE" https://kindredcard.com/api/v1/contacts</code></pre>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-semibold">Using Python:</h3>
+                        <div class="mockup-code mt-2">
+                            <pre data-prefix="$"><code>import requests</code></pre>
+                            <pre data-prefix="$"><code>headers = {'session': 'YOUR_TOKEN_HERE'}</code></pre>
+                            <pre data-prefix="$"><code>response = requests.get('https://kindredcard.com/api/v1/contacts', headers=headers)</code></pre>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-semibold">Using PowerShell:</h3>
+                        <div class="mockup-code mt-2">
+                            <pre data-prefix="$"><code>$myURI = "https://kindredcard.com"</code></pre>
+                            <pre data-prefix="$"><code>$myHeaders = @{"session" = "YOUR_TOKEN_HERE"}</code></pre>
+                            <pre data-prefix="$"><code>Invoke-RestMethod -Uri "$myURI/api/v1/contacts" -Headers $myHeaders</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Token Modal -->
+        <dialog id="createTokenModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">Create New API Token</h3>
+                <form id="createTokenForm" class="space-y-4 mt-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Token Name</span>
+                        </label>
+                        <input type="text" id="tokenName" name="name" placeholder="e.g., My Mobile App, CI/CD Pipeline" 
+                            class="input input-bordered" required maxlength="255">
+                        <label class="label">
+                            <span class="label-text-alt">Choose a descriptive name to identify this token</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label cursor-pointer">
+                            <span class="label-text">Set expiration date?</span>
+                            <input type="checkbox" id="hasExpiration" class="toggle toggle-primary">
+                        </label>
+                    </div>
+
+                    <div id="expirationField" class="form-control hidden">
+                        <label class="label">
+                            <span class="label-text">Expires At</span>
+                        </label>
+                        <input type="datetime-local" id="expiresAt" name="expires_at" class="input input-bordered">
+                        <label class="label">
+                            <span class="label-text-alt">Leave empty for no expiration</span>
+                        </label>
+                    </div>
+
+                    <div class="modal-action">
+                        <button type="button" class="btn" onclick="closeCreateTokenModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Token</button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+
+        <!-- Display Token Modal (ONE TIME DISPLAY) -->
+        <dialog id="displayTokenModal" class="modal">
+            <div class="modal-box max-w-2xl">
+                <h3 class="font-bold text-lg text-success">✅ Token Created Successfully!</h3>
+                
+                <div class="alert alert-warning mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <div class="font-bold">⚠️ Important: Save this token now!</div>
+                        <div class="text-sm">This is the only time you'll see the full token. Store it somewhere secure.</div>
+                    </div>
+                </div>
+
+                <div class="form-control mt-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Your new API token:</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="displayedToken" readonly 
+                            class="input input-bordered w-full pr-24 font-mono text-sm" value="">
+                        <button type="button" class="btn btn-sm btn-ghost absolute right-1 top-1" onclick="copyToken()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-base-200 p-4 rounded mt-4">
+                    <h4 class="font-semibold mb-2">Token Details:</h4>
+                    <ul class="text-sm space-y-1">
+                        <li><strong>Name:</strong> <span id="displayTokenName"></span></li>
+                        <li><strong>Created:</strong> <span id="displayTokenCreated"></span></li>
+                        <li><strong>Expires:</strong> <span id="displayTokenExpires">Never</span></li>
+                    </ul>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" class="btn btn-primary" onclick="closeDisplayTokenModal()">I've Saved My Token</button>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Confirm Delete Modal -->
+        <dialog id="confirmDeleteModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg text-error">⚠️ Delete Token?</h3>
+                <p class="py-4">
+                    Are you sure you want to delete "<span id="deleteTokenName" class="font-semibold"></span>"? 
+                    Any applications using this token will immediately lose access.
+                </p>
+                <p class="text-sm text-gray-600">This action cannot be undone.</p>
+                <div class="modal-action">
+                    <button type="button" class="btn" onclick="closeConfirmDeleteModal()">Cancel</button>
+                    <button type="button" class="btn btn-error" onclick="confirmDelete()">Delete Token</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    </div>
+
+    <!-- Security Tab -->
+    <div id="securityTab" class="tab-content hidden">
+
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+                <h2 class="card-title">Account Security & Details</h2>
+                <p class="text-sm text-base-content/70 mb-4">Manage your account security and active sessions</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-[60%_40%] md:grid-rows-2 gap-4">
+
+                    <!-- Account Information - Top left (col 1, row 1) -->
+                    <div class="card bg-base-200 shadow-md md:col-start-1 md:row-start-1">
+                        <div class="card-body">
+                            <h2 class="card-title">Account Information</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-base-300">
+                                    <span class="text-base-content/70">Email</span>
+                                    <span class="font-semibold">{{.User.Email}}</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-base-300">
+                                    <span class="text-base-content/70">User ID</span>
+                                    <span class="font-semibold">{{.User.ID}}</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-base-content/70">Timezone</span>
+                                    <span class="form-control flex flex-row gap-2">
+                                        <select id="timezone-select" onchange="updateTimezone(this.value)" class="select select-bordered grow">
+                                            {{$current := .CurrentTZ}}
+                                            {{range .Timezones}}
+                                            <option value="{{.}}" {{if eq . $current}}selected{{end}}>{{.}}</option>
+                                            {{end}}
+                                        </select>
+                                        <button type="button" onclick="detectTimezone()" class="btn btn-outline" title="Detect from browser">
+                                            🌐 Detect
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Sessions - Bottom left (col 1, row 2) -->
+                    <div class="card bg-base-200 shadow-md md:col-start-1 md:row-start-2">
+                        <div class="card-body">
+                            <h2 class="card-title">Active Sessions</h2>
+                            <p class="text-sm text-base-content/70 no-grow">Devices currently logged into your account</p>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Device</th>
+                                            <th>Last Active</th>
+                                            <th>Expires</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{range .Sessions}}
+                                        <tr class="hover">
+                                            <td>
+                                                <div class="flex items-center gap-2">
+                                                    <span>{{.GetDeviceIcon}}</span>
+                                                    <div>
+                                                        <div class="font-semibold text-sm">{{.GetHumanReadableDevice}}</div>
+                                                        <div class="text-xs text-base-content/60">{{.IPAddress}}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span class="text-sm">{{.TimeAgo}}</span>
+                                                </div>
+                                            </td>
+                                             <td>
+                                                <div>
+                                                    <span class="text-sm">{{.ExpirationTimeLeft}}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{if .IsCurrent}}
+                                                <span class="badge badge-primary badge-xs">Current</span>
+                                                {{else}}
+                                                <button onclick="revokeSession({{.ID}})" class="btn btn-ghost btn-xs text-error" title="Revoke session">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                                {{end}}
+                                            </td>
+                                        </tr>
+                                        {{else}}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-base-content/60">No active sessions</td>
+                                        </tr>
+                                        {{end}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {{if gt (len .Sessions) 1}}
+                            <div class="mt-4">
+                                <button onclick="revokeAllOtherSessions()" class="btn btn-sm btn-outline btn-error">
+                                    Revoke All Other Sessions
+                                </button>
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+
+                    <!-- Change Password - Takes up 2 rows on right -->
+                    <div class="card bg-base-200 shadow-md md:col-start-2 md:row-span-2 h-[520px]">
+                        <div class="card-body">
+                            <h2 class="card-title">Change Password</h2>
+                            <p class="text-sm text-base-content/70 mb-4">Update your account password</p>
+
+                            <form action="/settings/password" method="POST" class="space-y-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text font-semibold">Current Password</span>
+                                    </label>
+                                    <input type="password" name="current_password" class="input input-bordered" required>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text font-semibold">New Password</span>
+                                    </label>
+                                    <input type="password" name="new_password" class="input input-bordered" required minlength="8">
+                                    <label class="label">
+                                        <span class="label-text-alt">Minimum 8 characters</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text font-semibold">Confirm New Password</span>
+                                    </label>
+                                    <input type="password" name="confirm_password" class="input input-bordered" required minlength="8">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Update Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-error">Danger Zone</h2>
+                <p class="text-sm text-base-content/70 mb-4">Irreversible operations - use with caution</p>
+                
+                <div class="space-y-4">
+                    <!-- Delete All Contacts -->
+                    <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
+                        <div>
+                            <h3 class="font-bold">Delete Account</h3>
+                            <p class="text-sm opacity-90">Permanently delete your account and all associated data</p>
+                        </div>
+                        <button class="btn btn-error btn-sm" onclick="confirmDeleteAccount()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Include Webhook Modal -->
+{{template "add_webhook_modal" .}}
+
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/sessions.js"></script>
+<script src="/static/js/settings.js"></script>
+<script src="/static/js/api-tokens.js"></script>
+{{end}}

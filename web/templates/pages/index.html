@@ -1,0 +1,628 @@
+{{define "content"}}
+<!-- Dashboard Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <!-- Total Contacts -->
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <div class="stat-title">Total Contacts</div>
+            <div class="stat-value text-primary">{{.TotalContacts}}</div>
+        </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="stats shadow bg-base-100">
+        <a href="/events" class="cursor-pointer hover:bg-base-200 transition-colors">
+        <div class="stat">
+            <div class="stat-figure text-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div class="stat-title">Upcoming Events</div>
+            <div class="stat-value text-secondary">{{if .UpcomingEventCount}}{{.UpcomingEventCount}}{{else}}0{{end}}</div>
+        </div>
+        </a>
+    </div>
+
+    <!-- Recent Contacts -->
+    <div class="stats shadow bg-base-100">
+        <div class="stat">
+            <div class="stat-figure text-accent">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="stat-title">Recently Edited Contacts</div>
+            <div class="stat-value text-accent">{{.RecentCount}}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Actions Bar -->
+<div class="flex flex-col md:flex-row gap-4 mb-6">
+    <div class="flex-1">
+        <div class="form-control">
+            <div class="input-group">
+                <input type="text" 
+                       id="searchInput" 
+                       placeholder="Search contacts..." 
+                       class="input input-bordered w-full"
+                       onkeyup="filterContacts(this.value)">
+            </div>
+        </div>
+    </div>
+    <div class="flex gap-2">
+        <button class="btn btn-primary" onclick="openAddContactModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Contact
+        </button>
+        <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-ghost bg-base-300/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+            </label>
+            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                <li><a onclick="document.getElementById('vcardImport').click()">Import vCard</a></li>
+                <li><a onclick="exportAllJSON()">Export All as JSON</a></li>
+                <li><a onclick="exportAllVCARD()">Export All as vCard</a></li>
+            </ul>
+            <!-- Hidden file input -->
+            <input type="file" id="vcardImport" name="vcard" accept="text/vcard,text/x-vcard,.vcf" class="hidden" onchange="importVCard()">
+        </div>
+    </div>
+</div>
+
+<!-- Contact Cards Gallery -->
+<div id="contactsGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {{range .Contacts}}
+    <div class="contact-card cursor-pointer hover:scale-105 transition-transform duration-200" 
+         data-contact-id="{{.ID}}"
+         data-contact-name="{{.FullName}}"
+         onclick="openContactCard({{.ID}})">
+        <!-- Business Card Style -->
+        <div class="card bg-gradient-to-br from-primary to-secondary text-primary-content shadow-xl h-48 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-base-100 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-base-100 rounded-full -ml-12 -mb-12"></div>
+            </div>
+
+            <div class="card-body p-2 flex flex-col">
+
+                <div class="flex flex-row flex-grow items-start">
+                    
+                    <!-- AVATAR -->
+                    <div class="w-[35%] flex items-start justify-center pt-1"> 
+                        <div class="avatar">
+                            <div class="w-20 h-20 rounded-full ring ring-primary-content ring-offset-base-100 ring-offset-2">
+                                {{if .AvatarBase64}}
+                                <img src="data:{{.AvatarMimeType}};base64,{{.AvatarBase64}}" alt="{{.FullName}}" />
+                                {{else}}
+                                <div class="bg-base-100 text-primary flex items-center justify-center text-2xl font-bold h-[40%]">
+                                    {{if .GivenName}}{{initial .GivenName}}{{end}}{{if .FamilyName}}{{initial .FamilyName}}{{end}}
+                                </div>
+                                <div class="flex items-center justify-center h-[60%]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 md:w-8 fill-current text-neutral">
+                                        <path d="M4 3h13a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h12V5H5zm2 2h6v2H7V7zm0 4h8v2H7v-2zm0 4h6v2H7v-2z"/>
+                                    </svg>
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOP RIGHT INFO DETAILS -->
+                    <div class="w-[65%] flex flex-col pt-1">
+                        <div class="space-y-0 ml-0">
+
+                            <!-- Gender Badge -->
+                            {{if .Gender}}
+                            <div class="flex gap-1 justify-end text-right">
+                                {{if eq .Gender "M"}}
+                                <span class="text-xs font-semibold truncate">
+                                    {{genderFullString .Gender}}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimi="10">
+                                    <path
+                                        transform="translate(-1.22 -1.28)"
+                                        d="M8.5 8.5c0-.69-.28-1.314-.733-1.767A2.492 2.492 0 0 0 6 6a2.502 2.502 0 0 0-2.5 2.5C3.5 9.879 4.62 11 6 11c1.379 0 2.5-1.121 2.5-2.5zm-.733-1.767 3.172-3.172m-1.77 0h1.77v1.77"
+                                    />
+                                </svg>
+                                {{else if eq .Gender "F"}}
+                                <span class="text-xs font-semibold truncate">
+                                    {{genderFullString .Gender}}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-dasharray="none">
+                                    <path d="M6 11V6M3.5 8.5h5m0-5A2.5 2.5 0 0 1 6 6a2.5 2.5 0 0 1-2.5-2.5A2.5 2.5 0 0 1 6 1a2.5 2.5 0 0 1 2.5 2.5Z"/>
+                                </svg>
+                                {{else}}
+                                <span class="text-xs font-semibold truncate">
+                                    {{genderFullString .Gender}}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="9 7 232 266" class="w-5 h-5" fill="currentColor">
+                                    <path d="M 226,38 v 20 l 14,-8 v -42 h -42 l -8,14 h 20 l -37,37 a 79,79 0 0,0 -96,0 l -10,-10 14,-14 -12,-12 -14,14 -15,-15 h 20 l -8,-14 h -42 v 42 l 14,8 v -20 l 15,15 -14,14 12,12 14,-14 10,10 a 79,79 0 0,0 53,125 v 22 h -27 v 23 h 27 v 27 h 23 v -27 h 27 v -23 h -27 v -22 a 79,79 0 0,0 52,-125 zm -100,27 a 57,57 0 1,1 0,114 a 57,57 0 1,1 0,-114 z"/>
+                                </svg>
+                                {{end}}
+                            </div>
+                            {{end}}
+
+                            <!-- Birthday Badge -->
+                            {{if or .Birthday .BirthdayMonth}}
+                            <div class="flex gap-1 justify-end text-right">
+                                <span class="text-xs font-semibold truncate">
+                                    {{if .Birthday}}
+                                        {{formatBirthdayMedium .Birthday}}{{if getYear .Birthday}} ({{calculateYears .Birthday}}){{end}}
+                                    {{else if .BirthdayMonth}}
+                                        {{monthName .BirthdayMonth}} {{deref .BirthdayDay}}
+                                    {{end}}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20 7h-1.209A4.92 4.92 0 0019 5.5C19 3.57 17.43 2 15.5 2c-1.622 0-2.705 1.482-3.5 3.019C11.205 3.482 10.122 2 8.5 2 6.57 2 5 3.57 5 5.5c0 .596.079 1.089.209 1.5H4c-1.103 0-2 .897-2 2v2c0 1.103.897 2 2 2v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2zm-4.5-3c.827 0 1.5.673 1.5 1.5C17 7 16.374 7 16 7h-2.478c.511-1.576 1.253-3 1.978-3zM7 5.5C7 4.673 7.673 4 8.5 4c.725 0 1.467 1.424 1.978 3H8c-.374 0-1 0-1-1.5zM4 9h7v2H4V9zm2 11v-7h5v7H6zm12 0h-5v-7h5v7zm2-9h-7V9h7v2z"/>
+                                </svg>
+                            </div>
+                            {{end}}
+
+                            <!-- Anniversary Badge -->
+                            {{if or .Anniversary .AnniversaryMonth}}
+                            <div class="flex gap-1 justify-end text-right">
+                                <span class="text-xs font-semibold truncate">
+                                    {{if .Anniversary}}
+                                        {{formatBirthdayMedium .Anniversary}}{{if getYear .Anniversary}} ({{calculateYears .Anniversary}}){{end}}
+                                    {{else if .AnniversaryMonth}}
+                                        {{monthName .AnniversaryMonth}} {{deref .AnniversaryDay}}
+                                    {{end}}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </div>
+                            {{end}}
+
+                            <!-- Phone Badge -->
+                            {{if .Phones}}
+                            <div class="flex gap-1 justify-end text-right">
+                                {{with index .Phones 0}}
+                                    <span class="text-xs font-semibold truncate">{{.Phone}}</span>
+                                {{end}}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="2" d="M20.487 17.14l-4.065-3.696a1.001 1.001 0 00-1.391.043l-2.393 2.461c-.576-.11-1.734-.471-2.926-1.66-1.192-1.193-1.553-2.354-1.66-2.926l2.459-2.394a1 1 0 00.043-1.391L6.859 3.513a1 1 0 00-1.391-.087l-2.17 1.861a1 1 0 00-.29.649c-.015.25-.301 6.172 4.291 10.766C11.305 20.707 16.323 21 17.705 21c.202 0 .326-.006.359-.008a.992.992 0 00.648-.291l1.86-2.171a.997.997 0 00-.085-1.39z"/>
+                                </svg>
+                            </div>
+                            {{end}}
+
+                            <!-- Email Badge -->
+                            {{if .Emails}}
+                            <div class="flex gap-1 justify-end text-right">
+                                {{with index .Emails 0}}
+                                    <span class="text-xs font-normal truncate ml-0.5 mt-0.5">{{.Email}}</span>
+                                {{end}}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20 4H4c-1.103 0-2 .897-2 2v12c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 6.223-8-6.222V6h16zM4 18V9.044l7.386 5.745a.994.994 0 001.228 0L20 9.044 20.002 18H4z"/>
+                                </svg>
+                            </div>
+                            {{end}}
+
+                            <!-- NO CONTENT CONDITION -->
+                            {{if and (not .Birthday) (not .BirthdayMonth) (not .Anniversary) (not .AnniversaryMonth) (not .Phones) (not .Emails)}}
+                            <div class="text-center mr-2">
+                                <br><h4 class="font-bold">Add Some Details!</h4>
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-auto text-center w-full"> 
+                    {{if .Nickname}}
+                    <div class="text-2xl italic opacity-80">"{{.Nickname}}"</div>
+                    {{end}}
+                    
+                    <h2 class="text-3xl text-nowrap font-bold leading-tight tracking-wide text-shadow-lg">
+                        {{.GivenName}} {{.FamilyName}}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Hidden Modal Content (Front) -->
+        <template class="modal-front-content">
+            <div class="flex flex-col h-full p-6">
+                <!-- Avatar and Name Section -->
+                <div class="flex items-start gap-8 mb-8">
+                    <div class="avatar">
+                        <div class="w-40 h-40 rounded-full ring ring-primary-content ring-offset-base-100 ring-offset-4">
+                            {{if .AvatarBase64}}
+                            <img src="data:{{.AvatarMimeType}};base64,{{.AvatarBase64}}" alt="{{.FullName}}" />
+                            {{else}}
+                            <div class="bg-base-100 text-primary flex items-center justify-center text-6xl font-bold">
+                                {{if .GivenName}}{{initial .GivenName}}{{end}}{{if .FamilyName}}{{initial .FamilyName}}{{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-5xl font-bold mb-3">{{.FullName}}</h2>
+                        {{if .Nickname}}
+                        <p class="text-4xl opacity-90 italic mb-2">"{{.Nickname}}"</p>
+                        {{end}}
+
+                        <div class="flex items-center text-2xl mb-2">
+                            {{if eq .Gender "M"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" class="w-12 h-12" stroke="currentColor" stroke-width=".75" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimi="10">
+                                <path
+                                    transform="translate(-1.22 -1.28)"
+                                    d="M8.5 8.5c0-.69-.28-1.314-.733-1.767A2.492 2.492 0 0 0 6 6a2.502 2.502 0 0 0-2.5 2.5C3.5 9.879 4.62 11 6 11c1.379 0 2.5-1.121 2.5-2.5zm-.733-1.767 3.172-3.172m-1.77 0h1.77v1.77"
+                                />
+                            </svg>
+                            <span class="text-2xl">{{genderFullString .Gender}}</span>
+                            {{else if eq .Gender "F"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" class="w-12 h-12" stroke="currentColor" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-dasharray="none">
+                                <path 
+                                    d="M6 11V6M3.5 8.5h5m0-5A2.5 2.5 0 0 1 6 6a2.5 2.5 0 0 1-2.5-2.5A2.5 2.5 0 0 1 6 1a2.5 2.5 0 0 1 2.5 2.5Z"
+                                />
+                            </svg><span class="text-2xl">{{genderFullString .Gender}}</span>
+                            {{else}}
+                            {{if .Gender}}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="9 7 232 266" class="w-12 h-12" fill="currentColor">
+                                <path d="M 226,38 v 20 l 14,-8 v -42 h -42 l -8,14 h 20 l -37,37 a 79,79 0 0,0 -96,0 l -10,-10 14,-14 -12,-12 -14,14 -15,-15 h 20 l -8,-14 h -42 v 42 l 14,8 v -20 l 15,15 -14,14 12,12 14,-14 10,10 a 79,79 0 0,0 53,125 v 22 h -27 v 23 h 27 v 27 h 23 v -27 h 27 v -23 h -27 v -22 a 79,79 0 0,0 52,-125 zm -100,27 a 57,57 0 1,1 0,114 a 57,57 0 1,1 0,-114 z"/>
+                            </svg>
+                            <span class="text-2xl">{{genderFullString .Gender}}</span>{{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information Grid -->
+
+                <!-- Empty State: Get Started Arrow -->
+                {{if and (not .Birthday) (not .BirthdayMonth) (not .Anniversary) (not .AnniversaryMonth) (not .Phones) (not .Emails)}}
+                <div class="get-started-overlay">
+                    <svg class="get-started-arrow" viewBox="0 -210 650 230" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.1603 4.134 10.866-16.8205 13.6603-3.6603 26.4545-7.8205ZM13.6603-3.6603A380 380 300 01334.7499-193.7499"
+                                stroke="currentColor" 
+                                stroke-width="12" 
+                                fill="none" 
+                                stroke-linecap="round"
+                                stroke-linejoin="round"/>
+                            <text x="649" y="-185" class="get-started-text" text-anchor="end">Add contact details!</text>
+                    </svg>
+                </div>
+                {{end}}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        {{if .Emails}}
+                        <div>
+                            <h3 class="font-semibold text-2xl mb-3 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Email
+                            </h3>
+                            <div class="pl-8 space-y-2">
+                                {{range .Emails}}
+                                <div>
+                                    <a href="mailto:{{.Email}}" class="link link-hover text-lg">{{.Email}}</a>
+                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                        {{end}}
+
+                        {{if .Phones}}
+                        <div>
+                            <h3 class="font-semibold text-2xl mb-3 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                Phone
+                            </h3>
+                            <div class="pl-8 space-y-2">
+                                {{range .Phones}}
+                                <div>
+                                    <a href="tel:{{.Phone}}" class="link link-hover text-lg">{{.Phone}}</a>
+                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        {{if or .Birthday .BirthdayMonth}}
+                        <div>
+                            <h3 class="font-semibold text-2xl mb-3 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                                </svg>
+                                Birthday
+                            </h3>
+                            <p class="pl-8 text-xl">
+                                {{if .Birthday}}
+                                    {{formatBirthday .Birthday}}
+                                {{else if .BirthdayMonth}}
+                                    {{monthName .BirthdayMonth}} {{deref .BirthdayDay}}
+                                {{end}}
+                            </p>
+                        </div>
+                        {{end}}
+
+                        {{if or .Anniversary .AnniversaryMonth}}
+                        <div>
+                            <h3 class="font-semibold text-2xl mb-3 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                Anniversary
+                            </h3>
+                            <p class="pl-8 text-xl">
+                                {{if .Anniversary}}
+                                    {{formatBirthday .Anniversary}}
+                                {{else if .AnniversaryMonth}}
+                                    {{monthName .AnniversaryMonth}} {{deref .AnniversaryDay}}
+                                {{end}}
+                            </p>
+                        </div>
+                        {{end}}
+
+                        {{if .Addresses}}
+                        <div>
+                            <h3 class="font-semibold text-2xl mb-3 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Address
+                            </h3>
+                            <div class="pl-8 space-y-3">
+                                {{range .Addresses}}
+                                <div class="text-base">
+                                    {{if .Street}}<div>{{.Street}}</div>{{end}}
+                                    <div>
+                                        {{if .City}}{{.City}}{{end}}{{if and .City .State}}, {{end}}{{if .State}}{{.State}}{{end}} {{.PostalCode}}
+                                    </div>
+                                    {{if .Country}}<div>{{.Country}}</div>{{end}}
+                                    <span class="badge badge-sm mt-1">{{index .Type 0}}</span>
+                                    {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Flip Hint -->
+                <div class="text-center mt-8 opacity-60">
+                    <p class="text-lg">Click anywhere to see more details →</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- Hidden Modal Content (Back) -->
+        <template class="modal-back-content">
+            <div class="flex flex-col h-full p-8">
+
+                <div class="space-y-8 flex-1">
+                    <h2 class="text-4xl font-bold mb-6">Additional Details</h2>
+
+                    <!-- Organizations -->
+                    {{if .Organizations}}
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Organizations
+                        </h3>
+                        <div class="space-y-3">
+                            {{range .Organizations}}
+                            <div class="bg-base-100 p-4 rounded-lg">
+                                {{if .Name}}<div class="text-xl font-semibold">{{.Name}}</div>{{end}}
+                                {{if .Title}}<div class="text-lg">{{.Title}}</div>{{end}}
+                                {{if .Department}}<div class="text-base opacity-80">{{.Department}}</div>{{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    <!-- Relationships -->
+                    {{if or .Relationships .OtherRelationships}}
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Relationships
+                        </h3>
+                        <div class="space-y-2">
+                            {{if .Relationships}}
+                            {{range .Relationships}}
+                            <div class="flex items-center gap-3 text-lg">
+                                <span class="badge badge-primary badge-lg">{{.RelationshipType.Name}}</span>
+                                <a href="/contacts/{{.RelatedContactID}}" class="link link-hover">
+                                    {{if .RelatedContact.FullName}}{{.RelatedContact.FullName}}{{else}}{{.Contact.FullName}}{{end}}
+                                </a>
+                            </div>
+                            {{end}}
+                            {{end}}
+                            {{if .OtherRelationships}}
+                            {{range .OtherRelationships}}
+                            <div class="flex items-center gap-3 text-lg">
+                                <span class="badge badge-secondary badge-lg">{{.RelationshipName}}*</span>
+                                <a href="#" class="link link-hover">
+                                    {{.RelatedContactName}}
+                                </a>
+                            </div>
+                            {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+
+                    <!-- Other Dates -->
+                    {{if .OtherDates}}
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4v2 M16 4v2 M4 9h16 M6 5h12 a2 2 0 012 2v11 a2 2 0 01-2 2H6 a2 2 0 01-2-2V7 a2 2 0 012-2" />
+                            </svg>
+                            Other Dates
+                        </h3>
+                        <div class="space-y-2">
+                            {{range .OtherDates}}
+                                {{if or .EventDate .EventDateMonth}}
+                                <div>
+                                    <p class="pl-8 text-xl">
+                                        {{if .EventName}}
+                                            <span class="font-semibold">{{.EventName}}: </span>
+                                        {{end}}
+                                        {{if .EventDate}}
+                                            {{formatBirthday .EventDate}}
+                                        {{else if .EventDateMonth}}
+                                            {{monthName .EventDateMonth}} {{deref .EventDateDay}}
+                                        {{end}}
+                                    </p>
+                                </div>
+                                {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    <!-- URLs -->
+                    {{if .URLs}}
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                            Websites
+                        </h3>
+                        <div class="space-y-2">
+                            {{range .URLs}}
+                            <div>
+                                <a href="{{.URL}}" target="_blank" class="link link-primary text-lg">{{.URL}}</a>
+                                <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    <!-- Notes -->
+                    {{if .Notes}}
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Notes
+                        </h3>
+                        <div class="bg-base-100 p-6 rounded-lg whitespace-pre-wrap text-base leading-relaxed">{{.Notes}}</div>
+                    </div>
+                    {{end}}
+
+                    <div class="text-xs space-y-1">
+                        <div><span class="font-bold">Created:</span> {{.CreatedAt.Format "2006-01-02 15:04:05"}}Z</div>
+                        <div><span class="font-bold">Updated:</span> {{.UpdatedAt.Format "2006-01-02 15:04:05"}}Z</div>
+                        <div class="text-xs opacity-70">ID: {{.ID}} | UID: {{.UID}}</div>
+                    </div>
+                </div>
+
+                <!-- Flip Hint -->
+                <div class="text-center mt-8 opacity-60">
+                    <p class="text-lg">← Click anywhere to return to main details</p>
+                </div>
+            </div>
+        </template>
+    </div>
+    {{end}}
+</div>
+
+<!-- Contact Card Detail Modal -->
+<div id="contactCardModal" class="modal">
+    <div class="modal-box w-11/12 max-w-6xl h-5/6 max-h-screen p-0 overflow-hidden">
+        <div class="h-full flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b border-base-300">
+                <h3 class="text-2xl font-bold" id="modalContactName">Contact Details</h3>
+                <button class="btn btn-sm btn-circle btn-ghost" onclick="closeModal('contactCardModal')">✕</button>
+            </div>
+            
+            <!-- Card Container with Flip (Click anywhere to flip) -->
+            <div class="flex-1 overflow-y-auto p-6 cursor-pointer" onclick="flipCard()">
+                <div id="cardFlipContainer" class="relative w-full h-full min-h-[600px]" style="perspective: 1000px;">
+                    <!-- Front of Card -->
+                    <div id="cardFront" class="absolute inset-0 transition-transform duration-500" style="backface-visibility: hidden;">
+                        <div class="card bg-gradient-to-br from-primary to-secondary text-primary-content shadow-2xl h-full">
+                            <div class="card-body" id="cardFrontContent">
+                                <!-- Content loaded from template -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Back of Card -->
+                    <div id="cardBack" class="absolute inset-0 transition-transform duration-500" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                        <div class="card bg-base-200 shadow-2xl h-full">
+                            <div class="card-body overflow-y-auto" id="cardBackContent">
+                                <!-- Content loaded from template -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Actions -->
+            <div class="border-t border-base-300 p-6 flex justify-between items-center bg-base-100">
+                <div class="flex gap-2">
+                    <button class="btn btn-sm btn-ghost" onclick="editContact(event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                    </button>
+                    <button class="btn btn-sm btn-ghost" onclick="exportContactVCard(event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export
+                    </button>
+                </div>
+                <button class="btn btn-sm btn-error" onclick="openDeleteModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="closeModal('contactCardModal')">close</button>
+    </form>
+</div>
+
+{{template "new_contact_modal" .}}
+{{template "delete_conf_modal" .}}
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/index.js"></script>
+{{end}}

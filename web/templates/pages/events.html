@@ -1,0 +1,88 @@
+{{define "content"}}
+<div class="container mx-auto p-4 max-w-6xl">
+    <h1 class="text-3xl font-bold mb-6">Upcoming Events</h1>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Past Events Card -->
+        <div class="card bg-warning/10 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-warning">
+                    ⚠️ Last Chance
+                    <span class="badge badge-warning">{{.PastCount}}</span>
+                </h2>
+                <p class="text-sm">Past 7 days</p>
+            </div>
+        </div>
+
+        <!-- Today Card -->
+        <div class="card bg-primary/10 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-primary">
+                    🎯 Today
+                    <span class="badge badge-primary">{{.TodayCount}}</span>
+                </h2>
+                <p class="text-sm">Events today</p>
+            </div>
+        </div>
+
+        <!-- Upcoming Card -->
+        <div class="card bg-success/10 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-success">
+                    ✨ Coming Up
+                    <span class="badge badge-success">{{.UpcomingCount}}</span>
+                </h2>
+                <p class="text-sm">Next 7 days</p>
+            </div>
+        </div>
+    </div>
+
+     <!-- Event Table View -->
+    <div class="card bg-base-100 shadow-xl mt-6">
+        <div class="card-body">
+            <h1 class="text-3xl mb-3 card-title">📅 Events in the next 3 months</h2>
+
+			{{if .MonthlyEvents}}
+				{{range .MonthlyEvents}}
+				<div class="mb-8">
+					<!-- Month Header -->
+					<h2 class="text-2xl font-bold mb-4 border-b-2 border-base-300 pb-2">
+						{{.MonthName}}
+					</h2>
+					
+					<!-- Events List -->
+					{{if .Events}}
+					<div class="font-mono text-sm space-y-1 ml-4">
+						{{range .Events}}
+						<div class="flex">
+                            {{if eq .ContactID -42}}
+                            <span class="text-base-content/70 mr-4"></span>
+                            <span class="my-2 text-sm font-semibold text-base-content/60">{{.EventDescription}}</span>
+                            <span></span>
+                            {{else}}
+							<span class="text-base-content/70 mr-4">{{.DayFormatted}}</span>
+							<span class="mr-4 min-w-[130px]"><a class="link" href="/contacts/{{.ContactID}}">{{.FullName}}</a></span>
+							<span class="text-base-content/80">- {{.EventDescription}}</span>
+                            {{end}}
+						</div>
+						{{end}}
+					</div>
+					{{else}}
+					<p class="text-base-content/50 ml-4 italic">No events this month</p>
+					{{end}}
+				</div>
+				{{end}}
+			{{else}}
+			<div class="text-center py-12 text-base-content/50">
+				<svg class="w-20 h-20 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+				</svg>
+				<p class="text-lg font-semibold">No events in the next 3 months</p>
+			</div>
+			{{end}}
+		</div>
+    </div>
+
+</div>
+{{end}}

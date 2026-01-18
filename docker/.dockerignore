@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+#package-lock.json
+
+# Build artifacts
+kindredcard
+*.exe
+*.test
+*.prof
+
+# Output CSS (will be built in Docker)
+web/static/css/output.css
+web/static/css/output.css.map
+
+# Development files
+.env
+.env.local
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage.txt
+*.coverprofile
+
+# Temporary files
+tmp/
+temp/

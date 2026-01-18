@@ -1,0 +1,969 @@
+definitions:
+  models.APIToken:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_used_at:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Address:
+    properties:
+      city:
+        type: string
+      contact_id:
+        type: integer
+      country:
+        type: string
+      id:
+        type: integer
+      is_primary:
+        type: boolean
+      postal_code:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
+      type:
+        description: home, work, other
+        items:
+          type: string
+        type: array
+    type: object
+  models.Contact:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/models.Address'
+        type: array
+      anniversary:
+        example: "2022-01-03T00:00:00Z"
+        type: string
+      anniversary_day:
+        description: 1-31, for partial dates
+        example: 3
+        type: integer
+      anniversary_month:
+        description: 1-12, for partial dates
+        example: 1
+        type: integer
+      avatar_base64:
+        type: string
+      avatar_mime_type:
+        type: string
+      birthday:
+        example: "1990-12-15T00:00:00Z"
+        type: string
+      birthday_day:
+        description: 1-31, for partial dates
+        example: 15
+        type: integer
+      birthday_month:
+        description: 1-12, for partial dates
+        example: 12
+        type: integer
+      created_at:
+        type: string
+      deletedAt:
+        type: string
+      emails:
+        items:
+          $ref: '#/definitions/models.Email'
+        type: array
+      etag:
+        type: string
+      exclude_from_sync:
+        type: boolean
+      family_name:
+        example: Doe
+        type: string
+      full_name:
+        description: Computed from name parts
+        example: Dr. John Frank Doe III
+        type: string
+      gender:
+        description: M, F, O, N, U
+        example: M
+        type: string
+      given_name:
+        example: John
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_modified_token:
+        type: integer
+      middle_name:
+        example: Frank
+        type: string
+      nickname:
+        example: broheim
+        type: string
+      notes:
+        example: Met at work conference 2023
+        type: string
+      organizations:
+        items:
+          $ref: '#/definitions/models.Organization'
+        type: array
+      other_dates:
+        items:
+          $ref: '#/definitions/models.OtherDate'
+        type: array
+      other_relationships:
+        items:
+          $ref: '#/definitions/models.OtherRelationship'
+        type: array
+      phones:
+        items:
+          $ref: '#/definitions/models.Phone'
+        type: array
+      prefix:
+        example: Dr.
+        type: string
+      relationships:
+        items:
+          $ref: '#/definitions/models.Relationship'
+        type: array
+      suffix:
+        example: III
+        type: string
+      uid:
+        example: "42"
+        type: string
+      updated_at:
+        type: string
+      urls:
+        items:
+          $ref: '#/definitions/models.URL'
+        type: array
+      user_id:
+        type: integer
+    type: object
+  models.ContactJSONPatch:
+    properties:
+      avatar_base64:
+        type: string
+      avatar_mime_type:
+        type: string
+      exclude_from_sync:
+        example: false
+        type: boolean
+      family_name:
+        example: Doe
+        type: string
+      gender:
+        enum:
+        - M
+        - F
+        - O
+        example: M
+        type: string
+      given_name:
+        example: John
+        type: string
+      middle_name:
+        example: J
+        type: string
+      nickname:
+        example: Johnny
+        type: string
+      notes:
+        description: |-
+          Birthday           *string               `json:"birthday,omitempty"` // String for flexible parsing
+          BirthdayMonth      *int                  `json:"birthday_month,omitempty"`
+          BirthdayDay        *int                  `json:"birthday_day,omitempty"`
+          Anniversary        *string               `json:"anniversary,omitempty"` // String for flexible parsing
+          AnniversaryMonth   *int                  `json:"anniversary_month,omitempty"`
+          AnniversaryDay     *int                  `json:"anniversary_day,omitempty"`
+        example: VIP
+        type: string
+      prefix:
+        example: Dr.
+        type: string
+      suffix:
+        example: Jr.
+        type: string
+    type: object
+  models.CreateAPITokenRequest:
+    properties:
+      expires_at:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  models.Email:
+    properties:
+      contact_id:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      is_primary:
+        type: boolean
+      type:
+        description: home, work, other
+        items:
+          type: string
+        type: array
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        example: validation_error
+        type: string
+      field:
+        example: full_name
+        type: string
+      message:
+        example: Full name is required
+        type: string
+    type: object
+  models.Organization:
+    properties:
+      contact_id:
+        type: integer
+      department:
+        type: string
+      id:
+        type: integer
+      is_primary:
+        type: boolean
+      name:
+        type: string
+      title:
+        type: string
+    type: object
+  models.OtherDate:
+    properties:
+      contact_id:
+        type: integer
+      event_date:
+        type: string
+      event_date_day:
+        description: 1-31, for partial dates
+        type: integer
+      event_date_month:
+        description: 1-12, for partial dates
+        type: integer
+      event_name:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.OtherRelationship:
+    properties:
+      contact:
+        $ref: '#/definitions/models.Contact'
+      contact_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      related_contact_name:
+        type: string
+      relationship_name:
+        type: string
+    type: object
+  models.Phone:
+    properties:
+      contact_id:
+        type: integer
+      id:
+        type: integer
+      is_primary:
+        type: boolean
+      phone:
+        type: string
+      type:
+        description: home, work, mobile, fax, other
+        items:
+          type: string
+        type: array
+    type: object
+  models.Relationship:
+    properties:
+      contact:
+        $ref: '#/definitions/models.Contact'
+      contact_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      related_contact:
+        $ref: '#/definitions/models.Contact'
+      related_contact_id:
+        type: integer
+      relationship_type:
+        $ref: '#/definitions/models.RelationshipType'
+    type: object
+  models.RelationshipType:
+    properties:
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      name:
+        type: string
+      reverse_name_female:
+        type: string
+      reverse_name_male:
+        type: string
+      reverse_name_neutral:
+        type: string
+    type: object
+  models.TokenTestResponse:
+    properties:
+      authenticated:
+        example: true
+        type: boolean
+      message:
+        example: API token is valid
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  models.URL:
+    properties:
+      contact_id:
+        type: integer
+      id:
+        type: integer
+      is_primary:
+        type: boolean
+      type:
+        description: website, social, other
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    type: object
+  models.UpcomingEvent:
+    properties:
+      age_or_years:
+        description: Age for birthdays, years for anniversaries (nullable)
+        type: integer
+      contact_id:
+        type: integer
+      days_until:
+        description: Negative = past, 0 = today, positive = future
+        type: integer
+      event_date:
+        description: The actual date of the event
+        type: string
+      event_label:
+        description: custom label
+        type: string
+      event_type:
+        description: '"birthday", "anniversary", something else'
+        type: string
+      full_name:
+        type: string
+      this_year_date:
+        type: string
+      time_description:
+        description: '"Yesterday", "Today", "Tomorrow", "3 days ago", "in 5 days"'
+        type: string
+    type: object
+info:
+  contact:
+    email: support@kindredcard.com
+    name: API Support
+    url: https://kindredcard.com/support
+  description: Personal CRM for managing contacts, relationships, and important dates
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://kindredcard.com/terms
+  title: KindredCard API
+  version: "1.0"
+paths:
+  /api/v1/contacts:
+    post:
+      consumes:
+      - application/json
+      description: Create a new contact with the provided information
+      parameters:
+      - description: Contact information
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.Contact'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created contact
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Contact already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Create a new contact
+      tags:
+      - contacts
+  /api/v1/contacts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a contact by ID. The contact will be marked as deleted
+        but not permanently removed.
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - default: false
+        description: Permanently delete (hard delete)
+        in: query
+        name: permanent
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Contact deleted successfully
+        "400":
+          description: Invalid contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Delete a contact
+      tags:
+      - contacts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information about a specific contact by ID
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contact details
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Invalid contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Get a single contact
+      tags:
+      - contacts
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a contact using HTTP PATCH. Only provided
+        fields will be updated.
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Contact fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContactJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated contact
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Partially update a contact
+      tags:
+      - contacts
+    put:
+      consumes:
+      - application/json
+      description: Replace all fields of an existing contact. Use PATCH for partial
+        updates.
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Updated contact information
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.Contact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated contact
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a contact (full replacement)
+      tags:
+      - contacts
+  /api/v1/contacts/{id}/relationships:
+    post:
+      consumes:
+      - application/json
+      description: Create a relationship between two contacts (e.g., spouse, child,
+        parent)
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Relationship details
+        in: body
+        name: relationship
+        required: true
+        schema:
+          $ref: '#/definitions/models.Relationship'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created relationship
+          schema:
+            $ref: '#/definitions/models.Relationship'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Relationship already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Add relationship to contact
+      tags:
+      - relationships
+  /api/v1/events/upcoming:
+    get:
+      consumes:
+      - application/json
+      description: Get birthdays, anniversaries, and other important dates coming
+        up for all contacts
+      parameters:
+      - default: 30
+        description: Number of days to look ahead
+        in: query
+        maximum: 365
+        minimum: 1
+        name: days
+        type: integer
+      - description: Filter by event type
+        enum:
+        - birthday
+        - anniversary
+        - other
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of upcoming events
+          schema:
+            items:
+              $ref: '#/definitions/models.UpcomingEvent'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Get upcoming events
+      tags:
+      - events
+  /api/v1/export/vcard:
+    get:
+      description: Download all contacts in vCard (.vcf) format
+      produces:
+      - text/vcard
+      responses:
+        "200":
+          description: vCard file download
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Export all contacts as vCard
+      tags:
+      - export
+  /api/v1/tokens:
+    get:
+      consumes:
+      - application/json
+      description: Get all API tokens for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of API tokens (tokens are masked)
+          schema:
+            items:
+              $ref: '#/definitions/models.APIToken'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: List API tokens
+      tags:
+      - tokens
+    post:
+      consumes:
+      - application/json
+      description: Generate a new API token for programmatic access
+      parameters:
+      - description: Token details
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateAPITokenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created token (full token only shown once)
+          schema:
+            $ref: '#/definitions/models.APIToken'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Create API token
+      tags:
+      - tokens
+  /api/v1/tokens/{tokenId}:
+    delete:
+      consumes:
+      - application/json
+      description: Revoke an API token to prevent further use
+      parameters:
+      - description: Token ID
+        in: path
+        minimum: 1
+        name: tokenId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Token revoked successfully
+        "400":
+          description: Invalid token ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Token not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Revoke API token
+      tags:
+      - tokens
+  /api/v1/tokens/validate:
+    get:
+      description: Checks if the provided API token is valid and returns the authenticated
+        user's ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token is valid
+          schema:
+            $ref: '#/definitions/models.TokenTestResponse'
+        "401":
+          description: Unauthorized - Invalid or missing token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Validate API Token
+      tags:
+      - tokens
+  /contacts:
+    get:
+      consumes:
+      - application/json
+      description: Get all contacts for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Contact'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - SessionAuth: []
+      summary: Lists all contacts
+      tags:
+      - contacts
+securityDefinitions:
+  ApiTokenAuth:
+    description: API token for authentication
+    in: header
+    name: session
+    type: apiKey
+swagger: "2.0"

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{if .User}}{{.User.Theme}}{{else}}winter{{end}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+    <title>{{.Title}} - KindredCard</title>
+    
+    <!-- Tailwind CSS (built) -->
+    <link rel="stylesheet" href="/static/css/output.css">
+    
+    {{block "head" .}}{{end}}
+</head>
+<body class="bg-base-200 min-h-screen">
+    <!-- Header -->
+    {{template "header" .}}
+    
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        {{block "content" .}}{{end}}
+    </main>
+    
+    <!-- Toast Container for Notifications -->
+    <div id="toastContainer" class="toast toast-end"></div>
+
+    <!-- Footer -->
+    {{template "footer" .}}
+    
+    <!-- Global Scripts -->
+    <script src="/static/js/main.js"></script>
+    {{block "scripts" .}}{{end}}
+</body>
+</html>

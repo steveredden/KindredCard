@@ -1,0 +1,739 @@
+/*
+ * Copyright (C) 2026 Steve Redden
+ *
+ * KindredCard is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ */
+
+package converter
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
+	"github.com/emersion/go-vcard"
+	"github.com/google/uuid"
+	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
+)
+
+const (
+	AppleOmitYearKey    = "X-APPLE-OMIT-YEAR"
+	AppleOmitYearValue  = "1604"
+	AppleOmitYearValueI = 1604
+	AppleOmitYearPrefix = "1604-"
+
+	XLabelField         = "X-ABLABEL"
+	XDateField          = "X-ABDATE"
+	XRelatedNamesField  = "X-ABRELATEDNAMES"
+	XSocialProfileField = "X-SOCIALPROFILE"
+)
+
+// ContactToVCard converts a Contact model to a vCard
+func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
+	var extraItemIndex int = 1 //function-global extra item index
+
+	card := make(vcard.Card)
+
+	// Version
+	card.SetValue(vcard.FieldVersion, "4.0")
+
+	// UID
+	card.SetValue(vcard.FieldUID, contact.UID)
+
+	// Structured name (N field)
+	name := &vcard.Name{
+		FamilyName:      contact.FamilyName,
+		GivenName:       contact.GivenName,
+		AdditionalName:  contact.MiddleName,
+		HonorificPrefix: contact.Prefix,
+		HonorificSuffix: contact.Suffix,
+	}
+	card.SetName(name)
+
+	// Name fields
+	if contact.FullName != "" {
+		card.SetValue(vcard.FieldFormattedName, contact.FullName)
+	} else {
+		card.SetValue(vcard.FieldFormattedName, contact.GenerateFullName())
+	}
+
+	// Nickname
+	if contact.Nickname != "" {
+		card.SetValue(vcard.FieldNickname, contact.Nickname)
+	}
+
+	// Gender
+	if contact.Gender != "" {
+		card.SetValue(vcard.FieldGender, contact.Gender)
+	}
+
+	// Birthday - try full date first, then partial
+	// https://datatracker.ietf.org/doc/html/rfc6350#section-6.2.5
+	if contact.Birthday != nil {
+		card.SetValue(vcard.FieldBirthday, contact.Birthday.Format("20060102"))
+	} else if contact.BirthdayMonth != nil && contact.BirthdayDay != nil {
+		field := &vcard.Field{}
+
+		if isAppleClient {
+			if field.Params == nil {
+				field.Params = make(vcard.Params)
+			}
+			field.Params.Set(AppleOmitYearKey, AppleOmitYearValue)
+			field.Value = fmt.Sprintf("%s-%02d-%02d", AppleOmitYearValue, *contact.BirthdayMonth, *contact.BirthdayDay)
+		} else {
+			// Partial birthday: --MMDD format
+			field.Value = fmt.Sprintf("--%02d%02d", *contact.BirthdayMonth, *contact.BirthdayDay)
+		}
+
+		card.Add(vcard.FieldBirthday, field)
+	}
+
+	// Anniversary - try full date first, then partial
+	// https://datatracker.ietf.org/doc/html/rfc6350#section-6.2.6
+	if contact.Anniversary != nil {
+
+		if isAppleClient {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			field := &vcard.Field{Value: contact.Anniversary.Format("2006-01-02")}
+			field.Group = itemKey
+			card.Add(XDateField, field)
+
+			labelField := &vcard.Field{Value: "_$!<Anniversary>!$_"}
+			labelField.Group = itemKey
+			card.Add(XLabelField, labelField)
+		} else {
+			card.SetValue(vcard.FieldAnniversary, contact.Anniversary.Format("20060102"))
+		}
+	} else if contact.AnniversaryMonth != nil && contact.AnniversaryDay != nil {
+
+		if isAppleClient {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			field := &vcard.Field{}
+			field.Value = fmt.Sprintf("%s-%02d-%02d", AppleOmitYearValue, *contact.AnniversaryMonth, *contact.AnniversaryDay)
+			if field.Params == nil {
+				field.Params = make(vcard.Params)
+			}
+			field.Params.Set(AppleOmitYearKey, AppleOmitYearValue)
+			field.Group = itemKey
+			card.Add(XDateField, field)
+
+			labelField := &vcard.Field{Value: "_$!<Anniversary>!$_"}
+			labelField.Group = itemKey
+			card.Add(XLabelField, labelField)
+		} else {
+			// Partial anniversary: --MMDD format
+			card.SetValue(vcard.FieldAnniversary, fmt.Sprintf("--%02d%02d", *contact.AnniversaryMonth, *contact.AnniversaryDay))
+		}
+	}
+
+	// Other Dates
+	for _, otherDate := range contact.OtherDates {
+		dateField := &vcard.Field{}
+		labelField := &vcard.Field{}
+
+		if otherDate.EventDate != nil {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			dateField.Group = itemKey
+			labelField.Group = itemKey
+
+			dateField.Value = otherDate.EventDate.Format("20060102")
+			labelField.Value = otherDate.EventName
+
+			card.Add(XLabelField, labelField)
+			card.Add(XDateField, dateField)
+
+		} else if otherDate.EventDateMonth != nil && otherDate.EventDateDay != nil {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			dateField.Group = itemKey
+			labelField.Group = itemKey
+
+			if isAppleClient {
+				dateField.Value = fmt.Sprintf("%s-%02d-%02d", AppleOmitYearValue, *otherDate.EventDateMonth, *otherDate.EventDateDay)
+				if dateField.Params == nil {
+					dateField.Params = make(vcard.Params)
+				}
+				dateField.Params.Set(AppleOmitYearKey, AppleOmitYearValue)
+
+			} else {
+				dateField.Value = fmt.Sprintf("--%02d%02d", *otherDate.EventDateMonth, *otherDate.EventDateDay)
+			}
+			labelField.Value = otherDate.EventName
+
+			card.Add(XLabelField, labelField)
+			card.Add(XDateField, dateField)
+
+		}
+
+	}
+
+	// Emails
+	for _, email := range contact.Emails {
+
+		field := &vcard.Field{Value: email.Email}
+		if field.Params == nil {
+			field.Params = make(vcard.Params)
+		}
+
+		if len(email.Type) > 0 {
+			for _, t := range email.Type {
+				field.Params.Add(vcard.ParamType, t)
+			}
+		}
+
+		if email.IsPrimary {
+			field.Params.Set(vcard.ParamPreferred, "1")
+			if isAppleClient {
+				field.Params.Add(vcard.ParamType, "pref")
+			}
+		}
+		card.Add(vcard.FieldEmail, field)
+	}
+
+	// Phones
+	for _, phone := range contact.Phones {
+
+		field := &vcard.Field{Value: phone.Phone}
+		if field.Params == nil {
+			field.Params = make(vcard.Params)
+		}
+
+		if len(phone.Type) > 0 {
+			for _, t := range phone.Type {
+				field.Params.Add(vcard.ParamType, t)
+			}
+		}
+		if phone.IsPrimary {
+			field.Params.Set(vcard.ParamPreferred, "1")
+			if isAppleClient {
+				field.Params.Add(vcard.ParamType, "pref")
+			}
+		}
+		card.Add(vcard.FieldTelephone, field)
+	}
+
+	// Addresses
+	for _, addr := range contact.Addresses {
+		address := &vcard.Address{
+			StreetAddress: addr.Street,
+			Locality:      addr.City,
+			Region:        addr.State,
+			PostalCode:    addr.PostalCode,
+			Country:       addr.Country,
+		}
+		if address.Field == nil {
+			address.Field = &vcard.Field{}
+		}
+
+		if address.Field.Params == nil {
+			address.Field.Params = make(vcard.Params) // Assuming vcard.Params is a map type
+		}
+		if len(addr.Type) > 0 {
+			for _, t := range addr.Type {
+				address.Field.Params.Add(vcard.ParamType, t)
+			}
+		}
+		if addr.IsPrimary {
+			address.Field.Params.Set(vcard.ParamPreferred, "1")
+			if isAppleClient {
+				address.Field.Params.Add(vcard.ParamType, "pref")
+			}
+		}
+		if addr.IsPrimary {
+			address.Field.Params.Set(vcard.ParamPreferred, "1")
+		}
+		card.AddAddress(address)
+	}
+
+	// Organizations -- only do the first for now
+	if len(contact.Organizations) > 0 {
+		org := contact.Organizations[0]
+		if org.Name != "" {
+			card.SetValue(vcard.FieldOrganization, org.Name)
+		}
+		if org.Title != "" {
+			card.SetValue(vcard.FieldTitle, org.Title)
+		}
+	}
+
+	// URLs
+	for _, url := range contact.URLs {
+
+		field := &vcard.Field{Value: url.URL}
+		if field.Params == nil {
+			field.Params = make(vcard.Params)
+		}
+
+		if len(url.Type) > 0 {
+			for _, t := range url.Type {
+				field.Params.Add(vcard.ParamType, t)
+			}
+		}
+		if url.IsPrimary {
+			field.Params.Set(vcard.ParamPreferred, "1")
+			if isAppleClient {
+				field.Params.Add(vcard.ParamType, "pref")
+			}
+		}
+		card.Add(vcard.FieldURL, field)
+	}
+
+	// Notes
+	if contact.Notes != "" {
+		card.SetValue(vcard.FieldNote, contact.Notes)
+	}
+
+	// Avatar Photo
+	if contact.AvatarBase64 != "" {
+
+		photoField := &vcard.Field{Value: contact.AvatarBase64}
+		photoParams := make(vcard.Params)
+
+		// Determine the MIME subtype for the TYPE parameter
+		mimeSubtype := strings.ToUpper(strings.TrimPrefix(contact.AvatarMimeType, "image/"))
+		photoParams.Add(vcard.ParamType, mimeSubtype)
+
+		if isAppleClient {
+			// vCard 3.0 (B-Encoding)
+			photoParams.Add("ENCODING", "b")
+		} else {
+			// vCard 4.0 (Data URI)
+			photoParams.Add(vcard.ParamValue, "URI")
+			dataURI := fmt.Sprintf("data:%s;base64,%s", contact.AvatarMimeType, contact.AvatarBase64)
+			photoField.Value = dataURI
+		}
+
+		photoField.Params = photoParams
+		card.Add(vcard.FieldPhoto, photoField)
+	}
+
+	// Relationships
+	for _, rel := range contact.Relationships {
+		if rel.RelatedContact != nil {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			namefield := &vcard.Field{Value: rel.RelatedContact.FullName}
+			labelField := &vcard.Field{Value: rel.RelationshipType.Name}
+
+			namefield.Group = itemKey
+			labelField.Group = itemKey
+
+			card.Add(XLabelField, labelField)
+			card.Add(XRelatedNamesField, namefield)
+		}
+	}
+
+	// Other Relationships
+	for _, rel := range contact.OtherRelationships {
+		if rel.RelatedContactName != "" && rel.RelationshipName != "" {
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			namefield := &vcard.Field{Value: rel.RelatedContactName}
+			labelField := &vcard.Field{Value: rel.RelationshipName}
+
+			namefield.Group = itemKey
+			labelField.Group = itemKey
+
+			card.Add(XLabelField, labelField)
+			card.Add(XRelatedNamesField, namefield)
+		}
+	}
+
+	// Revision
+	card.SetValue(vcard.FieldRevision, contact.UpdatedAt.Format(time.RFC3339))
+
+	return card
+}
+
+// VCardToContact converts a vCard to a Contact model
+func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelationshipTypes []models.RelationshipType) (*models.Contact, error) {
+	uid := ""
+	if field := card.Get(vcard.FieldUID); field != nil && field.Value != "" {
+		uid = field.Value
+	} else {
+		uid = uuid.New().String() // generate a new UUID
+	}
+
+	contact := &models.Contact{
+		UID: uid,
+	}
+
+	// Name fields
+	if fn := card.Get(vcard.FieldFormattedName); fn != nil {
+		contact.FullName = fn.Value
+	}
+
+	if n := card.Name(); n != nil {
+		contact.GivenName = n.GivenName
+		contact.FamilyName = n.FamilyName
+		contact.MiddleName = n.AdditionalName
+		contact.Prefix = n.HonorificPrefix
+		contact.Suffix = n.HonorificSuffix
+	}
+
+	// If FullName is empty, generate it
+	if contact.FullName == "" {
+		contact.FullName = contact.GenerateFullName()
+	}
+
+	// Nickname
+	if nick := card.Get(vcard.FieldNickname); nick != nil {
+		contact.Nickname = nick.Value
+	}
+
+	// Gender
+	if gender := card.Get(vcard.FieldGender); gender != nil {
+		contact.Gender = gender.Value
+	}
+
+	// Birthday
+	if bday := card.Get(vcard.FieldBirthday); bday != nil {
+		birthday := bday.Value
+		if strings.HasPrefix(birthday, "--") {
+			// Partial date format: --MMDD
+			if len(birthday) == 6 {
+				month := utils.ParseIntPtr(birthday[2:4])
+				day := utils.ParseIntPtr(birthday[4:6])
+				contact.BirthdayMonth = month
+				contact.BirthdayDay = day
+			}
+		} else {
+			// Full date format: YYYYMMDD or YYYY-MM-DD
+			t, _ := time.Parse("20060102", birthday)
+			if t.IsZero() {
+				t, _ = time.Parse("2006-01-02", birthday)
+			}
+
+			//Apple specific logic
+			if t.Year() == AppleOmitYearValueI {
+
+				monthVal := int(t.Month())
+				dayVal := t.Day()
+
+				contact.BirthdayMonth = utils.IntPtr(monthVal)
+				contact.BirthdayDay = utils.IntPtr(dayVal)
+			} else if !t.IsZero() {
+				contact.Birthday = &t
+			}
+		}
+	}
+
+	// Anniversary
+	if anniv := card.Get(vcard.FieldAnniversary); anniv != nil {
+		anniversary := anniv.Value
+		if strings.HasPrefix(anniversary, "--") {
+			// Partial date format: --MMDD
+			if len(anniversary) == 6 {
+				month := utils.ParseIntPtr(anniversary[2:4])
+				day := utils.ParseIntPtr(anniversary[4:6])
+				contact.AnniversaryMonth = month
+				contact.AnniversaryDay = day
+			}
+		} else {
+			// Full date format: YYYYMMDD or YYYY-MM-DD
+			t, _ := time.Parse("20060102", anniversary)
+			if t.IsZero() {
+				t, _ = time.Parse("2006-01-02", anniversary)
+			}
+			if !t.IsZero() {
+				contact.Anniversary = &t
+			}
+		}
+	}
+
+	// Emails
+	for _, field := range card[vcard.FieldEmail] {
+		email := models.Email{
+			Email:     field.Value,
+			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
+		}
+
+		for _, t := range field.Params.Types() {
+			if t == "pref" { //apple or v3 includes primary as a type?
+				email.IsPrimary = true
+			} else {
+				email.Type = append(email.Type, t)
+			}
+		}
+		if len(email.Type) < 1 {
+			email.Type = append(email.Type, "home")
+		}
+		contact.Emails = append(contact.Emails, email)
+	}
+
+	// Phones
+	for _, field := range card[vcard.FieldTelephone] {
+		phone := models.Phone{
+			Phone:     field.Value,
+			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
+		}
+
+		for _, t := range field.Params.Types() {
+			if t == "pref" { //apple or v3 includes primary as a type?
+				phone.IsPrimary = true
+			} else if t == "voice" {
+				continue //discard
+			} else {
+				phone.Type = append(phone.Type, t)
+			}
+		}
+		if len(phone.Type) < 1 {
+			phone.Type = append(phone.Type, "mobile")
+		}
+		contact.Phones = append(contact.Phones, phone)
+	}
+
+	// Addresses
+	for _, addr := range card.Addresses() {
+		address := models.Address{
+			Street:     addr.StreetAddress,
+			City:       addr.Locality,
+			State:      addr.Region,
+			PostalCode: addr.PostalCode,
+			Country:    addr.Country,
+			IsPrimary:  addr.Field.Params.Get(vcard.ParamPreferred) == "1",
+		}
+		for _, t := range addr.Params.Types() {
+			if t == "pref" { //apple or v3 includes primary as a type?
+				address.IsPrimary = true
+			} else {
+				address.Type = append(address.Type, t)
+			}
+		}
+		if len(address.Type) < 1 {
+			address.Type = append(address.Type, "home")
+		}
+		contact.Addresses = append(contact.Addresses, address)
+	}
+
+	// Organization
+	if org := card.Get(vcard.FieldOrganization); org != nil {
+		organization := models.Organization{
+			Name:      org.Value,
+			IsPrimary: true,
+		}
+		if title := card.Get(vcard.FieldTitle); title != nil {
+			organization.Title = title.Value
+		}
+		contact.Organizations = append(contact.Organizations, organization)
+	}
+
+	// URLs
+	for _, field := range card[vcard.FieldURL] {
+		url := models.URL{URL: field.Value}
+		for _, t := range field.Params.Types() {
+			if t == "pref" { //apple or v3 includes primary as a type?
+				url.IsPrimary = true
+			} else {
+				url.Type = append(url.Type, t)
+			}
+		}
+		if len(url.Type) < 1 {
+			url.Type = append(url.Type, "other")
+		}
+		contact.URLs = append(contact.URLs, url)
+	}
+
+	// Notes
+	if note := card.Get(vcard.FieldNote); note != nil {
+		contact.Notes = note.Value
+	}
+
+	// Photo/Avatar
+	if photo := card.Get(vcard.FieldPhoto); photo != nil {
+		parts, err := parseVCardPhotoProperty(photo)
+		if err != nil {
+			fmt.Println("Error parsing data URL:", err)
+			return nil, fmt.Errorf("failed to process photo property: %w", err)
+		}
+		contact.AvatarBase64 = parts.Base64Data
+		contact.AvatarMimeType = parts.MimeType
+	}
+
+	// X-SOCIALPROFILE (iOS) -> convert to URL directly
+	for _, field := range card[XSocialProfileField] {
+		url := models.URL{URL: field.Value}
+		for _, t := range field.Params.Types() {
+			url.Type = append(url.Type, t)
+		}
+		if len(url.Type) < 1 {
+			url.Type = append(url.Type, "other")
+		}
+		contact.URLs = append(contact.URLs, url)
+	}
+
+	// X-ABLABELS and X-ABRELATEDNAME and X-ABDATE
+
+	fieldsOfInterest := map[string]struct{}{
+		XLabelField:        {},
+		XDateField:         {},
+		XRelatedNamesField: {},
+	}
+
+	contactLookup := make(map[string]*models.Contact)
+	for _, c := range allContacts {
+		contactLookup[strings.ToLower(c.FullName)] = c
+	}
+
+	relTypeLookup := make(map[string]*models.RelationshipType)
+	for i := range allRelationshipTypes {
+		rt := &allRelationshipTypes[i]
+		relTypeLookup[strings.ToLower(rt.Name)] = rt
+	}
+
+	labelMap := make(map[string]string)
+	relationshipMap := make(map[string]models.Relationship)
+	otherDateMap := make(map[string]models.OtherDate)
+
+	for fieldName, fieldSlice := range card {
+		if _, ok := fieldsOfInterest[fieldName]; !ok {
+			continue
+		}
+
+		for _, field := range fieldSlice {
+			if !strings.HasPrefix(field.Group, "item") {
+				continue
+			}
+
+			groupKey := field.Group
+
+			switch fieldName {
+			case XRelatedNamesField:
+				rel := relationshipMap[groupKey]
+				if rel.RelatedContact == nil {
+					rel.RelatedContact = &models.Contact{}
+				}
+				if rel.RelationshipType == nil {
+					rel.RelationshipType = &models.RelationshipType{}
+				}
+				rel.RelatedContact.FullName = strings.TrimSpace(field.Value)
+				relationshipMap[groupKey] = rel
+
+			case XDateField:
+				od := otherDateMap[groupKey]
+				dateVal := field.Value
+
+				if strings.HasPrefix(dateVal, "1604-") && len(dateVal) == 10 { //Apple default of 1604 for blank
+					// Apple format: 1604-MM-DD
+					od.EventDateMonth = utils.ParseIntPtr(dateVal[5:7])
+					od.EventDateDay = utils.ParseIntPtr(dateVal[8:10])
+				} else if strings.HasPrefix(dateVal, "--") {
+					// Standard No-Year: --MMDD or --MM-DD
+					cleanDate := strings.ReplaceAll(dateVal, "-", "")
+					if len(cleanDate) == 4 {
+						od.EventDateMonth = utils.ParseIntPtr(cleanDate[0:2])
+						od.EventDateDay = utils.ParseIntPtr(cleanDate[2:4])
+					}
+				} else {
+					// Full Date: Try YYYY-MM-DD then YYYYMMDD
+					t, _ := time.Parse("2006-01-02", dateVal)
+					if t.IsZero() {
+						t, _ = time.Parse("20060102", dateVal)
+					}
+					if !t.IsZero() {
+						od.EventDate = &t
+					}
+				}
+				otherDateMap[groupKey] = od
+
+			case XLabelField:
+
+				labelText := field.Value
+
+				if after, ok := strings.CutPrefix(labelText, "_$!<"); ok {
+					labelText = after
+					labelText = strings.TrimSuffix(labelText, ">!$_")
+
+					// Apple proprietary -> Format CamelCase to Space
+					var schemaName strings.Builder
+					for i, r := range labelText {
+						if i > 0 && unicode.IsUpper(r) {
+							schemaName.WriteString(" ")
+						}
+						schemaName.WriteString(string(r))
+					}
+					labelText = schemaName.String()
+				}
+
+				labelMap[groupKey] = labelText
+			}
+		}
+	}
+
+	// 5a. Finalize Other Dates
+	for groupKey, otherDate := range otherDateMap {
+		label := labelMap[groupKey]
+		if label == "" {
+			continue
+		} // Ignore dates without labels (event name)
+
+		otherDate.EventName = label
+		hasFullDate := otherDate.EventDate != nil && !otherDate.EventDate.IsZero()
+		hasPartialDate := otherDate.EventDateMonth != nil && otherDate.EventDateDay != nil
+
+		if hasFullDate || hasPartialDate {
+			if strings.EqualFold(otherDate.EventName, "Anniversary") {
+				if hasFullDate {
+					contact.Anniversary = otherDate.EventDate
+				} else {
+					contact.AnniversaryMonth = otherDate.EventDateMonth
+					contact.AnniversaryDay = otherDate.EventDateDay
+				}
+			} else {
+				contact.OtherDates = append(contact.OtherDates, otherDate)
+			}
+		}
+	}
+
+	// 5b. Finalize Relationships
+	for groupKey, relationship := range relationshipMap {
+		label := labelMap[groupKey]
+		if label == "" {
+			continue
+		} // Ignore relationships without labels (relationship type)
+
+		relationship.RelationshipType.Name = label
+		if relationship.RelatedContact != nil && relationship.RelatedContact.FullName != "" {
+			searchName := strings.ToLower(relationship.RelatedContact.FullName)
+			searchLabel := strings.ToLower(label)
+
+			// Search for matches
+			matchedContact, contactFound := contactLookup[searchName]
+			matchedRelType, relTypeFound := relTypeLookup[searchLabel]
+
+			if contactFound && relTypeFound {
+				// SUCCESS: We identified real KindredCard db values
+				// Set the actual DB-backed objects
+				relationship.RelatedContact = matchedContact
+				relationship.RelationshipType = matchedRelType
+
+				// Add to the main Relationships slice (foreign key relationship)
+				contact.Relationships = append(contact.Relationships, relationship)
+			} else {
+				// FAIL: Insert as other_relationship (plain text storage)
+				otherRelationship := models.OtherRelationship{
+					RelatedContactName: relationship.RelatedContact.FullName,
+					RelationshipName:   label,
+				}
+				contact.OtherRelationships = append(contact.OtherRelationships, otherRelationship)
+			}
+		}
+	}
+
+	return contact, nil
+}

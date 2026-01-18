@@ -1,0 +1,114 @@
+{{define "content"}}
+<div class="container mx-auto px-4 py-8 max-w-md">
+    <!-- Logo/Header -->
+    <div class="text-center mb-8">
+        <div class="inline-block">
+            <span class="text-6xl mb-4 block animate-bounce">💙</span>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                KindredCard
+            </h1>
+            <p class="text-base-content/60 mt-2">Personal CRM for Your Relationships</p>
+        </div>
+    </div>
+
+    <!-- Setup Card -->
+    <div class="card bg-base-100 shadow-2xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl justify-center mb-2">Welcome!</h2>
+            <p class="text-center text-sm text-base-content/70 mb-6">
+                Create your account to get started
+            </p>
+
+            {{if .Error}}
+            <div class="alert alert-error shadow-lg mb-4">
+                <div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{.Error}}</span>
+                </div>
+            </div>
+            {{end}}
+
+            <form action="/setup" method="POST" class="space-y-4">
+                <!-- Email -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Email Address</span>
+                    </label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <input type="email" 
+                                name="email" 
+                                class="grow" 
+                                placeholder="your@email.com" 
+                                required 
+                                autofocus />
+                    </label>
+                </div>
+
+                <!-- Password -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Password</span>
+                    </label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <input type="password" 
+                                name="password" 
+                                class="grow" 
+                                placeholder="••••••••" 
+                                required
+                                minlength="8" />
+                    </label>
+                    <label class="label">
+                        <span class="label-text-alt text-base-content/60">
+                            Minimum 8 characters
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Confirm Password</span>
+                    </label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <input type="password" 
+                                name="confirm_password" 
+                                class="grow" 
+                                placeholder="••••••••" 
+                                required
+                                minlength="8" />
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Create Account
+                    </button>
+                </div>
+                <!-- Login Link -->
+                <div class="mt-2 text-center text-sm">
+                    <a href="/login" class="link">Log In<a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/setup.js"></script>
+{{end}}

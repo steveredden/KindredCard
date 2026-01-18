@@ -1,0 +1,92 @@
+{{define "header"}}
+<header class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4">
+        <!-- Logo/Brand -->
+        <div class="flex-none">
+            <a href="/" class="btn btn-ghost normal-case text-xl gap-2">
+                <!-- <span class="text-primary text-2xl">💙</span> -->
+                <span class="font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    KindredCard
+                </span>
+            </a>
+        </div>
+        
+        {{if .User}}
+        <!-- Spacer -->
+        <div class="flex-1"></div>
+        
+        <!-- Navigation Menu -->
+        <div class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/" class="{{if eq .ActivePage "contacts"}}active{{end}}">Contacts</a></li>
+                <li><a href="/events" class="{{if eq .ActivePage "events"}}active{{end}}">Events</a></li>
+                <li><a href="/settings" class="{{if eq .ActivePage "settings"}}active{{end}}">Settings</a></li>
+            </ul>
+        </div>
+        
+        <!-- Divider -->
+        <div class="flex-none">
+            <div class="divider divider-horizontal mx-1"></div>
+        </div>
+        
+        <!-- Theme Switcher -->
+        <div class="flex-none">
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle border border-base-300/50 bg-base-200/50 hover:bg-base-200 hover:border-base-300 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                </label>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-2xl bg-base-100 rounded-box w-96 max-h-96 overflow-y-auto">
+                    <li class="menu-title"><span>Choose Theme</span></li>
+                    <li><a onclick="setTheme('light')">☀️ Light</a></li>
+                    <li><a onclick="setTheme('dark')">🌙 Dark</a></li>
+                    <li><a onclick="setTheme('cupcake')">🧁 Cupcake</a></li>
+                    <li><a onclick="setTheme('bumblebee')">🐝 Bumblebee</a></li>
+                    <li><a onclick="setTheme('emerald')">💚 Emerald</a></li>
+                    <li><a onclick="setTheme('corporate')">💼 Corporate</a></li>
+                    <li><a onclick="setTheme('synthwave')">🌃 Synthwave</a></li>
+                    <li><a onclick="setTheme('retro')">📼 Retro</a></li>
+                    <!-- <li><a onclick="setTheme('cyberpunk')">🤖 Cyberpunk</a></li> -->
+                    <li><a onclick="setTheme('valentine')">💝 Valentine</a></li>
+                    <li><a onclick="setTheme('halloween')">🎃 Halloween</a></li>
+                    <li><a onclick="setTheme('garden')">🌸 Garden</a></li>
+                    <li><a onclick="setTheme('forest')">🌲 Forest</a></li>
+                    <li><a onclick="setTheme('aqua')">🌊 Aqua</a></li>
+                    <li><a onclick="setTheme('lofi')">🎵 Lo-Fi</a></li>
+                    <li><a onclick="setTheme('pastel')">🎨 Pastel</a></li>
+                    <li><a onclick="setTheme('fantasy')">🦄 Fantasy</a></li>
+                    <!-- <li><a onclick="setTheme('wireframe')">📐 Wireframe</a></li> -->
+                    <li><a onclick="setTheme('black')">⬛ Black</a></li>
+                    <li><a onclick="setTheme('luxury')">💎 Luxury</a></li>
+                    <li><a onclick="setTheme('dracula')">🧛 Dracula</a></li>
+                    <li><a onclick="setTheme('business')">👔 Business</a></li>
+                    <li><a onclick="setTheme('night')">🌃 Night</a></li>
+                    <li><a onclick="setTheme('coffee')">☕ Coffee</a></li>
+                    <li><a onclick="setTheme('winter')">❄️ Winter</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="flex-none">
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle border border-base-300/50 bg-base-200/50 hover:bg-base-200 hover:border-base-300 avatar placeholder mr-2">
+                    <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
+                        <span class="text-xl">{{if .User.Email}}{{initial .User.Email}}{{else}}U{{end}}</span>
+                    </div>
+                </label>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-2xl bg-base-100 rounded-box w-64">
+                    <li class="menu-title">
+                        <span>{{.User.Email}}</span>
+                    </li>
+                    <li><a href="/settings">⚙️ Settings</a></li>
+                    <li><a href="/swagger/index.html">📘 Swagger</a></li>
+                    <li><a href="/logout">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</header>
+{{end}}

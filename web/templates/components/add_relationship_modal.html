@@ -1,0 +1,97 @@
+{{define "add_relationship_modal"}}
+<!-- Add Relationship Modal -->
+<dialog id="addRelationshipModal" class="modal">
+    <div class="modal-box w-11/12 max-w-2xl">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-2xl">Add Relationship</h3>
+            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="closeRelationshipModal()">✕</button>
+        </div>
+
+        <!-- Contact Selection -->
+        <div class="form-control mb-4">
+            <label class="label">
+                <span class="label-text font-semibold">Contact</span>
+            </label>
+            <select id="relatedContactSelect" class="select select-bordered" onchange="handleRelatedContactChange()">
+                <option value="">-- Select contact --</option>
+                {{range .AllContacts}}
+                {{if ne .ID $.Contact.ID}}
+                <option value="{{.ID}}">{{.FullName}}</option>
+                {{end}}
+                {{end}}
+                <option value="new">➕ Create New Contact</option>
+            </select>
+        </div>
+
+        <!-- New Contact Form (hidden by default) -->
+        <div id="newContactFormSection" class="hidden">
+            <div class="divider">New Contact</div>
+            <div class="card bg-base-200 shadow-md p-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">First Name *</span>
+                        </label>
+                        <input type="text" id="new_given_name" class="input input-bordered" placeholder="First name" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Last Name</span>
+                        </label>
+                        <input type="text" id="new_family_name" class="input input-bordered" placeholder="Last name">
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Middle Name</span>
+                        </label>
+                        <input type="text" id="new_middle_name" class="input input-bordered" placeholder="Middle name">
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Gender</span>
+                        </label>
+                        <select id="new_gender" class="select select-bordered">
+                            <option value="">Not specified</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                            <option value="O">Other</option>
+                            <option value="N">Prefer not to say</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relationship Type Selection -->
+        <div class="form-control mb-6">
+            <label class="label">
+                <span class="label-text font-semibold">Relationship Type</span>
+            </label>
+            <select id="relationshipTypeSelect" class="select select-bordered">
+                <option value="">-- Select type --</option>
+                {{range .RelationshipTypes}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+            </select>
+            <label class="label">
+                <span class="label-text-alt">How is this person related to {{.Contact.GivenName}}?</span>
+            </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-action">
+            <button type="button" class="btn btn-ghost" onclick="closeRelationshipModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveRelationship()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Relationship
+            </button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+{{end}}

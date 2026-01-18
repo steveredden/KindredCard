@@ -1,0 +1,51 @@
+name: kindredcard
+services:
+  postgres:
+    image: postgres:17.7
+    container_name: kindredcard-db
+    environment:
+      TZ: America/Chicago
+      POSTGRES_USER: ${DB_USER:-kindredcard}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kindredcardsecretpassword}
+      POSTGRES_DB: ${DB_NAME:-kindredcard}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../migrations/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ../migrations:/docker-entrypoint-initdb.d/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kindredcard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kindredcard-network
+    restart: unless-stopped
+
+  app:
+    image: kindredcard:latest
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-kindredcard}
+      DB_PASSWORD: ${DB_PASSWORD:-kindredcardsecretpassword}
+      DB_NAME: ${DB_NAME:-kindredcard}
+      APP_KEY: ${APP_KEY:-change-this-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kindredcard-network
+    restart: unless-stopped
+
+networks:
+  kindredcard-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
