@@ -1,0 +1,57 @@
+{{define "content"}}
+<div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Gender Assignment Utility</h1>
+        <span id="remaining-count" class="badge badge-outline">initial count: {{len .Contacts}}</span>
+    </div>
+
+    <div class="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[400px]">
+        
+        <button onclick="assignGender('M')" class="btn btn-primary btn-lg w-32 h-64 text-4xl shadow-xl">
+            M
+        </button>
+
+        <div id="contact-deck" class="w-full max-w-sm">
+            {{if .Contacts}}
+                {{range $index, $contact := .Contacts}}
+                <div class="contact-card {{if ne $index 0}}hidden{{end}}" data-id="{{$contact.ID}}">
+                    <div class="card bg-base-100 shadow-xl border border-base-300">
+                        <!-- AVATAR -->
+                        {{if $contact.AvatarBase64}}
+                        <div class="flex items-start justify-center pt-4"> 
+                            <div class="avatar">
+                                <div class="w-20 h-20 rounded-full ring ring-primary-content ring-offset-base-100 ring-offset-2">
+                                    <img src="data:{{$contact.AvatarMimeType}};base64,{{$contact.AvatarBase64}}" alt="{{$contact.FullName}}" />
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                        <div class="card-body items-center text-center">
+                            <h2 class="card-title text-2xl font-bold">{{$contact.FullName}}</h2>
+                            
+                            <div class="flex justify-between w-full mt-6">
+                                <button onclick="assignGender('skip')" class="btn btn-ghost text-info">Skip Contact</button>
+                                <button onclick="deleteContact()" class="btn btn-ghost text-error">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            {{else}}
+                <div class="text-center py-20">
+                    <h3 class="text-xl">All caught up! 🎉</h3>
+                    <p>No contacts are missing gender assignments.</p>
+                </div>
+            {{end}}
+        </div>
+
+        <button onclick="assignGender('F')" class="btn btn-secondary btn-lg w-32 h-64 text-4xl shadow-xl">
+            F
+        </button>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/util-gender.js"></script>
+{{end}}
