@@ -39,7 +39,13 @@ func New(host, port, user, password, dbname string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{db: db}, nil
+	// Run migrations automatically on startup
+	d := &Database{db: db}
+	if err := d.Migrate(); err != nil {
+		return nil, err
+	}
+
+	return d, nil
 }
 
 // Close closes the database connection
