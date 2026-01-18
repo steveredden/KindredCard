@@ -6,8 +6,7 @@ Your personal CRM system built in Go with PostgreSQL backend and CardDAV server 
 
 <img src="https://github.com/steveredden/KindredCard/wiki/assets/images/index.png"/>
 <p align="center">
-  <img src="https://github.com/steveredden/KindredCard/wiki/assets/images/index-modal1.png" width=50%/>
-  <img src="https://github.com/steveredden/KindredCard/wiki/assets/images/index-modal2.png" width=50%/>
+  <img src="https://github.com/steveredden/KindredCard/wiki/assets/images/index-modal1.png" width=49%/><img src="https://github.com/steveredden/KindredCard/wiki/assets/images/index-modal2.png" width=49%/>
 </p>
 
 ## Features
