@@ -137,6 +137,9 @@ func main() {
 	web.HandleFunc("/settings/password", handler.RotatePassword).Methods("POST")
 	web.HandleFunc("/settings/delete-account", handler.DeleteAccount).Methods("DELETE")
 
+	// Utilities
+	web.HandleFunc("/utilities/gender-assignment", handler.GenderAssignmentPage).Methods("GET")
+
 	// Protected API routes
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(middleware.APIAuthMiddleware(database))
