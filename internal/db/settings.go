@@ -220,7 +220,7 @@ func (d *Database) CreateNotificationSetting(userID int, notifier *models.Notifi
 			user_id, name, webhook_url, days_look_ahead, notification_time,
 			include_birthdays, include_anniversaries, include_event_dates,
 			other_event_regex, enabled, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
 		RETURNING id
 	`
 
