@@ -155,6 +155,7 @@ docker-login:
 	@echo "$(GITHUB_TOKEN)" | docker login $(REGISTRY) -u $(GH_USER) --password-stdin
 
 # Build, tag, and push both 'latest' and the specific version
+# EXAMPLE:  make docker-push VERSION=v0.0.1
 docker-push: docker-login docker-build
 	@echo "🚀 Pushing images to $(REGISTRY)..."
 	docker tag kindredcard:latest $(REGISTRY)/$(IMAGE_NAME):latest

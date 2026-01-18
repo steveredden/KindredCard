@@ -28,6 +28,7 @@ services:
     env_file:
       - .env
     environment:
+      TZ: America/Chicago
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-kindredcard}
