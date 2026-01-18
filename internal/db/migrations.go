@@ -43,7 +43,7 @@ func (d *Database) Migrate() error {
 			continue
 		}
 
-		logger.Info("Applying migration: %s", entry.Name())
+		logger.Info("[DATABASE] Applying migration: %s", entry.Name())
 		content, _ := migrationFiles.ReadFile("migrations/" + entry.Name())
 
 		tx, err := d.db.Begin()
