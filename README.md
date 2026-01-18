@@ -12,7 +12,7 @@ Your personal CRM system built in Go with PostgreSQL backend and CardDAV server 
 ## Features
 
 - ✅ **Full Contact Management**: Names, emails, phones, addresses, organizations, notes, gender, and more
-- ✅ **Fuzzy Dates**: Support for approximate dates (when year is unknown)
+- ✅ **Events Dashbaord**: Keep track of your contacts' important life events - [link](https://github.com/steveredden/KindredCard/wiki/Events)
 - ✅ **CardDAV Server**: Sync contacts with any CardDAV-compatible client - [link](https://github.com/steveredden/KindredCard/wiki/CardDAV)
 - ✅ **RESTful API**: OpenAPI 3.0 specification for programmatic access - [link](https://github.com/steveredden/KindredCard/wiki/REST-API)
 - ✅ **Discord Notifications**: Webhook integration to notify when events are ocurring - [link](https://github.com/steveredden/KindredCard/wiki/Discord_Notifications)
