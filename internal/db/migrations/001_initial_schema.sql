@@ -340,9 +340,9 @@ INSERT INTO relationship_types (name, reverse_name_male, reverse_name_female, re
     ('Ex-Partner', 'Ex-Husband', 'Ex-Wife', 'Ex-Partner', TRUE),
 
     -- Other Relationships
-    ('Boyfriend', 'Boyfriend', 'Girlfriend', 'Significant Other', TRUE)
-    ('Girlfriend', 'Boyfriend', 'Girlfriend', 'Significant Other', TRUE)
-    ('Significant Other', 'Significant Other', 'Significant Other', 'Significant Other', TRUE)
+    ('Boyfriend', 'Boyfriend', 'Girlfriend', 'Significant Other', TRUE),
+    ('Girlfriend', 'Boyfriend', 'Girlfriend', 'Significant Other', TRUE),
+    ('Significant Other', 'Significant Other', 'Significant Other', 'Significant Other', TRUE),
     
     -- Step family
     ('Step-Mother', 'Step-Son', 'Step-Daughter', 'Step-Child', TRUE),
