@@ -23,6 +23,7 @@ services:
 
   app:
     image: ghcr.io/steveredden/kindredcard:latest
+    container_name: kindredcard-app
     ports:
       - "8081:8080"
     env_file:
