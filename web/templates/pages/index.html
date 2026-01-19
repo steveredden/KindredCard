@@ -84,9 +84,12 @@
 <div id="contactsGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     {{range .Contacts}}
     <div class="contact-card cursor-pointer hover:scale-105 transition-transform duration-200" 
-         data-contact-id="{{.ID}}"
-         data-contact-name="{{.FullName}}"
-         onclick="openContactCard({{.ID}})">
+        data-contact-id="{{.ID}}"
+        data-contact-name="{{.FullName}}"
+        data-contact-nickname="{{.Nickname}}"
+        data-contact-email="{{if .Emails}}{{with index .Emails 0}}{{.Email}}{{end}}{{end}}"
+        data-contact-phone="{{if .Phones}}{{with index .Phones 0}}{{.Phone}}{{end}}{{end}}"
+        onclick="openContactCard({{.ID}})">
         <!-- Business Card Style -->
         <div class="card bg-gradient-to-br from-primary to-secondary text-primary-content shadow-xl h-48 relative overflow-hidden">
             <div class="absolute inset-0 opacity-10">

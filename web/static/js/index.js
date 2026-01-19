@@ -20,12 +20,17 @@
         const lowerQuery = query.toLowerCase();
         
         cards.forEach(card => {
-            const name = card.dataset.contactName.toLowerCase();
-            if (name.includes(lowerQuery)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
+            const name = (card.dataset.contactName || '').toLowerCase();
+            const nickname = (card.dataset.contactNickname || '').toLowerCase();
+            const email = (card.dataset.contactEmail || '').toLowerCase();
+            const phone = (card.dataset.contactPhone || '').toLowerCase();
+            
+            const matches = name.includes(lowerQuery) ||
+                            nickname.includes(lowerQuery) ||
+                            email.includes(lowerQuery) ||
+                            phone.includes(lowerQuery);
+        
+            card.style.display = matches ? '' : 'none';
         });
     };
 
