@@ -137,6 +137,10 @@ func main() {
 	web.HandleFunc("/settings/password", handler.RotatePassword).Methods("POST")
 	web.HandleFunc("/settings/delete-account", handler.DeleteAccount).Methods("DELETE")
 
+	// Utilities
+	web.HandleFunc("/utilities/gender-assignment", handler.GenderAssignmentPage).Methods("GET")
+	web.HandleFunc("/utilities/phone-formatter", handler.PhoneFormatterPage).Methods("GET")
+
 	// Protected API routes
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(middleware.APIAuthMiddleware(database))
@@ -148,7 +152,10 @@ func main() {
 	api.HandleFunc("/contacts/{id:[0-9]+}/avatar", handler.UploadAvatarAPI).Methods("POST")
 	api.HandleFunc("/contacts/{id:[0-9]+}/avatar", handler.DeleteAvatarAPI).Methods("DELETE")
 	api.HandleFunc("/contacts/search", handler.SearchContactsAPI).Methods("GET")
+
+	// Contact (and related) PATCH
 	api.HandleFunc("/contacts/{id:[0-9]+}", handler.PatchContactAPI).Methods("PATCH")
+	api.HandleFunc("/phones/{pid:[0-9]+}", handler.UpdatePhoneAPI).Methods("PATCH")
 
 	// Preferences / Theme
 	api.HandleFunc("/user/preferences", handler.UpdatePreferencesAPI).Methods("PUT")

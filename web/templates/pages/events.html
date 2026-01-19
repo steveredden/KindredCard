@@ -61,7 +61,9 @@
                             <span class="my-2 text-sm font-semibold text-base-content/60">{{.EventDescription}}</span>
                             <span></span>
                             {{else}}
-							<span class="text-base-content/70 mr-4">{{.DayFormatted}}</span>
+							<div class="tooltip tooltip-right" data-tip="Calculating..." data-event-date="{{.EventDate.Format "2006-01-02"}}">
+                                <span class="text-base-content/70 mr-4 cursor-help">{{.DayFormatted}}</span>
+                            </div>
 							<span class="mr-4 min-w-[130px]"><a class="link" href="/contacts/{{.ContactID}}">{{.FullName}}</a></span>
 							<span class="text-base-content/80">- {{.EventDescription}}</span>
                             {{end}}
@@ -85,4 +87,8 @@
     </div>
 
 </div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/events.js"></script>
 {{end}}

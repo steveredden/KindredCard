@@ -78,6 +78,11 @@ type ContactJSONPatch struct {
 	ExcludeFromSync *bool   `json:"exclude_from_sync" example:"false"`
 }
 
+type PhoneJSONPatch struct {
+	ID    *int    `json:"id" example:"1"`
+	Phone *string `json:"phone" example:"(555)122-4121"`
+}
+
 // OtherDateJSON is used for JSON marshaling/unmarshaling of other dates
 type OtherDateJSONPatch struct {
 	EventName      *string `json:"event_name"`

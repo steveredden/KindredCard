@@ -16,9 +16,10 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/steveredden/KindredCard/internal/discord"
+	"github.com/steveredden/KindredCard/internal/mailer"
 	"github.com/steveredden/KindredCard/internal/middleware"
 	"github.com/steveredden/KindredCard/internal/models"
-	"github.com/steveredden/KindredCard/internal/notifications"
 )
 
 // Contacts Setting Page
@@ -195,13 +196,32 @@ func (h *Handler) TestNotificationAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get user's notification settings
 	settings, err := h.db.GetNotificationSettingByID(user.ID, id)
-	if err != nil || settings.WebhookURL == "" {
+	if err != nil {
 		http.Error(w, "No webhook URL configured", http.StatusBadRequest)
 		return
 	}
 
 	// Send test notification
-	err = notifications.SendTestNotification(settings.WebhookURL, h.baseURL)
+	switch settings.ProviderType {
+	case "discord":
+		if settings.WebhookURL == nil || *settings.WebhookURL == "" {
+			http.Error(w, "No webhook URL configured", 400)
+			return
+		}
+		err = discord.SendTestNotification(*settings.WebhookURL, h.baseURL)
+
+	case "smtp":
+		if settings.TargetAddress == nil || *settings.TargetAddress == "" {
+			http.Error(w, "No email address configured", 400)
+			return
+		}
+		err = mailer.SendTestNotification(*settings.TargetAddress, h.baseURL)
+
+	default:
+		http.Error(w, "Unknown provider type", 400)
+		return
+	}
+
 	if err != nil {
 		http.Error(w, "Failed to send test notification", http.StatusInternalServerError)
 		return

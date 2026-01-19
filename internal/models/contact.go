@@ -97,11 +97,12 @@ type Email struct {
 
 // Phone represents a phone number
 type Phone struct {
-	ID        int      `json:"id"`
-	ContactID int      `json:"contact_id"`
-	Phone     string   `json:"phone"`
-	Type      []string `json:"type"` // home, work, mobile, fax, other
-	IsPrimary bool     `json:"is_primary"`
+	ID            int        `json:"id"`
+	ContactID     int        `json:"contact_id"`
+	Phone         string     `json:"phone"`
+	Type          []string   `json:"type"` // home, work, mobile, fax, other
+	IsPrimary     bool       `json:"is_primary"`
+	LastFormatted *time.Time `json:"last_formatted_at"`
 }
 
 // Address represents a physical address

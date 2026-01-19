@@ -1,63 +1,45 @@
-{{define "add_webhook_modal"}}
-<!-- Add/Edit Webhook Modal -->
-<dialog id="webhookModal" class="modal">
+{{define "add_notification_modal"}}
+<!-- Add/Edit Notification Modal -->
+<dialog id="notificationModal" class="modal">
     <div class="modal-box w-11/12 max-w-3xl">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h3 class="font-bold text-2xl" id="webhookModalTitle">Add Discord Webhook</h3>
-            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="closeWebhookModal()">✕</button>
+            <h3 class="font-bold text-2xl" id="notificationModalTitle">Add Notification</h3>
+            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="closeNotificationModal()">✕</button>
         </div>
 
-        <form id="webhookForm" class="space-y-4">
-            <input type="hidden" id="webhook_id" name="webhook_id">
+        <form id="notificationForm" class="space-y-4">
+            <input type="hidden" id="notification_id" name="notification_id">
+            <input type="hidden" id="notification_provider_type" name="notification_provider_type" value="discord">
 
             <!-- Name -->
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text font-semibold">Webhook Name*</span>
+                    <span class="label-text font-semibold">Notification Name*</span>
                 </label>
-                <input type="text" id="webhook_name" name="webhook_name" class="input input-bordered" placeholder="My Birthday Notifications" required>
+                <input type="text" id="notification_name" name="notification_name" class="input input-bordered" placeholder="My Birthday Notifications" required>
                 <label class="label">
-                    <span class="label-text-alt">A friendly name to identify this webhook</span>
+                    <span class="label-text-alt">A friendly name to identify this notification</span>
                 </label>
             </div>
 
-            <!-- Event Type
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text font-semibold">Event Type</span>
-                </label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label class="label cursor-pointer border-2 border-base-300 rounded-lg p-4 hover:border-primary">
-                        <div class="flex items-center gap-3">
-                            <input type="radio" name="event_type" value="birthday" class="radio radio-primary" checked>
-                            <div>
-                                <span class="text-2xl">🎂</span>
-                                <span class="font-semibold ml-2">Birthdays</span>
-                            </div>
-                        </div>
-                    </label>
-                    <label class="label cursor-pointer border-2 border-base-300 rounded-lg p-4 hover:border-secondary">
-                        <div class="flex items-center gap-3">
-                            <input type="radio" name="event_type" value="anniversary" class="radio radio-secondary">
-                            <div>
-                                <span class="text-2xl">💍</span>
-                                <span class="font-semibold ml-2">Anniversaries</span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div> -->
-
             <!-- Webhook URL -->
-            <div class="form-control">
+            <div class="form-control" id="notification_webhook_url">
                 <label class="label">
                     <span class="label-text font-semibold">Discord Webhook URL*</span>
                 </label>
-                <input type="url" id="webhook_url" name="webhook_url" class="input input-bordered font-mono text-sm" placeholder="https://discord.com/api/webhooks/..." required>
+                <input type="url" name="notification_webhook_url" class="input input-bordered font-mono text-sm" placeholder="https://discord.com/api/webhooks/..." required>
                 <label class="label">
                     <span class="label-text-alt">Get this from Discord Server Settings → Integrations → Webhooks</span>
                 </label>
+            </div>
+
+            <!-- Target Address -->
+            <div class="form-control" id="notification_target_address">
+                <label class="label">
+                    <span class="label-text font-semibold">Recipient Email Address*</span>
+                </label>
+                <input type="email" name="notification_target_address" class="input input-bordered font-mono text-sm" placeholder="you@example.com" required>
             </div>
 
             <!-- Timing Settings -->
@@ -69,7 +51,7 @@
                             <label class="label">
                                 <span class="label-text">Notify on events ocurring in the next...</span>
                             </label>
-                            <select id="webhook_days_look_ahead" name="webhook_days_look_ahead" class="select select-bordered">
+                            <select id="notification_days_look_ahead" name="notification_days_look_ahead" class="select select-bordered">
                                 <option value="0" selected>Today</option>
                                 <option value="1">1 days</option>
                                 <option value="2">2 days</option>
@@ -82,7 +64,7 @@
                             <label class="label">
                                 <span class="label-text">Time of Day (24-hour)</span>
                             </label>
-                            <input type="time" id="webhook_notification_time" name="webhook_notification_time" class="input input-bordered" value="09:00" required>
+                            <input type="time" id="notification_notification_time" name="notification_notification_time" class="input input-bordered" value="09:00" required>
                         </div>
                     </div>
                 </div>
@@ -95,28 +77,28 @@
                     <div class="space-y-3">
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input type="checkbox" id="webhook_enabled" name="webhook_enabled" class="toggle toggle-primary" checked>
-                                <span class="label-text font-semibold">Enable this webhook</span>
+                                <input type="checkbox" id="notification_enabled" name="notification_enabled" class="toggle toggle-primary" checked>
+                                <span class="label-text font-semibold">Enable this notification</span>
                             </label>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="form-control">
                                 <label class="label cursor-pointer justify-start gap-3">
-                                    <input type="checkbox" id="webhook_include_birthdays" name="webhook_include_birthdays" class="checkbox checkbox-primary">
+                                    <input type="checkbox" id="notification_include_birthdays" name="notification_include_birthdays" class="checkbox checkbox-primary">
                                     <span class="label-text">Include Birthday Events</span>
                                 </label>
                             </div>
 
                             <div class="form-control">
                                 <label class="label cursor-pointer justify-start gap-3">
-                                    <input type="checkbox" id="webhook_include_anniversaries" name="webhook_include_anniversaries" class="checkbox checkbox-primary">
+                                    <input type="checkbox" id="notification_include_anniversaries" name="notification_include_anniversaries" class="checkbox checkbox-primary">
                                     <span class="label-text">Include Anniversary Events</span>
                                 </label>
                             </div>
                         </div>
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input type="checkbox" id="webhook_include_event_dates" name="webhook_include_event_dates" class="checkbox checkbox-primary">
+                                <input type="checkbox" id="notification_include_event_dates" name="notification_include_event_dates" class="checkbox checkbox-primary">
                                 <span class="label-text">Include Other Events</span>
                             </label>
                         </div>
@@ -126,7 +108,7 @@
                             <label class="label">
                                 <span class="label-text font-semibold">Other Events Regex Filter</span>
                             </label>
-                            <input type="text" id="webhook_other_event_regex" name="webhook_other_event_regex" class="input input-bordered font-mono text-sm" placeholder="(first tooth|rode (bike|scooter))">
+                            <input type="text" id="notification_other_event_regex" name="notification_other_event_regex" class="input input-bordered font-mono text-sm" placeholder="(first tooth|rode (bike|scooter))">
                             <label class="label">
                                 <span class="label-text-alt">Omit to include all events regardless of their Name. Case insensitive.</span>
                             </label>
@@ -135,28 +117,14 @@
                 </div>
             </div>
 
-            <!-- Preview -->
-            <!-- <div class="card bg-base-200 shadow-md">
-                <div class="card-body">
-                    <h3 class="font-bold mb-2">Preview</h3>
-                    <div class="mockup-code text-sm">
-                        <pre data-prefix="📢"><code>KindredCard Birthday Reminder 🎂</code></pre>
-                        <pre data-prefix=""><code> </code></pre>
-                        <pre data-prefix="🎉"><code><strong>John Doe</strong>'s birthday is tomorrow!</code></pre>
-                        <pre data-prefix="📅"><code>Date: April 15</code></pre>
-                        <pre data-prefix="🎂"><code>Turning 30 years old</code></pre>
-                    </div>
-                </div>
-            </div> -->
-
             <!-- Actions -->
             <div class="modal-action">
-                <button type="button" class="btn btn-ghost" onclick="closeWebhookModal()">Cancel</button>
+                <button type="button" class="btn btn-ghost" onclick="closeNotificationModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span id="webhookSubmitText">Save Webhook</span>
+                    <span id="notificationSubmitText">Save Notification</span>
                 </button>
             </div>
         </form>

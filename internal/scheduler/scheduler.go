@@ -14,9 +14,10 @@ import (
 	"time"
 
 	"github.com/steveredden/KindredCard/internal/db"
+	"github.com/steveredden/KindredCard/internal/discord"
 	"github.com/steveredden/KindredCard/internal/logger"
+	"github.com/steveredden/KindredCard/internal/mailer"
 	"github.com/steveredden/KindredCard/internal/models"
-	"github.com/steveredden/KindredCard/internal/notifications"
 )
 
 // Scheduler handles scheduled notification checks
@@ -167,8 +168,21 @@ func (s *Scheduler) processNotificationSetting(setting models.NotificationSettin
 
 	logger.Debug("[SCHEDULER] Found %d upcoming events", len(relevantEvents))
 
-	embed := notifications.BuildTodayEventsEmbed(relevantEvents, s.baseURL)
-	notifications.SendDiscordNotification(setting.WebhookURL, []notifications.DiscordEmbed{embed})
+	switch setting.ProviderType {
+	case "discord":
+		if setting.WebhookURL == nil || *setting.WebhookURL == "" {
+			logger.Warn("Discord notification enabled but no WebhookURL provided")
+		}
+		embed := discord.BuildTodayEventsEmbed(relevantEvents, s.baseURL)
+		discord.SendDiscordNotification(*setting.WebhookURL, []discord.DiscordEmbed{embed})
+	case "smtp":
+		if setting.TargetAddress == nil || *setting.TargetAddress == "" {
+			logger.Warn("SMTP notification enabled but no TargetAddress provided")
+			return
+		}
+		body := mailer.BuildTodayEventsBody(relevantEvents, s.baseURL)
+		mailer.SendEventNotification(*setting.TargetAddress, "KindredCard Event Summary", body.Body)
+	}
 
 	// Record that we sent this notification
 	if err := s.db.RecordNotificationSettingSent(setting); err != nil {

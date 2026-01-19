@@ -814,6 +814,43 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 	return d.GetContactByID(userID, contactID)
 }
 
+func (d *Database) UpdateContactPhone(userID int, body models.PhoneJSONPatch) ([]models.Phone, error) {
+	logger.Debug("[DATABASE] Begin UpdateContactPhone(userID:%d, body:--)", userID)
+
+	var contactID int
+
+	query := `
+        UPDATE phones 
+        SET
+			phone = $1,
+			last_formatted_at = NOW()
+        WHERE id = $2 
+        AND contact_id IN (SELECT id FROM contacts WHERE user_id = $3)
+        RETURNING contact_id`
+
+	err := d.db.QueryRow(query, body.Phone, body.ID, userID).Scan(&contactID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Error("No rows patched: %v", err)
+			return nil, fmt.Errorf("phone record not found or unauthorized")
+		}
+		logger.Error("Error patching phone: %v", err)
+		return nil, fmt.Errorf("failed to patch phone: %w", err)
+	}
+
+	// Sync token update
+	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to increment sync token: %w", err)
+	}
+
+	if err := d.bumpContactSyncToken(contactID, newSyncToken); err != nil {
+		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
+	}
+
+	return d.getPhones(contactID)
+}
+
 // Helper functions for related data
 
 func (d *Database) insertEmails(tx *sql.Tx, contactID int, emails []models.Email) error {
