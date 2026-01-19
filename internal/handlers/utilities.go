@@ -36,3 +36,25 @@ func (h *Handler) GenderAssignmentPage(w http.ResponseWriter, r *http.Request) {
 	token, _ := middleware.GetTokenFromCurrentSession(r)
 	h.db.UpdateSessionActivity(token)
 }
+
+func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	contacts, err := h.db.GetContactsWithPhones(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	h.renderTemplate(w, "util_phone_formatter.html", map[string]interface{}{
+		"User":     user,
+		"Contacts": contacts,
+	})
+
+	token, _ := middleware.GetTokenFromCurrentSession(r)
+	h.db.UpdateSessionActivity(token)
+}

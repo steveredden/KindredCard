@@ -289,6 +289,8 @@ definitions:
         type: integer
       is_primary:
         type: boolean
+      last_formatted_at:
+        type: string
       phone:
         type: string
       type:
@@ -296,6 +298,15 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  models.PhoneJSONPatch:
+    properties:
+      id:
+        example: 1
+        type: integer
+      phone:
+        example: (555)122-4121
+        type: string
     type: object
   models.Relationship:
     properties:
@@ -785,6 +796,62 @@ paths:
       summary: Export all contacts as vCard
       tags:
       - export
+  /api/v1/phones/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a phone using HTTP PATCH. Only provided
+        fields will be updated.
+      parameters:
+      - description: Phone ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Phone fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.PhoneJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated phone
+          schema:
+            items:
+              $ref: '#/definitions/models.Phone'
+            type: array
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a phone number
+      tags:
+      - contacts
   /api/v1/tokens:
     get:
       consumes:
