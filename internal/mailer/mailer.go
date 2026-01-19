@@ -120,13 +120,23 @@ func BuildTodayEventsBody(events []models.UpcomingEvent, baseURL string) EmailCo
 		desc := ""
 		if e.AgeOrYears != nil {
 			ordinal := utils.Ordinal(*e.AgeOrYears)
-			if e.EventType == "birthday" {
+			switch e.EventType {
+			case "birthday":
 				desc = fmt.Sprintf("%s birthday %s!", ordinal, e.TimeDescription)
-			} else {
-				desc = fmt.Sprintf("%s anniversary %s!", ordinal, e.TimeDescription)
+			case "anniversary":
+				desc = fmt.Sprintf("%s wedding anniversary %s!", ordinal, e.TimeDescription)
+			default:
+				desc = fmt.Sprintf("%s anniversary of %s %s!", ordinal, e.EventType, e.TimeDescription)
 			}
 		} else {
-			desc = fmt.Sprintf("event %s!", e.TimeDescription)
+			switch e.EventType {
+			case "birthday":
+				desc = fmt.Sprintf("has a birthday %s!", e.TimeDescription)
+			case "anniversary":
+				desc = fmt.Sprintf("has a wedding anniversary %s!", e.TimeDescription)
+			default:
+				desc = fmt.Sprintf("anniversary of %s %s!", e.EventType, e.TimeDescription)
+			}
 		}
 
 		item := map[string]interface{}{
