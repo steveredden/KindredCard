@@ -22,7 +22,7 @@ Your personal CRM system built in Go with PostgreSQL backend and CardDAV server 
 
 ## Quick Start with Docker
 
-Check out the [wiki](https://github.com/steveredden/KindredCard/wiki/Docker) for explicit instructions
+Check out the [Wiki](https://github.com/steveredden/KindredCard/wiki/Docker) for explicit instructions
 
 ## Acknowledgments
 
