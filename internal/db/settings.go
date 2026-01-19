@@ -102,8 +102,8 @@ func (d *Database) GetAllNotificationSettings(enabled bool) ([]models.Notificati
 
 	query := `
 		SELECT 
-			id, user_id, name, webhook_url, days_look_ahead, notification_time,
-			include_birthdays, include_anniversaries, include_event_dates,
+			id, user_id, name, provider_type, webhook_url, target_address, days_look_ahead,
+			notification_time, include_birthdays, include_anniversaries, include_event_dates,
 			other_event_regex, enabled, last_sent_at, created_at, updated_at
 		FROM notification_settings
 	`
@@ -123,9 +123,9 @@ func (d *Database) GetAllNotificationSettings(enabled bool) ([]models.Notificati
 		var lastSentAt sql.NullTime
 		var s models.NotificationSetting
 		err := rows.Scan(
-			&s.ID, &s.UserID, &s.Name, &s.WebhookURL, &s.DaysLookAhead, &s.NotificationTime,
-			&s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates, &s.EventRegex,
-			&s.Enabled, &lastSentAt, &s.CreatedAt, &s.UpdatedAt,
+			&s.ID, &s.UserID, &s.Name, &s.ProviderType, &s.WebhookURL, &s.TargetAddress, &s.DaysLookAhead,
+			&s.NotificationTime, &s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates,
+			&s.EventRegex, &s.Enabled, &lastSentAt, &s.CreatedAt, &s.UpdatedAt,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning notification settings: %v", err)
@@ -149,9 +149,9 @@ func (d *Database) GetAllUserNotificationSettings(userID int) ([]models.Notifica
 
 	query := `
 		SELECT 
-			id, user_id, name, webhook_url, days_look_ahead, notification_time,
-			include_birthdays, include_anniversaries, include_event_dates, other_event_regex,
-			enabled, last_sent_at, created_at, updated_at
+			id, user_id, name, provider_type, webhook_url, target_address, days_look_ahead,
+			notification_time, include_birthdays, include_anniversaries, include_event_dates,
+			other_event_regex, enabled, last_sent_at, created_at, updated_at
 		FROM notification_settings
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -168,9 +168,9 @@ func (d *Database) GetAllUserNotificationSettings(userID int) ([]models.Notifica
 	for rows.Next() {
 		var s models.NotificationSetting
 		err := rows.Scan(
-			&s.ID, &s.UserID, &s.Name, &s.WebhookURL, &s.DaysLookAhead, &s.NotificationTime,
-			&s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates, &s.EventRegex,
-			&s.Enabled, &s.LastSentAt, &s.CreatedAt, &s.UpdatedAt,
+			&s.ID, &s.UserID, &s.Name, &s.ProviderType, &s.WebhookURL, &s.TargetAddress, &s.DaysLookAhead,
+			&s.NotificationTime, &s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates,
+			&s.EventRegex, &s.Enabled, &s.LastSentAt, &s.CreatedAt, &s.UpdatedAt,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning notification settings: %v", err)
@@ -188,17 +188,17 @@ func (d *Database) GetNotificationSettingByID(userID int, notifierID int) (*mode
 
 	query := `
 		SELECT 
-			id, user_id, name, webhook_url, days_look_ahead, notification_time,
-			include_birthdays, include_anniversaries, include_event_dates, other_event_regex,
-			enabled, last_sent_at, created_at, updated_at
+			id, user_id, name, provider_type, webhook_url, target_address, days_look_ahead,
+			notification_time, include_birthdays, include_anniversaries, include_event_dates,
+			other_event_regex, enabled, last_sent_at, created_at, updated_at
 		FROM notification_settings
 		WHERE id = $1 AND user_id = $2
 	`
 	var s models.NotificationSetting
 	err := d.db.QueryRow(query, notifierID, userID).Scan(
-		&s.ID, &s.UserID, &s.Name, &s.WebhookURL, &s.DaysLookAhead, &s.NotificationTime,
-		&s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates, &s.EventRegex,
-		&s.Enabled, &s.LastSentAt, &s.CreatedAt, &s.UpdatedAt,
+		&s.ID, &s.UserID, &s.Name, &s.ProviderType, &s.WebhookURL, &s.TargetAddress, &s.DaysLookAhead,
+		&s.NotificationTime, &s.IncludeBirthdays, &s.IncludeAnniversaries, &s.IncludeEventDates,
+		&s.EventRegex, &s.Enabled, &s.LastSentAt, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		logger.Error("[DATABASE] Error scanning notification settings: %v", err)
@@ -217,18 +217,18 @@ func (d *Database) CreateNotificationSetting(userID int, notifier *models.Notifi
 
 	query := `
 		INSERT INTO notification_settings (
-			user_id, name, webhook_url, days_look_ahead, notification_time,
-			include_birthdays, include_anniversaries, include_event_dates,
+			user_id, name, provider_type, webhook_url, target_address, days_look_ahead,
+			notification_time, include_birthdays, include_anniversaries, include_event_dates,
 			other_event_regex, enabled, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
 		RETURNING id
 	`
 
 	var id int
 	err := d.db.QueryRow(
 		query,
-		userID, notifier.Name, notifier.WebhookURL, notifier.DaysLookAhead, notifier.NotificationTime,
-		notifier.IncludeBirthdays, notifier.IncludeAnniversaries, notifier.IncludeEventDates,
+		userID, notifier.Name, notifier.ProviderType, notifier.WebhookURL, notifier.TargetAddress, notifier.DaysLookAhead,
+		notifier.NotificationTime, notifier.IncludeBirthdays, notifier.IncludeAnniversaries, notifier.IncludeEventDates,
 		notifier.EventRegex, notifier.Enabled,
 	).Scan(&id)
 
@@ -248,22 +248,24 @@ func (d *Database) UpdateNotificationSetting(userID int, notifier *models.Notifi
 		UPDATE notification_settings
 		SET 
 			name = $1,
-			webhook_url = $2,
-			days_look_ahead = $3,
-			notification_time = $4,
-			include_birthdays = $5,
-			include_anniversaries = $6,
-			include_event_dates = $7,
-			other_event_regex = $8,
-			enabled = $9,
+			provider_type = $2,
+			webhook_url = $3,
+			target_address = $4
+			days_look_ahead = $5,
+			notification_time = $6,
+			include_birthdays = $7,
+			include_anniversaries = $8,
+			include_event_dates = $9,
+			other_event_regex = $10,
+			enabled = $11,
 			updated_at = NOW()
-		WHERE id = $10 AND user_id = $11
+		WHERE id = $12 AND user_id = $13
 	`
 
 	result, err := d.db.Exec(
 		query,
-		notifier.Name, notifier.WebhookURL, notifier.DaysLookAhead, notifier.NotificationTime,
-		notifier.IncludeBirthdays, notifier.IncludeAnniversaries, notifier.IncludeEventDates,
+		notifier.Name, notifier.ProviderType, notifier.WebhookURL, notifier.TargetAddress, notifier.DaysLookAhead,
+		notifier.NotificationTime, notifier.IncludeBirthdays, notifier.IncludeAnniversaries, notifier.IncludeEventDates,
 		notifier.EventRegex, notifier.Enabled, notifier.ID,
 		userID,
 	)

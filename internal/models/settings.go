@@ -16,7 +16,9 @@ type NotificationSetting struct {
 	ID                   int        `json:"id"`
 	Name                 string     `json:"name"`
 	UserID               int        `json:"user_id"`
-	WebhookURL           string     `json:"webhook_url"`
+	ProviderType         string     `json:"provider_type"`  // 'discord' or 'smtp'
+	WebhookURL           *string    `json:"webhook_url"`    // if using 'discord' -> the URL
+	TargetAddress        *string    `json:"target_address"` // if using 'smtp' -> the TO:
 	DaysLookAhead        int        `json:"days_look_ahead"`
 	NotificationTime     string     `json:"notification_time"` // HH:MM format
 	IncludeBirthdays     bool       `json:"include_birthdays"`

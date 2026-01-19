@@ -219,66 +219,123 @@
     // NOTIFICATIONS TAB FUNCTIONS
     // ========================================
 
-    // Open add webhook modal
+    // Open add notification modal
     window.openAddWebhookModal = function() {
-        const modal = document.getElementById('webhookModal');
-        const form = document.getElementById('webhookForm');
+        const modal = document.getElementById('notificationModal');
+        const form = document.getElementById('notificationForm');
         
         if (form) {
             form.reset();
-            document.getElementById('webhook_id').value = '';
-            document.getElementById('webhook_enabled').checked = true;
-            document.getElementById('webhook_include_birthdays').checked = true;
-            document.getElementById('webhook_include_anniversaries').checked = true;
+            document.getElementById('notification_id').value = '';
+            document.getElementById('notification_provider_type').value = "discord";
+            document.getElementById('notification_enabled').checked = true;
+            document.getElementById('notification_include_birthdays').checked = true;
+            document.getElementById('notification_include_anniversaries').checked = true;
+
+            //show the webhook_url, hide target_address
+            document.getElementById('notification_webhook_url').classList.remove('hidden');
+            document.getElementById('notification_target_address').classList.add('hidden');
+
+            //update requirements
+            document.querySelector('input[name="notification_webhook_url"]').required = true;
+            document.querySelector('input[name="notification_target_address"]').required = false;
         }
-        
+
         // Update title
-        document.getElementById('webhookModalTitle').textContent = 'Add Discord Webhook';
-        document.getElementById('webhookSubmitText').textContent = 'Save Webhook';
+        document.getElementById('notificationModalTitle').textContent = 'Add Discord Webhook';
+        document.getElementById('notificationSubmitText').textContent = 'Save Webhook';
         
         if (modal) modal.showModal();
     };
 
-    // Close webhook modal
-    window.closeWebhookModal = function() {
-        const modal = document.getElementById('webhookModal');
+    // Open add notification modal
+    window.openAddEmailModal = function() {
+        const modal = document.getElementById('notificationModal');
+        const form = document.getElementById('notificationForm');
+        
+        if (form) {
+            form.reset();
+            document.getElementById('notification_id').value = '';
+            document.getElementById('notification_provider_type').value = "smtp";
+            document.getElementById('notification_enabled').checked = true;
+            document.getElementById('notification_include_birthdays').checked = true;
+            document.getElementById('notification_include_anniversaries').checked = true;
+
+            //hide the webhook_url, show target_address
+            document.getElementById('notification_webhook_url').classList.add('hidden');
+            document.getElementById('notification_target_address').classList.remove('hidden');
+
+            //update requirements
+            document.querySelector('input[name="notification_webhook_url"]').required = false;
+            document.querySelector('input[name="notification_target_address"]').required = true;
+        }
+
+        // Update title
+        document.getElementById('notificationModalTitle').textContent = 'Add Email Notification';
+        document.getElementById('notificationSubmitText').textContent = 'Save Notification';
+        
+        if (modal) modal.showModal();
+    };
+
+    // Close notification modal
+    window.closeNotificationModal = function() {
+        const modal = document.getElementById('notificationModal');
         if (modal) modal.close();
     };
 
-    // Edit webhook
-    window.editWebhook = async function(id) {
+    // Edit notification
+    window.editNotification = async function(id) {
         try {
             const response = await fetch(`/api/v1/notification-settings/${id}`);
-            if (!response.ok) throw new Error('Failed to load webhook');
-            
-            const webhook = await response.json();
+            if (!response.ok) throw new Error('Failed to load notification');
+
+            const webhookUrlField = document.getElementById('notification_webhook_url')
+            const targetAddressField = document.getElementById('notification_target_address')
+
+            const notification = await response.json();
             
             // Populate form
-            document.getElementById('webhook_id').value = webhook.id;
-            document.getElementById('webhook_name').value = webhook.name;
-            document.getElementById('webhook_url').value = webhook.webhook_url;
-            document.getElementById('webhook_days_look_ahead').value = webhook.days_look_ahead ?? 0;
-            document.getElementById('webhook_notification_time').value = webhook.notification_time ?? "09:00";
-            document.getElementById('webhook_include_birthdays').checked = webhook.include_birthdays || false;
-            document.getElementById('webhook_include_anniversaries').checked = webhook.include_anniversaries || false;
-            document.getElementById('webhook_include_event_dates').checked = webhook.include_event_dates || false;
-            document.getElementById('webhook_other_event_regex').value = webhook.other_event_regex ?? '';
-            document.getElementById('webhook_enabled').checked = webhook.enabled || false;
+            document.getElementById('notification_id').value = notification.id;
+            document.getElementById('notification_provider_type').value = notification.provider_type ?? "discord";
+            document.getElementById('notification_name').value = notification.name;
+            webhookUrlField.querySelector('input').value = notification.webhook_url || "";
+            targetAddressField.querySelector('input').value = notification.target_address || "";
+            document.getElementById('notification_days_look_ahead').value = notification.days_look_ahead ?? 0;
+            document.getElementById('notification_notification_time').value = notification.notification_time ?? "09:00";
+            document.getElementById('notification_include_birthdays').checked = notification.include_birthdays || false;
+            document.getElementById('notification_include_anniversaries').checked = notification.include_anniversaries || false;
+            document.getElementById('notification_include_event_dates').checked = notification.include_event_dates || false;
+            document.getElementById('notification_other_event_regex').value = notification.other_event_regex ?? '';
+            document.getElementById('notification_enabled').checked = notification.enabled || false;
             
-            // Update modal title
-            document.getElementById('webhookModalTitle').textContent = 'Edit Discord Webhook';
-            document.getElementById('webhookSubmitText').textContent = 'Update Webhook';
+            // Update modal based on type
+            let modalTitle;
+            let submitText;
+            if ( notification.provider_type == "smtp" ) {
+                modalTitle = 'Edit Email Target';
+                submitText = 'Update Notification';
+                webhookUrlField.classList.add('hidden');
+                targetAddressField.classList.remove('hidden');
+            } else {
+                modalTitle = 'Edit Discord Webhook';
+                submitText = 'Update Webhook';
+                webhookUrlField.classList.remove('hidden');
+                targetAddressField.classList.add('hidden');
+            }
+
+            document.getElementById('notificationModalTitle').textContent = modalTitle;
+            document.getElementById('notificationSubmitText').textContent = submitText;
             
             // Open modal
-            document.getElementById('webhookModal').showModal();
+            document.getElementById('notificationModal').showModal();
         } catch (error) {
-            console.error('Load webhook error:', error);
-            showNotification('Failed to load webhook settings', 'error');
+            console.error('Load notification error:', error);
+            showNotification('Failed to load notification settings', 'error');
         }
     };
 
-    // Test webhook
-    window.testWebhook = async function(id) {
+    // Test notification
+    window.testNotification = async function(id) {
         const button = event.target.closest('button');
         button.classList.add('loading');
         button.disabled = true;
@@ -290,13 +347,13 @@
             });
 
             if (response.ok) {
-                showNotification('Test notification sent to Discord!', 'success');
+                showNotification('Test notification sent!', 'success');
             } else {
                 const error = await response.json();
                 throw new Error(error.message || 'Test failed');
             }
         } catch (error) {
-            console.error('Test webhook error:', error);
+            console.error('Test notification error:', error);
             showNotification(`Failed to send test: ${error.message}`, 'error');
         } finally {
             button.classList.remove('loading');
@@ -304,11 +361,10 @@
         }
     };
 
-    // Delete webhook
-    window.deleteWebhook = async function(id) {
-        if (!confirm('Are you sure you want to delete this webhook?')) {
-            return;
-        }
+    // Delete notification
+    window.deleteNotification = async function(id) {
+        const confirmed = await customConfirm('Are you sure you want to delete this notification?')
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/api/v1/notification-settings/${id}`, {
@@ -317,73 +373,77 @@
             });
 
             if (response.ok) {
-                showNotification('Webhook deleted', 'success');
+                showNotification('Notification deleted', 'success');
                 setTimeout(() => location.reload(), 800);
             } else {
                 throw new Error('Delete failed');
             }
         } catch (error) {
-            console.error('Delete webhook error:', error);
-            showNotification('Failed to delete webhook', 'error');
+            console.error('Delete notification error:', error);
+            showNotification('Failed to delete notification', 'error');
         }
     };
 
-    // Webhook form submission
-    const webhookForm = document.getElementById('webhookForm');
-    if (webhookForm) {
-        webhookForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const webhookId = document.getElementById('webhook_id').value;
-            const isEdit = !!webhookId;
-            
-            const data = {
-                name: document.getElementById('webhook_name').value,
-                webhook_url: document.getElementById('webhook_url').value,
-                days_look_ahead: parseInt(document.getElementById('webhook_days_look_ahead').value),
-                notification_time: document.getElementById('webhook_notification_time').value,
-                include_birthdays: document.getElementById('webhook_include_birthdays').checked,
-                include_anniversaries: document.getElementById('webhook_include_anniversaries').checked,
-                include_event_dates: document.getElementById('webhook_include_event_dates').checked,
-                other_event_regex: document.getElementById('webhook_other_event_regex').value,
-                enabled: document.getElementById('webhook_enabled').checked,
-            };
+    // Notification form submission
+    notificationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 1. Use FormData to get all values at once
+        const formData = new FormData(notificationForm);
+        const notificationId = document.getElementById('notification_id').value;
+        const isEdit = !!notificationId;
 
-            // Validate webhook URL
-            if (!data.webhook_url.startsWith('https://discord.com/api/webhooks/')) {
-                showNotification('Invalid Discord webhook URL', 'error');
-                return;
+        // 2. Build the data object safely
+        const data = {
+            name: formData.get('notification_name'),
+            provider_type: formData.get('notification_provider_type'),
+            webhook_url: formData.get('notification_webhook_url') || "",
+            target_address: formData.get('notification_target_address') || "",
+            days_look_ahead: parseInt(formData.get('notification_days_look_ahead')) || 0,
+            notification_time: formData.get('notification_notification_time'),
+            include_birthdays: formData.get('notification_include_birthdays') === 'on' || document.getElementById('notification_include_birthdays').checked,
+            include_anniversaries: formData.get('notification_include_anniversaries') === 'on' || document.getElementById('notification_include_anniversaries').checked,
+            include_event_dates: formData.get('notification_include_event_dates') === 'on' || document.getElementById('notification_include_event_dates').checked,
+            other_event_regex: formData.get('notification_other_event_regex') || "",
+            enabled: formData.get('notification_enabled') === 'on' || document.getElementById('notification_enabled').checked,
+        };
+
+        // Validation
+        if (data.provider_type === "discord" && (!data.webhook_url || !data.webhook_url.startsWith('https://discord.com/api/webhooks/'))) {
+            showNotification('Invalid Discord webhook URL', 'error');
+            return;
+        }
+        
+        if (data.provider_type === "smtp" && !data.target_address.includes('@')) {
+            showNotification('Invalid email address', 'error');
+            return;
+        }
+
+        try {
+            const url = isEdit 
+                ? `/api/v1/notification-settings/${notificationId}`
+                : '/api/v1/notification-settings';
+
+            const response = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                showNotification(`Notification ${isEdit ? 'updated' : 'created'} successfully`, 'success');
+                // Assuming this function exists to hide the daisyUI modal
+                if (window.notification_modal) window.notification_modal.close(); 
+                setTimeout(() => location.reload(), 800);
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Save failed');
             }
-
-            try {
-                const url = isEdit 
-                    ? `/api/v1/notification-settings/${webhookId}`
-                    : '/api/v1/notification-settings';
-
-                if (isEdit) {
-                    data.id = Number(webhookId);
-                }
-                
-                const response = await fetch(url, {
-                    method: isEdit ? 'PUT' : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    showNotification(`Webhook ${isEdit ? 'updated' : 'created'} successfully`, 'success');
-                    closeWebhookModal();
-                    setTimeout(() => location.reload(), 800);
-                } else {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Save failed');
-                }
-            } catch (error) {
-                console.error('Save webhook error:', error);
-                showNotification(`Failed to save webhook: ${error.message}`, 'error');
-            }
-        });
-    }
+        } catch (error) {
+            console.error('Save notification error:', error);
+            showNotification(error.message, 'error');
+        }
+    });
 
     // ========================================
     // SECURITY TAB FUNCTIONS
