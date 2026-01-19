@@ -7,7 +7,7 @@
  * License, or (at your option) any later version.
  */
 
-package notifications
+package discord
 
 import (
 	"bytes"

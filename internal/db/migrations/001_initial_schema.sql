@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS api_tokens (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Notification settings for Discord webhooks
+-- Notification settings for Discord webhooks and/or SMTP
 CREATE TABLE IF NOT EXISTS notification_settings (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
