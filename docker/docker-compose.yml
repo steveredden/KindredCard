@@ -4,12 +4,11 @@ services:
     image: postgres:17.7
     container_name: kindredcard-db
     environment:
-      TZ: America/Chicago
       POSTGRES_USER: ${DB_USER:-kindredcard}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-kindredcardsecretpassword}
       POSTGRES_DB: ${DB_NAME:-kindredcard}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +30,6 @@ services:
     environment:
       TZ: America/Chicago
       DB_HOST: postgres
-      DB_PORT: 5432
       DB_USER: ${DB_USER:-kindredcard}
       DB_PASSWORD: ${DB_PASSWORD:-kindredcardsecretpassword}
       DB_NAME: ${DB_NAME:-kindredcard}

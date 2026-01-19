@@ -221,7 +221,7 @@ func getPartialDateView(otherDate models.OtherDate) PartialDateView {
 	return dateView
 }
 
-// HandlePatchContact godoc
+// PatchContactAPI godoc
 //
 //	@Summary		Partially update a contact
 //	@Description	Update specific fields of a contact using HTTP PATCH. Only provided fields will be updated.
@@ -260,6 +260,55 @@ func (h *Handler) PatchContactAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Apply patch
 	updated, err := h.db.PatchContact(user.ID, contactID, &patch)
+	if err != nil {
+		http.Error(w, "Update failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Return updated record
+	json.NewEncoder(w).Encode(updated)
+}
+
+// UpdatePhoneAPI godoc
+//
+//	@Summary		Update a phone number
+//	@Description	Update specific fields of a phone using HTTP PATCH. Only provided fields will be updated.
+//	@Tags			contacts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int						true	"Phone ID"
+//	@Param			contact	body		models.PhoneJSONPatch	true	"Phone fields to update"
+//	@Success		200		{object}	[]models.Phone			"Updated phone"
+//	@Failure		400		{object}	map[string]string		"Invalid request body or contact ID"
+//	@Failure		401		{object}	map[string]string		"Unauthorized"
+//	@Failure		404		{object}	map[string]string		"Contact not found"
+//	@Failure		500		{object}	map[string]string		"Internal server error"
+//	@Security		ApiTokenAuth
+//	@Router			/api/v1/phones/{id} [patch]
+func (h *Handler) UpdatePhoneAPI(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get Contact ID from URL
+	phoneID, err := strconv.Atoi(mux.Vars(r)["pid"])
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	var input models.PhoneJSONPatch
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", 400)
+		return
+	}
+
+	input.ID = &phoneID
+
+	updated, err := h.db.UpdateContactPhone(user.ID, input)
 	if err != nil {
 		http.Error(w, "Update failed", http.StatusInternalServerError)
 		return

@@ -7,7 +7,7 @@
  * License, or (at your option) any later version.
  */
 
-// KindredCard - Login Page JavaScript
+// KindredCard - Utilities page: Gender Assignment
 (function() {
     'use strict';
     
@@ -48,14 +48,32 @@
         const nextCard = currentCard.nextElementSibling;
         currentCard.remove(); // Remove from DOM
 
+        // Decrement the UI counter
+        window.decrementBadge();
+
         if (nextCard) {
             nextCard.classList.remove('hidden');
         } else {
             document.getElementById('contact-deck').innerHTML = `
                 <div class="text-center py-20 animate-bounce">
                     <h3 class="text-xl font-bold text-success">Done!</h3>
-                    <p>You've cleared the queue.</p>
+                    <p>You've cleared the queue!</p>
+                    <p>Refresh for more</p>
                 </div>`;
         }
     }
+
+    window.decrementBadge = function() {
+        const badge = document.getElementById('remaining-count');
+        if (badge) {
+            // Extract the number from "100 remaining" or similar text
+            const currentText = badge.innerText;
+            const match = currentText.match(/\d+/);
+            if (match) {
+                const count = parseInt(match[0], 10);
+                const newCount = Math.max(0, count - 1);
+                badge.innerText = `${newCount} remaining`;
+            }
+        }
+    };
 })();
