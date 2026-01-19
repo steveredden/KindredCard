@@ -29,6 +29,7 @@ func (h *Handler) GenderAssignmentPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderTemplate(w, "util_gender_assign.html", map[string]interface{}{
+		"Title":    "Gender Assigner",
 		"User":     user,
 		"Contacts": contacts,
 	})
@@ -51,6 +52,7 @@ func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderTemplate(w, "util_phone_formatter.html", map[string]interface{}{
+		"Title":    "Phone Formatter",
 		"User":     user,
 		"Contacts": contacts,
 	})
