@@ -15,12 +15,12 @@
             </label>
             <select id="relatedContactSelect" class="select select-bordered" onchange="handleRelatedContactChange()">
                 <option value="">-- Select contact --</option>
+                <option value="new">➕ Create New Contact</option>
                 {{range .AllContacts}}
                 {{if ne .ID $.Contact.ID}}
                 <option value="{{.ID}}">{{.FullName}}</option>
                 {{end}}
                 {{end}}
-                <option value="new">➕ Create New Contact</option>
             </select>
         </div>
 
