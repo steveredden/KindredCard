@@ -18,7 +18,6 @@ type User struct {
 	PasswordHash    string    `json:"-"`
 	IsSetupComplete bool      `json:"is_setup_complete"`
 	Theme           string    `json:"theme"`
-	Timezone        string    `json:"timezone"`
 	SyncToken       int       `json:"addressbook_sync_token"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`

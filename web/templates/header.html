@@ -10,11 +10,41 @@
                 </span>
             </a>
         </div>
-        
+
         {{if .User}}
-        <!-- Spacer -->
-        <div class="flex-1"></div>
-        
+
+        <!-- Search Bar -->
+        <div class="flex-1 px-6">
+            <div class="dropdown w-full" id="search-dropdown">
+                <div class="form-control relative w-full">
+                    <input type="text" 
+                        id="search-input"
+                        name="q" 
+                        placeholder="Search contacts..." 
+                        class="input input-bordered w-full focus:input-primary pr-20"
+                        hx-get="/contacts/search-header" 
+                        hx-trigger="keyup changed delay:300ms" 
+                        hx-target="#search-results" 
+                        hx-indicator="#search-spinner"
+                        oninput="toggleClearButton(this)"
+                        autocomplete="off" />
+                    
+                    <div class="absolute right-3 top-3 flex items-center gap-2">
+                        <span id="search-spinner" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
+                        <button type="button" 
+                                id="clear-search" 
+                                class="hidden btn btn-ghost btn-circle btn-xs" 
+                                onclick="clearSearchInput()">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+                
+                <ul id="search-results" class="dropdown-content z-[50] menu p-2 shadow-2xl bg-base-100 rounded-box w-full mt-1 max-h-96 overflow-y-auto border border-base-300">
+                </ul>
+            </div>
+        </div>
+                
         <!-- Navigation Menu -->
         <div class="flex-none">
             <ul class="menu menu-horizontal px-1">

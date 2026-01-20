@@ -17,17 +17,12 @@
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
 
-        // 2. Prepare full preferences object to avoid overwriting other settings
-        const currentTZ = document.getElementById('timezone-select')?.value 
-                          || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
         // 3. Sync with Server
         fetch('/api/v1/user/preferences', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                theme: theme,
-                timezone: currentTZ 
+                theme: theme
             })
         }).catch(err => console.error('Failed to save preferences:', err));
 

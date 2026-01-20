@@ -1,11 +1,12 @@
 {
   "name": "kindredcard",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Personal CRM for managing contacts and relationships",
   "scripts": {
     "build:css": "tailwindcss -i web/static/css/input.css -o web/static/css/output.css",
     "watch:css": "tailwindcss -i web/static/css/input.css -o web/static/css/output.css --watch",
-    "build:css:prod": "NODE_ENV=production tailwindcss -i web/static/css/input.css -o web/static/css/output.css --minify"
+    "build:css:prod": "NODE_ENV=production tailwindcss -i web/static/css/input.css -o web/static/css/output.css --minify",
+    "prepare": "mkdir -p web/static/js && cp node_modules/htmx.org/dist/htmx.min.js web/static/js/"
   },
   "keywords": [
     "crm",
@@ -14,6 +15,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "htmx.org": "^1.9.10"
+  },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",
     "daisyui": "^4.6.0",

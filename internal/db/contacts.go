@@ -88,6 +88,9 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 	if err := d.insertOtherDates(tx, contact.ID, contact.OtherDates); err != nil {
 		return err
 	}
+	if err := d.insertRelationships(tx, contact.ID, contact.Relationships); err != nil {
+		return err
+	}
 	if err := d.insertOtherRelationships(tx, contact.ID, contact.OtherRelationships); err != nil {
 		return err
 	}
@@ -517,7 +520,7 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 	logger.Debug("[DATABASE] Begin SearchContacts(userID:%d, query:%s)", userID, query)
 
 	searchQuery := `
-		SELECT DISTINCT c.id, c.uid, c.full_name, c.given_name, c.family_name, c.middle_name, 
+		SELECT DISTINCT c.id, c.uid, c.full_name, c.given_name, c.family_name, c.middle_name, c.nickname,
 			c.prefix, c.suffix, c.nickname, c.birthday, c.anniversary, c.notes, c.avatar_base64,
 			c.avatar_mime_type, c.exclude_from_sync, c.created_at, c.updated_at, c.etag
 		FROM contacts c
@@ -526,12 +529,13 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 				c.full_name ILIKE $1 
 				OR c.given_name ILIKE $1 
 				OR c.family_name ILIKE $1 
+				OR c.nickname ILIKE $1
 				OR e.email ILIKE $1
 			)
 		ORDER BY c.full_name`
 
 	searchPattern := "%" + query + "%"
-	rows, err := d.db.Query(searchQuery, searchPattern)
+	rows, err := d.db.Query(searchQuery, searchPattern, userID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting contacts: %v", err)
 		return nil, err
@@ -542,8 +546,8 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 	for rows.Next() {
 		contact := &models.Contact{}
 		err := rows.Scan(
-			&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName,
-			&contact.FamilyName, &contact.MiddleName, &contact.Prefix, &contact.Suffix,
+			&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &contact.FamilyName,
+			&contact.MiddleName, &contact.Nickname, &contact.Prefix, &contact.Suffix,
 			&contact.Nickname, &contact.Birthday, &contact.Anniversary, &contact.Notes,
 			&contact.AvatarBase64, &contact.AvatarMimeType, &contact.ExcludeFromSync,
 			&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,

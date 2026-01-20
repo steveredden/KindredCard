@@ -10,9 +10,9 @@ COPY package*.json ./
 RUN npm install
 
 # Copy CSS source and templates (needed for Tailwind content scanning)
-COPY web/static/css/input.css ./web/static/css/
 COPY web/templates ./web/templates
 COPY web/static/js ./web/static/js
+COPY web/static/css/input.css ./web/static/css/
 COPY tailwind.config.js ./
 
 # Build production CSS (minified, purged)
