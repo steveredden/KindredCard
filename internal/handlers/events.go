@@ -87,7 +87,7 @@ func (h *Handler) ShowEvents(w http.ResponseWriter, r *http.Request) {
 	// Group events by month
 	monthlyGroups := groupEventsByMonth(combinedEvents)
 
-	h.renderTemplate(w, "events.html", map[string]interface{}{
+	h.renderTemplate(w, r, "events.html", map[string]interface{}{
 		"User":          user,
 		"Title":         "Events",
 		"ActivePage":    "events",
@@ -96,9 +96,6 @@ func (h *Handler) ShowEvents(w http.ResponseWriter, r *http.Request) {
 		"TodayCount":    todayCount,
 		"UpcomingCount": upcomingEventCount,
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }
 
 // GetUpcomingEventsAPI godoc
