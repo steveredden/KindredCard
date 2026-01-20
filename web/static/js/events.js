@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (diffInDays < 0) {
             tipText = `${Math.abs(diffInDays)} days ago`;
         } else {
-            tipText = `${diffInDays} days`;
+            tipText = `in ${diffInDays} days`;
         }
 
         el.setAttribute('data-tip', tipText);
