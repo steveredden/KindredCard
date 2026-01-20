@@ -4,7 +4,6 @@ services:
     image: postgres:17.7
     container_name: kindredcard-db
     environment:
-      TZ: America/Chicago
       POSTGRES_USER: kindredcard
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: kindredcard
@@ -27,7 +26,6 @@ services:
       TZ: America/Chicago
       BASE_URL: https://kindredcard.my.tld
       DB_HOST: postgres
-      DB_PORT: 5432
       DB_USER: kindredcard
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: kindredcard
