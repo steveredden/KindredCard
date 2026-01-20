@@ -10,6 +10,11 @@ DOCKER_COMPOSE := docker compose -f $(DOCKER_DIR)/docker-compose.yml
 # Get version from git or default
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "v0.0.0-dev")
 
+# Export additional local dev env details
+SHELL := /bin/bash
+	export
+	include docker/.env.local
+
 help:
 	@echo "KindredCard Management"
 	@echo "  make dev          - Run local dev server (Go + CSS watch)"
