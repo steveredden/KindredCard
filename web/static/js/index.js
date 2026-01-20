@@ -205,45 +205,5 @@
         });
     }
 
-    // Import/Export functions
-    window.importVCard = async function() {
-        const fileInput = document.getElementById('vcardImport');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            showNotification('Please select a file', 'warning');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('vcard', file);
-
-        try {
-            const response = await fetch('/api/v1/contacts/import', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                showNotification(`Imported ${result.count} contact(s)`, 'success');
-                fileInput.value = '';
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                throw new Error('Import failed');
-            }
-        } catch (error) {
-            console.error('Import error:', error);
-            showNotification('Failed to import contacts', 'error');
-        }
-    };
-
-    window.exportAllJSON = function() {
-        window.location.href = '/api/v1/contacts/export/json';
-    };
-    window.exportAllVCARD = function() {
-        window.location.href = '/api/v1/contacts/export/vcard';
-    };
-
     console.log('Index page initialized (simplified)');
 })();

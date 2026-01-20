@@ -63,20 +63,6 @@
             </svg>
             Add Contact
         </button>
-        <div class="dropdown dropdown-end">
-            <label tabindex="0" class="btn btn-ghost bg-base-300/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-            </label>
-            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-                <li><a onclick="document.getElementById('vcardImport').click()">Import vCard</a></li>
-                <li><a onclick="exportAllJSON()">Export All as JSON</a></li>
-                <li><a onclick="exportAllVCARD()">Export All as vCard</a></li>
-            </ul>
-            <!-- Hidden file input -->
-            <input type="file" id="vcardImport" name="vcard" accept="text/vcard,text/x-vcard,.vcf" class="hidden" onchange="importVCard()">
-        </div>
     </div>
 </div>
 

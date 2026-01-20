@@ -98,6 +98,9 @@
                     <h3 class="text-xl font-bold text-success">Done!</h3>
                     <p>You've cleared the queue!</p>
                     <p>Refresh for more</p>
+                </div>
+                <div class="text-center bg-base-200 rounded-box">
+                    <a href="/" class="btn btn-outline btn-sm mt-4">Return to Contacts</a>
                 </div>`;
         }
     }
@@ -115,4 +118,5 @@
             }
         }
     };
+    
 })();

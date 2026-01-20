@@ -141,6 +141,8 @@ func main() {
 	// Utilities
 	web.HandleFunc("/utilities/gender-assignment", handler.GenderAssignmentPage).Methods("GET")
 	web.HandleFunc("/utilities/phone-formatter", handler.PhoneFormatterPage).Methods("GET")
+	web.HandleFunc("/utilities/relationship-assignment", handler.RelationshipAssignmentPage).Methods("GET")
+	web.HandleFunc("/utilities/anniversary-proposal", handler.AnniversaryProposalPage).Methods("GET")
 
 	// Protected API routes
 	api := r.PathPrefix("/api/v1").Subrouter()
@@ -156,6 +158,7 @@ func main() {
 
 	// Contact (and related) PATCH
 	api.HandleFunc("/contacts/{id:[0-9]+}", handler.PatchContactAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{id:[0-9]+}/anniversary", handler.UpdateAnniversaryAPI).Methods("PATCH")
 	api.HandleFunc("/phones/{pid:[0-9]+}", handler.UpdatePhoneAPI).Methods("PATCH")
 
 	// Preferences / Theme

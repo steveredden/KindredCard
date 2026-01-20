@@ -705,9 +705,6 @@ func (h *Handler) ImportVCardsAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allContacts, _ := h.db.GetAllContactsAbbrv(user.ID, false)
-	allRelTypes, _ := h.db.GetRelationshipTypes()
-
 	// Parse multipart form
 	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10 MB max
 		logger.Error("[HANDLER] Error parsing multipartform: %v", err)
@@ -724,44 +721,78 @@ func (h *Handler) ImportVCardsAPI(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Read file content
-	content, err := io.ReadAll(file)
-	if err != nil {
-		logger.Error("[HANDLER] Error reading file: %v", err)
-		http.Error(w, "Error reading file content", http.StatusInternalServerError)
-		return
-	}
+	content, _ := io.ReadAll(file)
 
-	// Parse vCards
+	// Pass 0: Decode all vCards into a slice immediately
+	var cards []vcard.Card
 	decoder := vcard.NewDecoder(bytes.NewReader(content))
-	imported := 0
-
 	for {
 		card, err := decoder.Decode()
 		if err == io.EOF {
 			break
 		}
+		if err == nil {
+			cards = append(cards, card)
+		}
+	}
+
+	// Pass 1: Create "Shells"
+	// We only care about UID and FullName here to satisfy FKs for relationships
+	for _, card := range cards {
+		contact, err := converter.VCardToContactShell(card)
 		if err != nil {
 			continue
 		}
 
-		// Convert vCard to contact
+		// if input doesnt have a UID, we created one -> and now need to set it for loop 2
+		if card.Get(vcard.FieldUID) == nil {
+			card.SetValue(vcard.FieldUID, contact.UID)
+		}
+
+		// Create the contact if it doesn't exist
+		// h.db.CreateContact should handle "ON CONFLICT (user_id, uid) DO NOTHING"
+		_ = h.db.CreateContact(user.ID, contact)
+	}
+
+	// Fetch current state for relationship matching
+	allContacts, _ := h.db.GetAllContactsAbbrv(user.ID, false)
+	allRelTypes, _ := h.db.GetRelationshipTypes()
+
+	// Create a quick lookup map: UID -> Internal ID
+	uidToID := make(map[string]int)
+	for _, c := range allContacts {
+		uidToID[c.UID] = c.ID
+	}
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[HANDLER] Dump of uidToID:")
+		utils.Dump(uidToID)
+	}
+
+	// Pass 2: Full Update
+	// Now converter.VCardToContact can find the related contacts in allContacts
+	imported := 0
+	for _, card := range cards {
 		contact, err := converter.VCardToContact(card, allContacts, allRelTypes)
 		if err != nil {
-			logger.Error("[HANDLER] Error converting vCard to Contact: %v", err)
-			return
-		}
-
-		// Create contact
-		if err := h.db.CreateContact(user.ID, contact); err != nil {
+			logger.Debug("[HANDLER] Error converting vCard to Contact: %v", err)
 			continue
 		}
-		imported++
+
+		//Populate the contact.ID based on what's been created or already exists
+		logger.Trace("UID: %s", contact.UID)
+		if id, ok := uidToID[contact.UID]; ok {
+			contact.ID = id
+			if err := h.db.UpdateContact(user.ID, contact); err == nil {
+				imported++
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"imported": imported,
-		"status":   "success",
+		"count":  imported,
+		"status": "success",
 	})
 }
 

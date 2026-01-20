@@ -41,3 +41,15 @@ type OtherRelationship struct {
 	RelationshipName   string    `json:"relationship_name"`
 	CreatedAt          time.Time `json:"created_at"`
 }
+
+// Suggestion defines the proposed action for the UI
+type RelationshipSuggestion struct {
+	Type               string // "Relationship"
+	TargetID           int    // The ID of the person we are ADDING the link to
+	TargetName         string
+	ProposedID         int // The ID of the person they are related to
+	SourceName         string
+	RelationshipTypeID int    // The ID for "Brother", "Father", etc.
+	ProposedVal        string // The Label (e.g., "Brother")
+	Reason             string // Your logic description
+}

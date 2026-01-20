@@ -27,6 +27,11 @@ import (
 func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 	logger.Debug("[DATABASE] Begin CreateContact(userID:%d, contact:--)", userID)
 
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of Contact:")
+		utils.Dump(contact)
+	}
+
 	tx, err := d.db.Begin()
 	if err != nil {
 		logger.Error("[DATABASE] Error starting tx: %v", err)
@@ -361,6 +366,11 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 // UpdateContact updates an existing contact
 func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 	logger.Debug("[DATABASE] Begin UpdateContact(userID:%d, contact:--)", userID)
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of Contact:")
+		utils.Dump(contact)
+	}
 
 	tx, err := d.db.Begin()
 	if err != nil {
@@ -818,8 +828,40 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 	return d.GetContactByID(userID, contactID)
 }
 
+// UpdateContactAnniversary specifically updates anniversary data for sync suggestions
+func (d *Database) UpdateContactAnniversary(userID int, contactID int, body models.AnniversaryJSONPatch) error {
+	logger.Debug("[DATABASE] Begin UpdateContactAnniversary(userID:%d, contactID:%d, body:--)", userID, contactID)
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of AnniversaryJSONPatch:")
+		utils.Dump(body)
+	}
+
+	_, err := d.db.Exec(`
+		UPDATE contacts 
+		SET anniversary = $1, anniversary_month = $2, anniversary_day = $3
+		WHERE id = $4 AND user_id = $5`,
+		body.Anniversary, body.AnniversaryMonth, body.AnniversaryDay, contactID, userID)
+	if err != nil {
+		return err
+	}
+
+	// 2. Increment sync token so CardDAV clients pull the change
+	newToken, err := d.IncrementAndGetNewSyncToken(userID)
+	if err == nil {
+		_ = d.bumpContactSyncToken(contactID, newToken)
+	}
+
+	return nil
+}
+
 func (d *Database) UpdateContactPhone(userID int, body models.PhoneJSONPatch) ([]models.Phone, error) {
 	logger.Debug("[DATABASE] Begin UpdateContactPhone(userID:%d, body:--)", userID)
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of PhoneJSONPatch:")
+		utils.Dump(body)
+	}
 
 	var contactID int
 
@@ -945,14 +987,40 @@ func (d *Database) insertOtherDates(tx *sql.Tx, contactID int, otherDates []mode
 
 func (d *Database) insertRelationships(tx *sql.Tx, contactID int, relationships []models.Relationship) error {
 	for _, relationship := range relationships {
+		relatedID := relationship.RelatedContact.ID
+		typeID := relationship.RelationshipType.ID
 
-		_, err := tx.Exec(`
-			INSERT INTO relationships (contact_id, related_contact_id, relationship_type_id)
-			VALUES ($1, $2, $3)
-			ON CONFLICT (contact_id, related_contact_id, relationship_type_id) DO NOTHING`,
-			contactID, relationship.RelatedContact.ID, relationship.RelationshipType.ID)
+		// Find what the "Mirror" relationship would be
+		// (e.g., if we are adding 'Son', the reverse is 'Father' or 'Mother')
+		// We get the current contact's gender to know which reverse name to check for
+		var myGender string
+		_ = tx.QueryRow("SELECT gender FROM contacts WHERE id = $1", contactID).Scan(&myGender)
+
+		reverseTypeID, err := d.GetReverseRelationshipType(typeID, myGender)
+
+		if err == nil {
+			// Check if the mirror already exists
+			var exists bool
+			tx.QueryRow(`
+                SELECT EXISTS(
+                    SELECT 1 FROM relationships 
+                    WHERE contact_id = $1 AND related_contact_id = $2 AND relationship_type_id = $3
+                )`, relatedID, contactID, reverseTypeID).Scan(&exists)
+
+			if exists {
+				logger.Debug("[DATABASE] Skipping mirror relationship: %d is already %d of %d", contactID, reverseTypeID, relatedID)
+				continue
+			}
+		}
+
+		// If no mirror exists, insert as normal
+		_, err = tx.Exec(`
+            INSERT INTO relationships (contact_id, related_contact_id, relationship_type_id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (contact_id, related_contact_id, relationship_type_id) DO NOTHING`,
+			contactID, relatedID, typeID)
+
 		if err != nil {
-			logger.Error("[DATABASE] Error inserting Relationships: %v", err)
 			return err
 		}
 	}

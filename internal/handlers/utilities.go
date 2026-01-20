@@ -54,3 +54,45 @@ func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
 		"Contacts": contacts,
 	})
 }
+
+func (h *Handler) RelationshipAssignmentPage(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	suggestions, err := h.db.GetRelationshipSuggestions(user.ID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Render using your existing template pattern
+	h.renderTemplate(w, r, "util_relationship_assign.html", map[string]interface{}{
+		"Title":       "Relationship Assignment",
+		"User":        user,
+		"Suggestions": suggestions,
+	})
+}
+
+func (h *Handler) AnniversaryProposalPage(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	suggestions, err := h.db.GetAnniversarySuggestions(user.ID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Render using your existing template pattern
+	h.renderTemplate(w, r, "util_anniversary_proposer.html", map[string]interface{}{
+		"Title":       "Anniversary Proposal",
+		"User":        user,
+		"Suggestions": suggestions,
+	})
+}

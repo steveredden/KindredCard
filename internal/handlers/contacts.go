@@ -337,7 +337,7 @@ func (h *Handler) UpdatePhoneAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get Contact ID from URL
+	// Get Phone ID from URL
 	phoneID, err := strconv.Atoi(mux.Vars(r)["pid"])
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
@@ -362,3 +362,52 @@ func (h *Handler) UpdatePhoneAPI(w http.ResponseWriter, r *http.Request) {
 	// Return updated record
 	json.NewEncoder(w).Encode(updated)
 }
+
+// UpdateAnniversaryAPI godoc
+//
+//	@Summary		Update an anniversary
+//	@Description	Update specific fields of an anniversary using HTTP PATCH. Only provided fields will be updated.
+//	@Tags			contacts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int						true	"Contact ID"
+//	@Param			contact	body		models.AnniversaryJSONPatch	true	"Anniversary fields to update"
+//	@Success		200		{object}	[]models.Contact		"Updated contact"
+//	@Failure		400		{object}	map[string]string		"Invalid request body or contact ID"
+//	@Failure		401		{object}	map[string]string		"Unauthorized"
+//	@Failure		404		{object}	map[string]string		"Contact not found"
+//	@Failure		500		{object}	map[string]string		"Internal server error"
+//	@Security		ApiTokenAuth
+//	@Router			/api/v1/contacts/{id}/anniversary [patch]
+func (h *Handler) UpdateAnniversaryAPI(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get Contact ID from URL
+	contactID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	var input models.AnniversaryJSONPatch
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.db.UpdateContactAnniversary(user.ID, contactID, input)
+	if err != nil {
+		http.Error(w, "Update failed", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}
+
+// Router: api.HandleFunc("/contacts/{id:[0-9]+}/anniversary", handler.PatchAnniversaryAPI).Methods("PATCH")
