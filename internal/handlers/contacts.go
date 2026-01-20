@@ -40,7 +40,7 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	upcomingEventCount, _ := h.db.GetUpcomingEventsCount(user.ID, 7)
 	recentlyEditedCount, _ := h.db.GetRecentlyEditedCountByDays(user.ID, 7)
 
-	h.renderTemplate(w, "index.html", map[string]interface{}{
+	h.renderTemplate(w, r, "index.html", map[string]interface{}{
 		"User":               user,
 		"Contacts":           contacts,
 		"TotalContacts":      totalCount,
@@ -49,9 +49,6 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 		"Title":              "Contacts",
 		"ActivePage":         "contacts",
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }
 
 // ShowContact displays a single contact
@@ -84,7 +81,7 @@ func (h *Handler) ShowContact(w http.ResponseWriter, r *http.Request) {
 	allContacts, _ := h.db.GetAllContactsAbbrv(user.ID, false)
 	relationshipTypes, _ := h.db.GetRelationshipTypes()
 
-	h.renderTemplate(w, "contact_detail.html", map[string]interface{}{
+	h.renderTemplate(w, r, "contact_detail.html", map[string]interface{}{
 		"AllContacts":       allContacts,
 		"RelationshipTypes": relationshipTypes,
 		"Contact":           contact,
@@ -95,9 +92,6 @@ func (h *Handler) ShowContact(w http.ResponseWriter, r *http.Request) {
 		"Title":             contact.FullName,
 		"ActivePage":        "contacts",
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }
 
 // PartialDateView represents a date that may or may not have a year

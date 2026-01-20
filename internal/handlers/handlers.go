@@ -87,7 +87,12 @@ func NewHandler(database *db.Database, templatesPath string, baseURL string, rel
 }
 
 // renderTemplate renders a template by combining base layout with specific page
-func (h *Handler) renderTemplate(w http.ResponseWriter, pageName string, data any) error {
+func (h *Handler) renderTemplate(w http.ResponseWriter, r *http.Request, pageName string, data any) error {
+	token, _ := middleware.GetTokenFromCurrentSession(r)
+	if token != "" {
+		h.db.UpdateSessionActivity(token)
+	}
+
 	tmpl, err := h.templates.Clone()
 	if err != nil {
 		return err
@@ -123,7 +128,7 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		userNotifications = []models.NotificationSetting{}
 	}
 
-	userPreferences, _ := h.db.GetUserPreferences(user.ID)
+	// userPreferences, _ := h.db.GetUserPreferences(user.ID)
 
 	tokens, err := h.db.GetAPITokensByUserID(user.ID)
 	if err != nil {
@@ -148,12 +153,12 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	commonZones := []string{
-		"UTC", "America/New_York", "America/Chicago", "America/Denver",
-		"America/Los_Angeles", "Europe/London", "Europe/Paris", "Asia/Tokyo",
-	}
+	// commonZones := []string{
+	// 	"UTC", "America/New_York", "America/Chicago", "America/Denver",
+	// 	"America/Los_Angeles", "Europe/London", "Europe/Paris", "Asia/Tokyo",
+	// }
 
-	h.renderTemplate(w, "settings.html", map[string]interface{}{
+	h.renderTemplate(w, r, "settings.html", map[string]interface{}{
 		"User":                 user,
 		"Title":                "Settings",
 		"ActivePage":           "settings",
@@ -161,12 +166,9 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		"APITokens":            tokens,
 		"Sessions":             sessions,
 		"NotificationSettings": userNotifications,
-		"Timezones":            commonZones,
-		"CurrentTZ":            userPreferences.Timezone,
+		// "Timezones":            commonZones,
+		// "CurrentTZ":            userPreferences.Timezone,
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }
 
 // API Handlers

@@ -28,14 +28,11 @@ func (h *Handler) GenderAssignmentPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.renderTemplate(w, "util_gender_assign.html", map[string]interface{}{
+	h.renderTemplate(w, r, "util_gender_assign.html", map[string]interface{}{
 		"Title":    "Gender Assigner",
 		"User":     user,
 		"Contacts": contacts,
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }
 
 func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
@@ -51,12 +48,9 @@ func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.renderTemplate(w, "util_phone_formatter.html", map[string]interface{}{
+	h.renderTemplate(w, r, "util_phone_formatter.html", map[string]interface{}{
 		"Title":    "Phone Formatter",
 		"User":     user,
 		"Contacts": contacts,
 	})
-
-	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
 }

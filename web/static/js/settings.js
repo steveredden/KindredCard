@@ -449,42 +449,42 @@
     // SECURITY TAB FUNCTIONS
     // ========================================
 
-    // Timezone things
-    window.savePreferences = async function(prefs) {
-        try {
-            const response = await fetch('/api/v1/user/preferences', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(prefs)
-            });
-            if (response.ok) {
-                console.log("Preferences saved successfully");
-            }
-        } catch (err) {
-            console.error("Failed to save preferences:", err);
-        }
-    }
+    // // Timezone things
+    // window.savePreferences = async function(prefs) {
+    //     try {
+    //         const response = await fetch('/api/v1/user/preferences', {
+    //             method: 'PUT',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify(prefs)
+    //         });
+    //         if (response.ok) {
+    //             console.log("Preferences saved successfully");
+    //         }
+    //     } catch (err) {
+    //         console.error("Failed to save preferences:", err);
+    //     }
+    // }
 
-    window.updateTimezone = function(tz) {
-        savePreferences({ 
-            theme: document.documentElement.getAttribute('data-theme'),
-            timezone: tz 
-        });
-    };
+    // window.updateTimezone = function(tz) {
+    //     savePreferences({ 
+    //         theme: document.documentElement.getAttribute('data-theme'),
+    //         timezone: tz 
+    //     });
+    // };
 
-    window.detectTimezone = function() {
-        const detectedTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const select = document.getElementById('timezone-select');
+    // window.detectTimezone = function() {
+    //     const detectedTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    //     const select = document.getElementById('timezone-select');
         
-        if (select) {
-            select.value = detectedTZ;
-            updateTimezone(detectedTZ);
+    //     if (select) {
+    //         select.value = detectedTZ;
+    //         updateTimezone(detectedTZ);
             
-            if (window.showNotification) {
-                showNotification(`Detected: ${detectedTZ}`, 'success');
-            }
-        }
-    };
+    //         if (window.showNotification) {
+    //             showNotification(`Detected: ${detectedTZ}`, 'success');
+    //         }
+    //     }
+    // };
 
     // Password change form validation
     const passwordForm = document.querySelector('form[action="/settings/password"]');
