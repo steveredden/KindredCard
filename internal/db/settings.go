@@ -372,14 +372,13 @@ func (d *Database) GetUserPreferences(userID int) (*models.User, error) {
 	var userPrefs models.User
 
 	query := `
-		SELECT 
-			theme, timezone
+		SELECT theme
 		FROM users
 		WHERE id = $1
 		LIMIT 1
 	`
 
-	err := d.db.QueryRow(query, userID).Scan(&userPrefs.Theme, &userPrefs.Timezone)
+	err := d.db.QueryRow(query, userID).Scan(&userPrefs.Theme)
 
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting user preferences: %v", err)
@@ -499,9 +498,8 @@ func (d *Database) UpdateUserPreferences(user models.User) error {
 	_, err := d.db.Exec(`
 		UPDATE users 
 		SET 
-			theme = $1,
-			timezone = $2
-		WHERE id = $3`,
-		user.Theme, user.Timezone, user.ID)
+			theme = $1
+		WHERE id = $2`,
+		user.Theme, user.ID)
 	return err
 }

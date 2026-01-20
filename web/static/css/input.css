@@ -336,3 +336,7 @@
 .no-grow {
   flex: 0 0 auto;
 }
+
+#search-results:empty {
+    display: none;
+}

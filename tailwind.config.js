@@ -4,6 +4,12 @@ module.exports = {
     "./web/templates/**/*.html",
     "./web/static/js/**/*.js",
   ],
+  safelist: [
+    'htmx-indicator',
+    'htmx-request',
+    'htmx-settling',
+    'htmx-swapping'
+  ],
   theme: {
     extend: {
       // Custom extensions if needed

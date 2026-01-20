@@ -26,6 +26,7 @@ help:
 
 dev:
 	@echo "🚀 Starting development servers..."
+	@npm install
 	@npm run build:css && (npm run watch:css & go run cmd/kindredcard/main.go)
 
 db-reset:
@@ -61,3 +62,4 @@ clean:
 	@echo "🧹 Cleaning..."
 	rm -f kindredcard
 	rm -f web/static/css/output.css*
+	rm -f web/static/js/htmx.min.js

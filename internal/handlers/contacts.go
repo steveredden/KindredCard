@@ -11,6 +11,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,12 +19,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/steveredden/KindredCard/internal/middleware"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 // Main Index (index.html) Page!
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
-
-	// on the index page cache the user context
 	user, ok := middleware.GetUserFromContext(r)
 	if !ok {
 		return
@@ -49,6 +49,57 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 		"Title":              "Contacts",
 		"ActivePage":         "contacts",
 	})
+}
+
+func (h *Handler) SearchContactsHeader(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		return
+	}
+
+	query := r.URL.Query().Get("q")
+	if len(query) < 2 {
+		return
+	}
+
+	// Replace with your actual DB query logic
+	contacts, err := h.db.SearchContacts(user.ID, query)
+	if err != nil || len(contacts) == 0 {
+		w.Write([]byte("<li><span class='menu-title'>No contacts found</span></li>"))
+		return
+	}
+
+	// Return the HTML fragment for HTMX to inject
+	for _, c := range contacts {
+		var avatarHTML string
+		// Check if we have a valid avatar
+		if c.AvatarBase64 != "" && c.AvatarMimeType != "" {
+			avatarHTML = fmt.Sprintf(`
+                <div class="avatar">
+                    <div class="rounded-full w-8">
+                        <img src="data:%s;base64,%s" alt="%s" />
+                    </div>
+                </div>`, c.AvatarMimeType, c.AvatarBase64, c.FullName)
+		} else {
+			// Fallback to the DaisyUI placeholder used in your header
+			avatarHTML = fmt.Sprintf(`
+                <div class="avatar placeholder">
+                    <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
+                        <span class="text-xs">%s</span>
+                    </div>
+                </div>`, utils.Initial(c.FullName))
+		}
+
+		fmt.Fprintf(w, `
+            <li>
+                <a href="/contacts/%d" class="flex items-center gap-3 py-2 hover:bg-base-200">
+                    %s
+                    <div class="flex flex-col">
+                        <span class="font-medium text-sm text-base-content">%s</span>
+                    </div>
+                </a>
+            </li>`, c.ID, avatarHTML, c.FullName)
+	}
 }
 
 // ShowContact displays a single contact

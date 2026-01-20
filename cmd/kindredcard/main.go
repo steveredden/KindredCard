@@ -130,6 +130,7 @@ func main() {
 	web.HandleFunc("/", handler.Index).Methods("GET")
 	web.HandleFunc("/events", handler.ShowEvents).Methods("GET")
 	web.HandleFunc("/contacts/{id:[0-9]+}", handler.ShowContact).Methods("GET")
+	web.HandleFunc("/contacts/search-header", handler.SearchContactsHeader).Methods("GET")
 	web.HandleFunc("/settings", handler.ShowSettings).Methods("GET")
 	web.HandleFunc("/logout", handler.Logout).Methods("GET")
 
