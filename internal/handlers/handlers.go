@@ -89,7 +89,9 @@ func NewHandler(database *db.Database, templatesPath string, baseURL string, rel
 // renderTemplate renders a template by combining base layout with specific page
 func (h *Handler) renderTemplate(w http.ResponseWriter, r *http.Request, pageName string, data any) error {
 	token, _ := middleware.GetTokenFromCurrentSession(r)
-	h.db.UpdateSessionActivity(token)
+	if token != "" {
+		h.db.UpdateSessionActivity(token)
+	}
 
 	tmpl, err := h.templates.Clone()
 	if err != nil {

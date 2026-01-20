@@ -23,7 +23,7 @@ import (
 // Authentication Handlers
 
 func (h *Handler) ShowLogin(w http.ResponseWriter, r *http.Request) {
-	h.renderTemplate(w, "login.html", map[string]interface{}{
+	h.renderTemplate(w, r, "login.html", map[string]interface{}{
 		"Title": "Login",
 	})
 }
@@ -34,7 +34,7 @@ func (h *Handler) ProcessLogin(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.db.ValidateUserCredentials(email, password)
 	if err != nil {
-		h.renderTemplate(w, "login.html", map[string]interface{}{
+		h.renderTemplate(w, r, "login.html", map[string]interface{}{
 			"Title": "Login",
 			"Error": "Invalid email or password",
 		})
@@ -130,7 +130,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 // Setup Handlers
 
 func (h *Handler) ShowSetup(w http.ResponseWriter, r *http.Request) {
-	h.renderTemplate(w, "setup.html", map[string]interface{}{
+	h.renderTemplate(w, r, "setup.html", map[string]interface{}{
 		"Title": "Setup",
 		"Error": "",
 	})
@@ -150,7 +150,7 @@ func (h *Handler) ProcessSetup(w http.ResponseWriter, r *http.Request) {
 	confirm := r.FormValue("confirm_password")
 
 	if password != confirm {
-		h.renderTemplate(w, "setup.html", map[string]interface{}{
+		h.renderTemplate(w, r, "setup.html", map[string]interface{}{
 			"Title": "Setup",
 			"Error": "Passwords don't match",
 		})
@@ -158,7 +158,7 @@ func (h *Handler) ProcessSetup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(password) < 8 {
-		h.renderTemplate(w, "setup.html", map[string]interface{}{
+		h.renderTemplate(w, r, "setup.html", map[string]interface{}{
 			"Title": "Setup",
 			"Error": "Password must be at least 8 characters",
 		})
@@ -175,7 +175,7 @@ func (h *Handler) ProcessSetup(w http.ResponseWriter, r *http.Request) {
 	// Create user
 	user, err := h.db.CreateUser(email, hash)
 	if err != nil {
-		h.renderTemplate(w, "setup.html", map[string]interface{}{
+		h.renderTemplate(w, r, "setup.html", map[string]interface{}{
 			"Title": "Setup",
 			"Error": "Email already exists or database error",
 		})
@@ -253,14 +253,14 @@ func (h *Handler) RotatePassword(w http.ResponseWriter, r *http.Request) {
 
 	// 3. **Validation Checks**
 	if newPassword != confirmNewPassword {
-		h.renderTemplate(w, "settings.html", map[string]interface{}{
+		h.renderTemplate(w, r, "settings.html", map[string]interface{}{
 			"Error": "New passwords do not match.",
 		})
 		return
 	}
 
 	if len(newPassword) < 8 {
-		h.renderTemplate(w, "settings.html", map[string]interface{}{
+		h.renderTemplate(w, r, "settings.html", map[string]interface{}{
 			"Error": "New password must be at least 8 characters.",
 		})
 		return
@@ -269,7 +269,7 @@ func (h *Handler) RotatePassword(w http.ResponseWriter, r *http.Request) {
 	// 4. **Verify Current Password (Critical Step)**
 	// You need the stored hash from the user's database record (user.PasswordHash).
 	if err := auth.CheckPassword(currentPassword, user.PasswordHash); err != nil {
-		h.renderTemplate(w, "settings.html", map[string]interface{}{
+		h.renderTemplate(w, r, "settings.html", map[string]interface{}{
 			"Error": "Current password is incorrect.",
 		})
 		return
