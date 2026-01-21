@@ -370,13 +370,13 @@ func (h *Handler) UpdatePhoneAPI(w http.ResponseWriter, r *http.Request) {
 //	@Tags			contacts
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		int						true	"Contact ID"
+//	@Param			id		path		int							true	"Contact ID"
 //	@Param			contact	body		models.AnniversaryJSONPatch	true	"Anniversary fields to update"
-//	@Success		200		{object}	[]models.Contact		"Updated contact"
-//	@Failure		400		{object}	map[string]string		"Invalid request body or contact ID"
-//	@Failure		401		{object}	map[string]string		"Unauthorized"
-//	@Failure		404		{object}	map[string]string		"Contact not found"
-//	@Failure		500		{object}	map[string]string		"Internal server error"
+//	@Success		200		{object}	map[string]string			"Updated contact"
+//	@Failure		400		{object}	map[string]string			"Invalid request body or contact ID"
+//	@Failure		401		{object}	map[string]string			"Unauthorized"
+//	@Failure		404		{object}	map[string]string			"Contact not found"
+//	@Failure		500		{object}	map[string]string			"Internal server error"
 //	@Security		ApiTokenAuth
 //	@Router			/api/v1/contacts/{id}/anniversary [patch]
 func (h *Handler) UpdateAnniversaryAPI(w http.ResponseWriter, r *http.Request) {
