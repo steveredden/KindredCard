@@ -29,9 +29,10 @@ func (h *Handler) GenderAssignmentPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderTemplate(w, r, "util_gender_assign.html", map[string]interface{}{
-		"Title":    "Gender Assigner",
-		"User":     user,
-		"Contacts": contacts,
+		"Title": "Gender Assigner",
+		"User":  user,
+		"Items": contacts,
+		"Count": len(contacts),
 	})
 }
 
@@ -49,9 +50,10 @@ func (h *Handler) PhoneFormatterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderTemplate(w, r, "util_phone_formatter.html", map[string]interface{}{
-		"Title":    "Phone Formatter",
-		"User":     user,
-		"Contacts": contacts,
+		"Title": "Phone Formatter",
+		"User":  user,
+		"Items": contacts,
+		"Count": len(contacts),
 	})
 }
 
@@ -70,9 +72,10 @@ func (h *Handler) RelationshipAssignmentPage(w http.ResponseWriter, r *http.Requ
 
 	// 2. Render using your existing template pattern
 	h.renderTemplate(w, r, "util_relationship_assign.html", map[string]interface{}{
-		"Title":       "Relationship Assignment",
-		"User":        user,
-		"Suggestions": suggestions,
+		"Title": "Relationship Assignment",
+		"User":  user,
+		"Items": suggestions,
+		"Count": len(suggestions),
 	})
 }
 
@@ -91,8 +94,9 @@ func (h *Handler) AnniversaryProposalPage(w http.ResponseWriter, r *http.Request
 
 	// 2. Render using your existing template pattern
 	h.renderTemplate(w, r, "util_anniversary_proposer.html", map[string]interface{}{
-		"Title":       "Anniversary Proposal",
-		"User":        user,
-		"Suggestions": suggestions,
+		"Title": "Anniversary Proposal",
+		"User":  user,
+		"Items": suggestions,
+		"Count": len(suggestions),
 	})
 }
