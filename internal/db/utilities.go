@@ -52,7 +52,10 @@ func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error
 func (d *Database) GetContactsWithPhones(userID int) ([]models.Contact, error) {
 	logger.Debug("[DATABASE] Begin GetContactsWithPhones(userID:%d)", userID)
 
-	query := `SELECT c.id, c.full_name, c.given_name, c.family_name, p.id, p.phone 
+	query := `
+		SELECT 
+			c.id, c.full_name, c.given_name, c.family_name, p.id, p.phone,
+			c.avatar_base64, c.avatar_mime_type
           FROM phones p
           JOIN contacts c on c.id = p.contact_id
           WHERE c.user_id = $1
@@ -75,6 +78,7 @@ func (d *Database) GetContactsWithPhones(userID int) ([]models.Contact, error) {
 		err := rows.Scan(
 			&c.ID, &c.FullName, &c.GivenName, &c.FamilyName,
 			&p.ID, &p.Phone,
+			&c.AvatarBase64, &c.AvatarMimeType,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contact/phone: %v", err)

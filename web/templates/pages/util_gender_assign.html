@@ -19,7 +19,7 @@
                     <div class="avatar {{if not $c.AvatarBase64}}placeholder{{end}}">
                         <div class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                             {{if $c.AvatarBase64}}
-                                <img src="data:image/jpeg;base64,{{$c.AvatarBase64}}" />
+                                <img src="data:{{$c.AvatarMimeType}};base64,{{$c.AvatarBase64}}" alt="{{$c.FullName}}" />
                             {{else}}
                                 <span class="text-4xl font-bold">{{initial $c.FullName}}</span>
                             {{end}}
