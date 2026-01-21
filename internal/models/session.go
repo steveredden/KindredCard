@@ -49,7 +49,7 @@ type Session struct {
 
 // IsExpired checks if the session has expired
 func (s *Session) IsExpired() bool {
-	return time.Now().After(s.ExpiresAt)
+	return time.Now().UTC().After(s.ExpiresAt)
 }
 
 // TimeAgo returns a human-readable string for last activity

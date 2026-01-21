@@ -341,7 +341,7 @@ func (d *Database) HasNotificationBeenSent(notifier models.NotificationSetting) 
 
 	var count int64
 
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 
 	query := `
 		SELECT COUNT(*) 

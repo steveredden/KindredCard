@@ -190,10 +190,10 @@ func CompareSecureStrings(a, b string) bool {
 
 // IsTokenExpired checks if a token expiration time has passed
 func IsTokenExpired(expiresAt time.Time) bool {
-	return time.Now().After(expiresAt)
+	return time.Now().UTC().After(expiresAt)
 }
 
 // GetSessionExpiry returns a future timestamp for session expiration
 func GetSessionExpiry() time.Time {
-	return time.Now().Add(30 * 24 * time.Hour) // 30 days
+	return time.Now().UTC().Add(30 * 24 * time.Hour) // 30 days
 }

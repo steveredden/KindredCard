@@ -45,6 +45,8 @@ func New(host, port, user, password, dbname string) (*Database, error) {
 		return nil, err
 	}
 
+	d.db.Exec("SET TIME ZONE 'UTC'")
+
 	return d, nil
 }
 
