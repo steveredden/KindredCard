@@ -61,8 +61,8 @@ release: setup-buildx docker-login
 		-t $(IMAGE_NAME):$$REL_VER \
 		-t $(IMAGE_NAME):latest \
 		-f $(DOCKER_DIR)/Dockerfile \
-		--push . ; \
-	@echo "✅ Release $$REL_VER pushed successfully!"
+		--push .
+	@echo "✅ Release pushed successfully!"
 
 clean:
 	@echo "🧹 Cleaning..."
