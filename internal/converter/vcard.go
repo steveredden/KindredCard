@@ -737,3 +737,42 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 
 	return contact, nil
 }
+
+// VCardToContactShell converts a vCard to a limited Contact model: UID, FullName, and Gender
+func VCardToContactShell(card vcard.Card) (*models.Contact, error) {
+	uid := ""
+	if field := card.Get(vcard.FieldUID); field != nil && field.Value != "" {
+		uid = field.Value
+	} else {
+		uid = uuid.New().String() // generate a new UUID
+	}
+
+	contact := &models.Contact{
+		UID: uid,
+	}
+
+	// Name fields
+	if fn := card.Get(vcard.FieldFormattedName); fn != nil {
+		contact.FullName = fn.Value
+	}
+
+	if n := card.Name(); n != nil {
+		contact.GivenName = n.GivenName
+		contact.FamilyName = n.FamilyName
+		contact.MiddleName = n.AdditionalName
+		contact.Prefix = n.HonorificPrefix
+		contact.Suffix = n.HonorificSuffix
+	}
+
+	// If FullName is empty, generate it
+	if contact.FullName == "" {
+		contact.FullName = contact.GenerateFullName()
+	}
+
+	// Gender
+	if gender := card.Get(vcard.FieldGender); gender != nil {
+		contact.Gender = gender.Value
+	}
+
+	return contact, nil
+}

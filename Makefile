@@ -1,4 +1,4 @@
-.PHONY: help dev db-reset release docker-login setup-buildx clean
+.PHONY: help swag-fmt dev db-reset release docker-login setup-buildx clean
 
 # Configuration
 GH_USER ?= $(GITHUB_USERNAME)
@@ -24,7 +24,13 @@ help:
 
 # --- Development ---
 
-dev:
+swag-fmt: ## Format and generate Swagger documentation
+	@echo "Formatting swagger comments..."
+	@swag fmt -g cmd/kindredcard/main.go
+	@echo "Generating swagger docs..."
+	@swag init -g cmd/kindredcard/main.go -o ./docs
+
+dev: swag-fmt
 	@echo "🚀 Starting development servers..."
 	@npm install
 	@npm run build:css && (npm run watch:css & go run cmd/kindredcard/main.go)

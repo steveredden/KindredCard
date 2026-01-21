@@ -400,6 +400,91 @@
                 }
             }
         },
+        "/api/v1/contacts/{id}/anniversary": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of an anniversary using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update an anniversary",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Anniversary fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AnniversaryJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated contact",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/contacts/{id}/relationships": {
             "post": {
                 "security": [
@@ -1022,6 +1107,23 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "models.AnniversaryJSONPatch": {
+            "type": "object",
+            "properties": {
+                "anniversary": {
+                    "type": "string",
+                    "example": "2026-04-30"
+                },
+                "anniversary_day": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "anniversary_month": {
+                    "type": "integer",
+                    "example": 4
                 }
             }
         },

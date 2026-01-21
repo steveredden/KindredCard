@@ -14,6 +14,7 @@ import (
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 // GetRelationshipTypes retrieves all relationship types
@@ -41,6 +42,33 @@ func (d *Database) GetRelationshipTypes() ([]models.RelationshipType, error) {
 	return types, nil
 }
 
+func (d *Database) GetReverseRelationshipType(typeID int, gender string) (int, error) {
+	logger.Debug("[DATABASE] Begin GetAPITokenByID(typeID:%d, gender:%s)", typeID, gender)
+
+	// Look up the relationship type to find its reverse names
+	var name, revMale, revFemale, revNeutral string
+	err := d.db.QueryRow("SELECT name, reverse_name_male, reverse_name_female, reverse_name_neutral FROM relationship_types WHERE id = $1", typeID).Scan(&name, &revMale, &revFemale, &revNeutral)
+	if err != nil {
+		return 0, err
+	}
+
+	// Determine which reverse name to look for based on the target's gender
+	targetName := revNeutral
+	if gender == "M" && revMale != "" {
+		targetName = revMale
+	} else if gender == "F" && revFemale != "" {
+		targetName = revFemale
+	}
+
+	if targetName == "" {
+		return 0, fmt.Errorf("no reverse type")
+	}
+
+	var reverseID int
+	err = d.db.QueryRow("SELECT id FROM relationship_types WHERE name = $1", targetName).Scan(&reverseID)
+	return reverseID, err
+}
+
 func (d *Database) GetRelationshipTypeByName(query string) (models.RelationshipType, error) {
 	logger.Debug("[DATABASE] Begin GetRelationshipTypeByName(query:%s)", query)
 
@@ -64,6 +92,11 @@ func (d *Database) GetRelationshipTypeByName(query string) (models.RelationshipT
 func (d *Database) CreateRelationshipType(relationshipType *models.RelationshipType) (int, error) {
 	logger.Debug("[DATABASE] Begin CreateRelationshipType(relationshipType:--)")
 
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of RelationshipType:")
+		utils.Dump(relationshipType)
+	}
+
 	var newID int
 
 	err := d.db.QueryRow(`
@@ -83,29 +116,49 @@ func (d *Database) CreateRelationshipType(relationshipType *models.RelationshipT
 func (d *Database) AddRelationship(userID int, contactID int, relatedContactID int, relationshipTypeID int) error {
 	logger.Debug("[DATABASE] Begin AddRelationship(userID:%d, contactID:%d, relatedContactID:%d, relationshipTypeID:%d)", userID, contactID, relatedContactID, relationshipTypeID)
 
-	_, err := d.db.Exec(`
-		INSERT INTO relationships (contact_id, related_contact_id, relationship_type_id)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (contact_id, related_contact_id, relationship_type_id) DO NOTHING`,
-		contactID, relatedContactID, relationshipTypeID)
-	if err != nil {
-		logger.Error("[DATABASE] Error inserting Relationships: %v", err)
+	// Mirror Detection: Check if the inverse already exists
+	var myGender string
+	_ = d.db.QueryRow("SELECT gender FROM contacts WHERE id = $1", contactID).Scan(&myGender)
+
+	reverseTypeID, err := d.GetReverseRelationshipType(relationshipTypeID, myGender)
+	if err == nil {
+		var exists bool
+		d.db.QueryRow(`
+            SELECT EXISTS(
+                SELECT 1 FROM relationships 
+                WHERE contact_id = $1 AND related_contact_id = $2 AND relationship_type_id = $3
+            )`, relatedContactID, contactID, reverseTypeID).Scan(&exists)
+
+		if exists {
+			logger.Info("[DATABASE] Relationship mirror already exists. Skipping redundant insert.")
+			return nil
+		}
 	}
 
+	// Perform the Insert
+	_, err = d.db.Exec(`
+        INSERT INTO relationships (contact_id, related_contact_id, relationship_type_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (contact_id, related_contact_id, relationship_type_id) DO NOTHING`,
+		contactID, relatedContactID, relationshipTypeID)
+
+	if err != nil {
+		logger.Error("[DATABASE] Error inserting Relationships: %v", err)
+		return err
+	}
+
+	// Sync Token Management
 	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
 	if err != nil {
 		logger.Error("[DATABASE] Error incrementing CardDAV sync token: %v", err)
 		return fmt.Errorf("failed to increment sync token: %w", err)
 	}
 
-	if err := d.bumpContactSyncToken(contactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
-	if err := d.bumpContactSyncToken(relatedContactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
+	// Bump both contacts so CardDAV clients see the update for both people
+	_ = d.bumpContactSyncToken(contactID, newSyncToken)
+	_ = d.bumpContactSyncToken(relatedContactID, newSyncToken)
 
-	return err
+	return nil
 }
 
 // RemoveRelationship removes a relationship between two contacts

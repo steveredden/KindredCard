@@ -16,6 +16,7 @@ import (
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -215,6 +216,11 @@ func (d *Database) GetNotificationSettingByID(userID int, notifierID int) (*mode
 func (d *Database) CreateNotificationSetting(userID int, notifier *models.NotificationSetting) (int, error) {
 	logger.Debug("[DATABASE] Begin CreateNotificationSetting(userID:%d, notifier:--)", userID)
 
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of NotificationSetting:")
+		utils.Dump(notifier)
+	}
+
 	query := `
 		INSERT INTO notification_settings (
 			user_id, name, provider_type, webhook_url, target_address, days_look_ahead,
@@ -243,6 +249,11 @@ func (d *Database) CreateNotificationSetting(userID int, notifier *models.Notifi
 // UpdateNotificationSetting updates a notification setting
 func (d *Database) UpdateNotificationSetting(userID int, notifier *models.NotificationSetting) error {
 	logger.Debug("[DATABASE] Begin UpdateNotificationSetting(userID:%d, notifier:--)", userID)
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of NotificationSetting:")
+		utils.Dump(notifier)
+	}
 
 	query := `
 		UPDATE notification_settings
@@ -289,6 +300,11 @@ func (d *Database) UpdateNotificationSetting(userID int, notifier *models.Notifi
 func (d *Database) RecordNotificationSettingSent(notifier models.NotificationSetting) error {
 	logger.Debug("[DATABASE] Begin RecordNotificationSettingSent(notifier:--)")
 
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of NotificationSetting:")
+		utils.Dump(notifier)
+	}
+
 	query := `
 		UPDATE notification_settings
 		SET 
@@ -318,6 +334,11 @@ func (d *Database) RecordNotificationSettingSent(notifier models.NotificationSet
 func (d *Database) HasNotificationBeenSent(notifier models.NotificationSetting) bool {
 	logger.Debug("[DATABASE] Begin HasNotificationBeenSent(notifier:--)")
 
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of NotificationSetting:")
+		utils.Dump(notifier)
+	}
+
 	var count int64
 
 	today := time.Now().Format("2006-01-02")
@@ -340,7 +361,7 @@ func (d *Database) HasNotificationBeenSent(notifier models.NotificationSetting) 
 
 // DeleteNotificationSetting deletes a notification setting
 func (d *Database) DeleteNotificationSetting(userID int, notifierID int) error {
-	logger.Debug("[DATABASE] Begin DeleteNotificationSetting(userID:%d, token:--)", userID)
+	logger.Debug("[DATABASE] Begin DeleteNotificationSetting(userID:%d, notifierID:%d)", userID, notifierID)
 
 	query := `DELETE FROM notification_settings WHERE id = $1 AND user_id = $2`
 
@@ -494,6 +515,11 @@ func (d *Database) GetContactStats(userID int) (*models.ContactStats, error) {
 // UpdateUserPreferences updates user theme and contacts per page
 func (d *Database) UpdateUserPreferences(user models.User) error {
 	logger.Debug("[DATABASE] Begin UpdateUserPreferences(user:--)")
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of User:")
+		utils.Dump(user)
+	}
 
 	_, err := d.db.Exec(`
 		UPDATE users 

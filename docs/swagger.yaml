@@ -40,6 +40,18 @@ definitions:
           type: string
         type: array
     type: object
+  models.AnniversaryJSONPatch:
+    properties:
+      anniversary:
+        example: "2026-04-30"
+        type: string
+      anniversary_day:
+        example: 30
+        type: integer
+      anniversary_month:
+        example: 4
+        type: integer
+    type: object
   models.Contact:
     properties:
       addresses:
@@ -658,6 +670,62 @@ paths:
       security:
       - ApiTokenAuth: []
       summary: Update a contact (full replacement)
+      tags:
+      - contacts
+  /api/v1/contacts/{id}/anniversary:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of an anniversary using HTTP PATCH. Only
+        provided fields will be updated.
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Anniversary fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.AnniversaryJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated contact
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update an anniversary
       tags:
       - contacts
   /api/v1/contacts/{id}/relationships:

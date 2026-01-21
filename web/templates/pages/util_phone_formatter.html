@@ -1,66 +1,93 @@
 {{define "content"}}
-<div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Phone Number Formatter</h1>
-        <div class="flex gap-4 items-center">
-            <span class="label gap-1">Format Selection:</span>
-            <select id="format-selector" class="select select-bordered select-sm" onchange="previewAll()">
-                <option value="(XXX) XXX-XXXX">(123) 456-7890</option>
-                <option value="XXX-XXX-XXXX">123-456-7890</option>
-                <option value="+1 XXXXXXXXXX">+1 1234567890</option>
-                <option value="XXX.XXX.XXXX">123.456.7890</option>
-            </select>
-            <span id="remaining-count" class="badge badge-outline">{{len .Contacts}} remaining</span>
-            <button onclick="window.location.reload()" class="btn btn-ghost btn-sm" title="Refresh Batch">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                </svg>
-            </button>
+    {{template "util_layout" .}}
+{{end}}
+
+{{define "util_body"}}
+    <div class="side-action-btn hidden md:block w-24"></div>
+
+    <div id="contact-deck" class="w-full max-w-md px-4">
+        <div class="card bg-base-300 mb-6 shadow-inner border border-base-100/10">
+            <div class="card-body p-4 flex-row items-center gap-4">
+                <span class="text-[10px] font-bold uppercase opacity-60">Format:</span>
+                <select id="format-selector" class="select select-bordered select-sm flex-1 font-mono focus:ring-2 focus:ring-primary" onchange="window.previewPhone()">
+                    <option value="(XXX) XXX-XXXX">(123) 456-7890</option>
+                    <option value="XXX-XXX-XXXX">123-456-7890</option>
+                    <option value="XXX.XXX.XXXX">123.456.7890</option>
+                    <option value="+1 XXXXXXXXXX">+1 1234567890</option>
+                    <option value="+1 (XXX) XXX-XXXX">+1 (123) 456-7890</option>
+                </select>
+            </div>
         </div>
-    </div>
 
-    <div class="flex flex-col items-center justify-center min-h-[400px]">
-        <div id="contact-deck" class="w-full max-w-2xl">
-            {{if .Contacts}}
-                {{range $index, $contact := .Contacts}}
-                    {{ $phone := index $contact.Phones 0 }} 
+        {{if .Items}}
+            {{range $contactIndex, $c := .Items}}
+                {{range $phoneIndex, $p := $c.Phones}}
+                <div class="util-card {{if or (ne $contactIndex 0) (ne $phoneIndex 0)}}hidden{{end}} card bg-base-100 shadow-xl border border-base-300 mx-auto"
+                     data-id="{{$c.ID}}" 
+                     data-phone-id="{{$p.ID}}"
+                     data-raw="{{$p.Phone}}">
                     
-                    <div class="phone-card card bg-base-100 shadow-xl border border-base-300 {{if ne $index 0}}hidden{{end}}" 
-                        data-phone-id="{{$phone.ID}}" 
-                        data-contact-id="{{$contact.ID}}"
-                        data-raw="{{$phone.Phone}}">
-                        <div class="card-body text-center">
-                            <h2 class="text-xl font-bold">{{$contact.FullName}}</h2>
-                            
-                            <div class="grid grid-cols-2 gap-4 my-6 p-4 bg-base-200 rounded-lg">
-                                <div>
-                                    <span class="text-xs uppercase opacity-50 block">Current</span>
-                                    <span class="text-lg font-mono">{{$phone.Phone}}</span>
-                                </div>
-                                <div class="text-success">
-                                    <span class="text-xs uppercase opacity-50 block text-base-content">Preview</span>
-                                    <span class="preview-text text-lg font-mono font-bold">--</span>
-                                </div>
+                    <div class="card-body items-center text-center">
+                        <div class="avatar placeholder mb-2">
+                            <div class="bg-neutral text-neutral-content rounded-full w-20 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                {{if $c.AvatarBase64}}
+                                    <img src="data:image/jpeg;base64,{{$c.AvatarBase64}}" />
+                                {{else}}
+                                    <span class="text-2xl font-bold">{{slice $c.FullName 0 1}}</span>
+                                {{end}}
                             </div>
+                        </div> 
+                        
+                        <h2 class="card-title text-2xl font-black tracking-tight">{{$c.FullName}}</h2>
+                        <p class="text-[10px] opacity-40 uppercase tracking-widest font-bold">Standardize Phone Number</p>
+                        
+                        <div class="divider my-1 opacity-20"></div>
 
-                            <div class="card-actions justify-center gap-4">
-                                <button onclick="skipPhone()" class="btn btn-ghost">Skip</button>
-                                <button onclick="applyFormat()" class="btn btn-primary btn-wide">Update Format</button>
+                        <div class="w-full py-2 space-y-3">
+                            <div class="bg-base-200 rounded-xl p-3 border border-base-300/50">
+                                <span class="text-[10px] uppercase opacity-40 block mb-1 font-bold">Current</span>
+                                <span class="font-mono text-sm opacity-70">{{$p.Phone}}</span>
+                            </div>
+                            
+                            <div class="bg-primary/5 rounded-xl p-3 border border-primary/20 relative overflow-hidden">
+                                <span class="text-[10px] uppercase text-primary font-black block mb-1">Preview</span>
+                                <span class="preview-text font-mono text-xl font-bold text-primary tracking-widest leading-none">--</span>
                             </div>
                         </div>
+
+                        <div class="card-actions w-full flex-col gap-4 mt-4">
+                            <button onclick="applyFormat(event, '{{$c.ID}}', '{{$p.ID}}')" 
+                                    class="btn btn-primary btn-block shadow-lg">
+                                Apply Format
+                            </button>
+                            
+                            <button onclick="UtilCommon.showNext(this.closest('.util-card'))" 
+                                    class="btn btn-ghost btn-sm opacity-50 hover:opacity-100 font-bold uppercase tracking-tighter mx-auto">
+                                Skip Contact
+                            </button>
+                        </div>
                     </div>
+                </div>
                 {{end}}
-            {{else}}
-            <div class="text-center py-20">
-                <h3 class="text-xl">No phone numbers found to format.</h3>
-            </div>
             {{end}}
-        </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.previewPhone) window.previewPhone();
+                });
+            </script>
+        {{else}}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.UtilCommon) UtilCommon.showFinishedState();
+                });
+            </script>
+        {{end}}
     </div>
-</div>
+
+    <div class="side-action-btn hidden md:block w-24"></div>
 {{end}}
 
 {{define "scripts"}}
+<script src="/static/js/util-common.js"></script>
 <script src="/static/js/util-phone-format.js"></script>
 {{end}}

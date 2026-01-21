@@ -86,6 +86,13 @@ func (c *Contact) GenerateFullName() string {
 	return fullName
 }
 
+// HasAnniversary returns true if either the full date or the partial components are set
+func (c *Contact) HasAnniversary() bool {
+	hasFullDate := c.Anniversary != nil
+	hasPartial := c.AnniversaryMonth != nil && c.AnniversaryDay != nil
+	return hasFullDate || hasPartial
+}
+
 // Email represents an email address
 type Email struct {
 	ID        int      `json:"id"`

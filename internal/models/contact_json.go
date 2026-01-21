@@ -78,6 +78,12 @@ type ContactJSONPatch struct {
 	ExcludeFromSync *bool   `json:"exclude_from_sync" example:"false"`
 }
 
+type AnniversaryJSONPatch struct {
+	Anniversary      *time.Time `json:"anniversary" example:"2026-04-30"`
+	AnniversaryMonth *int       `json:"anniversary_month" example:"4"`
+	AnniversaryDay   *int       `json:"anniversary_day" example:"30"`
+}
+
 type PhoneJSONPatch struct {
 	ID    *int    `json:"id" example:"1"`
 	Phone *string `json:"phone" example:"(555)122-4121"`

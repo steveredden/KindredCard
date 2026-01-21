@@ -7,20 +7,22 @@
  * License, or (at your option) any later version.
  */
 
-// KindredCard - Utilities page: Gender Assignment
+// KindredCard - Utilities page: Relationship Suggestions
 (function() {
     'use strict';
     
-    window.assignGender = function(gender) {
-        const card = document.querySelector('.util-card:not(.hidden)');
-        if (!card) return;
-        const id = card.getAttribute('data-id');
-        
+    window.applyRel = async function(e, targetId, sourceId, typeId) {
+        const card = e.currentTarget.closest('.util-card');
         UtilCommon.showNext(card);
-        fetch(`/api/v1/contacts/${id}`, {
-            method: 'PATCH',
+        
+        fetch(`/api/v1/contacts/${sourceId}/relationships`, {
+            method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({gender: gender})
+            body: JSON.stringify({
+                related_contact_id: parseInt(targetId),
+                relationship_type_id: parseInt(typeId)
+            })
         });
     };
+
 })();
