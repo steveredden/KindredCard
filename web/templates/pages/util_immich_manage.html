@@ -1,0 +1,109 @@
+{{define "content"}}
+    {{template "util_layout" .}}
+{{end}}
+
+{{define "util_body"}}
+<div class="w-full max-w-5xl px-4 mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-black">Immich Connections</h2>
+            <p class="text-xs opacity-50 uppercase tracking-widest font-bold">Sync Data & Manage Links</p>
+        </div>
+        <a href="/utilities/immich-link" class="btn btn-ghost btn-sm">← Back to Linker</a>
+    </div>
+
+    <div class="bg-base-100 border border-base-300 rounded-[2rem] overflow-hidden shadow-xl">
+        <table class="table w-full">
+            <thead>
+                <tr class="bg-base-200/50 border-b border-base-300">
+                    <th class="py-4 text-[10px] uppercase tracking-widest">KindredCard Contact</th>
+                    <th class="py-4 text-center text-[10px] uppercase tracking-widest">Status</th>
+                    <th class="py-4 text-[10px] uppercase tracking-widest">Immich Person</th>
+                    <th class="py-4 text-right text-[10px] uppercase tracking-widest px-6">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-300">
+                {{range .Items}}
+                <tr class="hover:bg-base-200/30 transition-colors">
+                    <td class="py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="avatar {{if not .Contact.AvatarBase64}}placeholder{{end}}">
+                                <div class="w-12 h-12 rounded-2xl border border-base-300">
+                                    {{if .Contact.AvatarBase64}}
+                                        <img src="data:{{.Contact.AvatarMimeType}};base64,{{.Contact.AvatarBase64}}" />
+                                    {{else}}
+                                        <span class="text-xl font-black bg-neutral text-neutral-content w-full h-full flex items-center justify-center">
+                                            {{slice .Contact.FullName 0 1}}
+                                        </span>
+                                    {{end}}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-black text-sm">{{.Contact.FullName}}</div>
+                                <div class="text-[10px] opacity-50 font-mono">
+                                    {{if .Contact.Birthday}}{{.Contact.Birthday.Format "2006-01-02"}}{{else}}No Birthday{{end}}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="text-center opacity-20">
+                        <div class="flex flex-col items-center">
+                            <div class="h-px w-8 bg-current mb-1"></div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </div>
+                    </td>
+
+                    <td class="py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="avatar">
+                                <div class="w-12 h-12 rounded-2xl border border-base-300 shadow-sm">
+                                    <img src="/api/v1/immich/proxy/thumbnail/{{.ImmichPerson.ID}}" />
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">{{.ImmichPerson.Name}}</div>
+                                <div class="text-[10px] opacity-50 font-mono">
+                                    {{if .ImmichPerson.BirthDate}}{{.ImmichPerson.BirthDate}}{{else}}No Birthday{{end}}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="text-right py-4 px-6">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="syncField('{{.Contact.ID}}', 'avatar')" 
+                                    class="btn btn-square btn-ghost btn-sm tooltip" data-tip="Sync Avatar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            </button>
+                            
+                            <button onclick="syncField('{{.Contact.ID}}', 'birthday')" 
+                                    class="btn btn-square btn-ghost btn-sm tooltip" data-tip="Sync Birthday">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                            </button>
+
+                            <div class="divider divider-horizontal mx-0 w-2 opacity-10"></div>
+
+                            <button onclick="unlinkImmich('{{.Contact.ID}}', '{{(index .Contact.URLs 0).ID}}')" 
+                                    class="btn btn-square btn-ghost btn-sm text-error tooltip" data-tip="Remove Connection">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 9-6 6"/><path d="m9 9 6 6"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="4" class="text-center py-20 opacity-30 italic">
+                        No established connections found.
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/util-immich.js"></script>
+{{end}}
