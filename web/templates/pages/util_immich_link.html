@@ -1,0 +1,161 @@
+{{define "content"}}
+    {{template "util_layout" .}}
+{{end}}
+
+{{define "util_body"}}
+    {{if not .Configured}}
+    <!-- Not Configured -->
+    <div class="alert alert-warning">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+            <h3 class="font-bold">Immich Not Configured</h3>
+            <div class="text-sm">{{.Error}}</div>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl mt-6">
+        <div class="card-body">
+            <h2 class="card-title">Setup Instructions</h2>
+            <div class="space-y-4">
+                <div class="mockup-code">
+                    <pre data-prefix="$"><code>nano .env</code></pre>
+                    <pre data-prefix=""><code></code></pre>
+                    <pre data-prefix=""><code>IMMICH_URL=https://immich.yourdomain.com</code></pre>
+                    <pre data-prefix=""><code>IMMICH_TOKEN=your-api-token-here</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{else}}
+    <!-- Configured -->
+    <div class="side-action-btn hidden md:block w-24"></div>
+
+        <div id="contact-deck" class="w-full max-w-lg px-4">
+            <div id="potential-matches">
+                {{if .Items}}
+                    {{range $index, $m := .Items}}
+                    <div class="util-card {{if ne $index 0}}hidden{{end}} card bg-base-100 shadow-xl border border-base-300"
+                        data-contact-id="{{$m.Contact.ID}}" data-person-id="{{$m.ImmichPerson.ID}}">
+                        <div class="card-body items-center text-center">
+                            <h2 class="card-title opacity-50 text-[10px] uppercase tracking-[0.2em] mb-4">Identify Connection</h2>
+                            
+                            <div class="flex items-center justify-between w-full gap-4 bg-base-200/50 p-6 rounded-3xl border border-base-300">
+
+                                <div class="flex-1">
+                                    <div class="text-sm font-black truncate w-40 mb-3">KindredCard</div>
+                                    <div class="avatar placeholder mb-2">
+                                        <div class="bg-neutral text-neutral-content rounded-full w-20 ring ring-secondary ring-offset-base-100 ring-offset-2">
+                                            <span class="text-2xl font-black">{{slice $m.Contact.FullName 0 1}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs font-black truncate w-24 mx-auto">{{$m.Contact.FullName}}</div>
+                                </div>
+
+                                <div class="text-xl animate-pulse">🔗</div>
+
+                                <div class="flex-1">
+                                    <div class="text-sm font-black truncate w-40 mb-3">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5">
+                                                <path d="M11.9863 0.2695c-2.409 0 -5.207 1.091 -5.207 3.8946v0.1523c1.3428 0.597 2.9347 1.6629 4.4121 2.9707 1.5713 1.3912 2.8374 2.8821 3.6524 4.2871 1.3997 -2.5034 2.3358 -5.4784 2.3476 -7.373V4.164c0 -2.8035 -2.796 -3.8946 -5.205 -3.8946m7.5117 4.4903c-0.3778 -0.0081 -0.7747 0.0502 -1.1914 0.1855 -0.0366 0.0118 -0.086 0.0278 -0.1445 0.0469 -0.1525 1.4611 -0.6756 3.304 -1.4629 5.1133 -0.8373 1.9243 -1.8627 3.5898 -2.9472 4.7988 2.8132 0.558 5.9307 0.5273 7.7363 -0.0469 0.0126 -0.004 0.0246 -0.0065 0.0351 -0.0097 2.6665 -0.8666 2.84 -3.8636 2.0957 -6.1543 -0.6279 -1.9332 -2.081 -3.89 -4.121 -3.9336m-14.996 0.039C2.4618 4.8424 1.0088 6.7973 0.3809 8.7305c-0.7442 2.291 -0.5708 5.288 2.0957 6.1543l0.1445 0.0468c0.982 -1.0926 2.4873 -2.2761 4.1875 -3.2773 1.8088 -1.0646 3.619 -1.808 5.207 -2.1484 -1.9483 -2.1049 -4.4884 -3.9132 -6.287 -4.5098l-0.0352 -0.0117c-0.4167 -0.1354 -0.8136 -0.1936 -1.1914 -0.1856m4.6718 6.7578c-2.6038 1.2025 -5.1088 3.0598 -6.2324 4.586l-0.0215 0.0293c-1.6478 2.2683 -0.0272 4.7953 1.9219 6.211 1.9487 1.4159 4.8518 2.1765 6.5 -0.0919 0.0228 -0.0309 0.0536 -0.071 0.0898 -0.121 -0.7356 -1.2717 -1.396 -3.0718 -1.8222 -4.9981 -0.4534 -2.0492 -0.6023 -4 -0.4356 -5.6153m1.0723 3.338c0.3387 2.8478 1.3315 5.8037 2.4355 7.3437l0.0215 0.0293c1.6478 2.2683 4.551 1.5078 6.5 0.0918 1.9487 -1.416 3.5697 -3.943 1.9219 -6.211 -0.0228 -0.0309 -0.0517 -0.073 -0.0879 -0.123 -1.4367 0.3066 -3.3522 0.3794 -5.3164 0.1894 -2.089 -0.2017 -3.9895 -0.6623 -5.4746 -1.3203" fill="#000000" stroke-width=".9"></path>
+                                            </svg>
+                                            Immich
+                                        </span>
+                                    </div>
+                                    <div class="avatar mb-2">
+                                        <div class="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                                            <img src="/api/v1/immich/proxy/thumbnail/{{$m.ImmichPerson.ID}}" />
+                                        </div>
+                                    </div>
+                                    <div class="text-xs font-black truncate w-24 mx-auto">{{$m.ImmichPerson.Name}}</div>
+                                </div>
+
+                            </div>
+
+                            <div class="card-actions w-full flex-col gap-2 mt-6">
+                                <button onclick="linkImmich(event)" class="btn btn-primary btn-block shadow-lg">Link Connection</button>
+                                <button onclick="UtilCommon.showNext(this.closest('.util-card'))" class="btn btn-ghost btn-sm opacity-50">Not a match</button>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                {{else}}
+                    <div class="text-center p-8 bg-base-200/30 rounded-3xl border border-dashed border-base-300">
+                        <p class="text-sm opacity-40 font-bold uppercase tracking-widest">No new suggestions</p>
+                    </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div id="established-links">
+            <div class="mt-12">
+                <h3 class="text-sm font-black uppercase tracking-widest mb-4 opacity-60 px-2">Established Links</h3>
+                <div class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr class="bg-base-200">
+                                <th>Contact</th>
+                                <th>Immich Person</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Existing}}
+                            <tr>
+                                <td class="font-bold text-xs">
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar">
+                                            <div class="w-6 h-6 rounded-full">
+                                                {{if .Contact.AvatarBase64}}
+                                                <img src="data:{{.Contact.AvatarMimeType}};base64,{{.Contact.AvatarBase64}}" alt="{{.Contact.FullName}}" />
+                                                {{else}}
+                                                <div class="bg-base-100 text-primary flex items-center justify-center text-2xl font-bold h-[40%]">
+                                                    {{initial .Contact.FullName}}
+                                                </div>
+                                                {{end}}
+                                            </div>
+                                        </div>
+                                        <span><a class="link" href="/contacts/{{.Contact.ID}}">{{.Contact.FullName}}</a></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar">
+                                            <div class="w-6 h-6 rounded-full">
+                                                <img src="/api/v1/immich/proxy/thumbnail/{{.ImmichPerson.ID}}" />
+                                            </div>
+                                        </div>
+                                        <span class="text-[10px]">{{.ImmichPerson.Name}}</span>
+                                    </div>
+                                </td>
+                                <td class="text-right space-x-1">
+                                    <button onclick="syncSingle('{{.Contact.ID}}')" class="btn btn-square btn-ghost btn-xs text-success" title="Sync Data">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                                    </button>
+                                    <button onclick="unlinkImmich('{{.Contact.ID}}', '{{(index .Contact.URLs 0).ID}}')" class="btn btn-square btn-ghost btn-xs text-error" title="Remove Link">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            {{else}}
+                            <tr>
+                                <td colspan="3" class="text-center py-8 opacity-30 italic text-sm">No linked contacts yet</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-action-btn hidden md:block w-24"></div>
+    {{end}}
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/util-common.js"></script>
+<script src="/static/js/util-immich-link.js"></script>
+{{end}}
