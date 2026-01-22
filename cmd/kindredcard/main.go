@@ -144,6 +144,10 @@ func main() {
 	web.HandleFunc("/utilities/relationship-assignment", handler.RelationshipAssignmentPage).Methods("GET")
 	web.HandleFunc("/utilities/anniversary-proposal", handler.AnniversaryProposalPage).Methods("GET")
 
+	// immich pages
+	web.HandleFunc("/utilities/immich-link", handler.ImmichLinkPage).Methods("GET")
+	web.HandleFunc("/utilities/immich-manage", handler.ImmichManagementPage).Methods("GET")
+
 	// Protected API routes
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(middleware.APIAuthMiddleware(database))
@@ -156,10 +160,14 @@ func main() {
 	api.HandleFunc("/contacts/{id:[0-9]+}/avatar", handler.DeleteAvatarAPI).Methods("DELETE")
 	api.HandleFunc("/contacts/search", handler.SearchContactsAPI).Methods("GET")
 
-	// Contact (and related) PATCH
+	// Contact (and related) PATCH / POST / DELETE
 	api.HandleFunc("/contacts/{id:[0-9]+}", handler.PatchContactAPI).Methods("PATCH")
 	api.HandleFunc("/contacts/{id:[0-9]+}/anniversary", handler.UpdateAnniversaryAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{id:[0-9]+}/birthday", handler.UpdateBirthdayAPI).Methods("PATCH")
 	api.HandleFunc("/phones/{pid:[0-9]+}", handler.UpdatePhoneAPI).Methods("PATCH")
+	api.HandleFunc("/other-dates/{oid:[0-9]+}", handler.UpdateOtherDateAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{id:[0-9]+}/url", handler.NewURLAPI).Methods("POST")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/url/{urlid:[0-9]+}", handler.DeleteURLAPI).Methods("DELETE")
 
 	// Preferences / Theme
 	api.HandleFunc("/user/preferences", handler.UpdatePreferencesAPI).Methods("PUT")
@@ -205,6 +213,14 @@ func main() {
 	api.HandleFunc("/tokens/{id:[0-9]+}", handler.GetAPIToken).Methods("GET")
 	api.HandleFunc("/tokens/{id:[0-9]+}", handler.DeleteAPIToken).Methods("DELETE")
 	api.HandleFunc("/tokens/{id:[0-9]+}/revoke", handler.RevokeAPIToken).Methods("POST")
+
+	// immich APIs
+	api.HandleFunc("/immich/proxy/thumbnail/{personID}", handler.GetImmichThumbnailProxy).Methods("GET")
+	api.HandleFunc("/immich/link", handler.PostImmichLinkAPI).Methods("POST")
+	//api.HandleFunc("/sync/immich/status", handler.ImmichSyncAPIStatus).Methods("GET")
+	//api.HandleFunc("/sync/immich/test", handler.ImmichTestConnectionAPI).Methods("GET")
+	// api.HandleFunc("/sync/immich", handler.ImmichSyncAPI).Methods("POST")
+	// api.HandleFunc("/sync/immich/matches", handler.ImmichGetMatchesAPI).Methods("GET")
 
 	// CardDAV routes (Basic Auth)
 	carddav := r.PathPrefix("/carddav").Subrouter()

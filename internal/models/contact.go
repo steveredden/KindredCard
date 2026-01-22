@@ -93,6 +93,16 @@ func (c *Contact) HasAnniversary() bool {
 	return hasFullDate || hasPartial
 }
 
+// HasAvatar returns true if both an avatar and mimetype are set
+func (c *Contact) HasAvatar() bool {
+	return c.AvatarBase64 != "" && c.AvatarMimeType != ""
+}
+
+// HasAvatar returns true if both an avatar and mimetype are set
+func (c *Contact) HasFullBirthday() bool {
+	return c.Birthday != nil
+}
+
 // Email represents an email address
 type Email struct {
 	ID        int      `json:"id"`

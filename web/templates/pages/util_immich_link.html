@@ -1,0 +1,139 @@
+{{define "content"}}
+    {{template "util_layout" .}}
+{{end}}
+
+{{define "util_body"}}
+    {{if not .Configured}}
+    <!-- Not Configured -->
+    <div class="flex flex-col items-center justify-center min-h-[60vh] w-full px-4">
+        
+        <div class="w-full max-w-2xl space-y-6">
+            
+            <div class="alert alert-warning shadow-lg py-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-8 w-8" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-black text-xl">Immich Not Configured</h3>
+                    <div class="text-sm font-medium opacity-80" style="white-space: pre-line;">{{.Error}}</div>
+                </div>
+            </div>
+
+            <div class="card bg-base-100 border-2 border-base-300 shadow-2xl">
+                <div class="card-body p-10">
+                    <h2 class="card-title text-2xl font-black mb-4">Setup Instructions</h2>
+                    <p class="text-sm opacity-60 mb-6 font-bold uppercase tracking-widest">Add these variables to your environment file:</p>
+                    
+                    <div class="space-y-4">
+                        <div class="mockup-code bg-neutral text-neutral-content shadow-inner border border-white/10">
+                            <pre data-prefix="$" class="text-success"><code>IMMICH_URL=https://immich.yourdomain.com</code></pre>
+                            <pre data-prefix="$" class="text-success"><code>IMMICH_KEY=your-api-token-here</code></pre>
+                        </div>
+                    </div>
+                    <span class="text-sm opacity-90 mt-4 pt-4">
+                        Full Instructions: <a href="https://github.com/steveredden/KindredCard/wiki/Immich-Integration" target="_blank" class="link">github.com/steveredden/KindredCard/wiki/Immich-Integration</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center py-16">
+            <div class="flex justify-center gap-4">
+                <a href="/" class="btn btn-primary px-8">Return Home</a>
+                <a href="/settings" class="btn btn-ghost">Settings</a>
+            </div>
+        </div>
+
+    </div>
+
+    {{else}}
+    <!-- Configured -->
+    <div class="side-action-btn hidden md:block w-24"></div>
+
+    <div class="w-full max-w-lg px-4 flex flex-col gap-8">
+        
+        <div id="contact-deck">
+            {{if .Items}}
+                {{range $index, $m := .Items}}
+                <div class="util-card {{if ne $index 0}}hidden{{end}} card bg-base-100 shadow-xl border border-base-300"
+                    data-contact-id="{{$m.Contact.ID}}" data-person-id="{{$m.ImmichPerson.ID}}">
+                    <div class="card-body items-center text-center">
+                        <h2 class="card-title opacity-50 text-[10px] uppercase tracking-[0.2em] mb-4">Identify Connection</h2>
+                        
+                        <div class="flex items-center justify-between w-full gap-4 bg-base-200/50 p-6 rounded-3xl border border-base-300">
+
+                            <div class="flex-1">
+                                <div class="text-sm font-black truncate w-40 mb-3 opacity-60">KindredCard</div>
+                                <div class="avatar {{if not $m.Contact.AvatarBase64}}placeholder{{end}} mb-2">
+                                    <div class="bg-neutral text-neutral-content rounded-full w-20 ring ring-secondary ring-offset-base-100 ring-offset-2">
+                                        {{if $m.Contact.AvatarBase64}}
+                                            <img src="data:{{$m.Contact.AvatarMimeType}};base64,{{$m.Contact.AvatarBase64}}" alt="{{$m.Contact.FullName}}" />
+                                        {{else}}
+                                            <span class="text-2xl font-black">{{slice $m.Contact.FullName 0 1}}</span>
+                                        {{end}}
+                                    </div>
+                                </div>
+                                <div class="text-xs font-black truncate w-24 mx-auto">{{$m.Contact.FullName}}</div>
+                            </div>
+
+                            <div class="text-xl animate-pulse">🔗</div>
+
+                            <div class="flex-1">
+                                <div class="text-sm font-black truncate w-40 mb-3">
+                                    <span class="flex items-center justify-center gap-2">
+                                        <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current">
+                                            <path d="M11.9863 0.2695c-2.409 0 -5.207 1.091 -5.207 3.8946v0.1523c1.3428 0.597 2.9347 1.6629 4.4121 2.9707 1.5713 1.3912 2.8374 2.8821 3.6524 4.2871 1.3997 -2.5034 2.3358 -5.4784 2.3476 -7.373V4.164c0 -2.8035 -2.796 -3.8946 -5.205 -3.8946m7.5117 4.4903c-0.3778 -0.0081 -0.7747 0.0502 -1.1914 0.1855 -0.0366 0.0118 -0.086 0.0278 -0.1445 0.0469 -0.1525 1.4611 -0.6756 3.304 -1.4629 5.1133 -0.8373 1.9243 -1.8627 3.5898 -2.9472 4.7988 2.8132 0.558 5.9307 0.5273 7.7363 -0.0469 0.0126 -0.004 0.0246 -0.0065 0.0351 -0.0097 2.6665 -0.8666 2.84 -3.8636 2.0957 -6.1543 -0.6279 -1.9332 -2.081 -3.89 -4.121 -3.9336m-14.996 0.039C2.4618 4.8424 1.0088 6.7973 0.3809 8.7305c-0.7442 2.291 -0.5708 5.288 2.0957 6.1543l0.1445 0.0468c0.982 -1.0926 2.4873 -2.2761 4.1875 -3.2773 1.8088 -1.0646 3.619 -1.808 5.207 -2.1484 -1.9483 -2.1049 -4.4884 -3.9132 -6.287 -4.5098l-0.0352 -0.0117c-0.4167 -0.1354 -0.8136 -0.1936 -1.1914 -0.1856m4.6718 6.7578c-2.6038 1.2025 -5.1088 3.0598 -6.2324 4.586l-0.0215 0.0293c-1.6478 2.2683 -0.0272 4.7953 1.9219 6.211 1.9487 1.4159 4.8518 2.1765 6.5 -0.0919 0.0228 -0.0309 0.0536 -0.071 0.0898 -0.121 -0.7356 -1.2717 -1.396 -3.0718 -1.8222 -4.9981 -0.4534 -2.0492 -0.6023 -4 -0.4356 -5.6153m1.0723 3.338c0.3387 2.8478 1.3315 5.8037 2.4355 7.3437l0.0215 0.0293c1.6478 2.2683 4.551 1.5078 6.5 0.0918 1.9487 -1.416 3.5697 -3.943 1.9219 -6.211 -0.0228 -0.0309 -0.0517 -0.073 -0.0879 -0.123 -1.4367 0.3066 -3.3522 0.3794 -5.3164 0.1894 -2.089 -0.2017 -3.9895 -0.6623 -5.4746 -1.3203" />
+                                        </svg>
+                                        Immich
+                                    </span>
+                                </div>
+                                <div class="avatar mb-2">
+                                    <div class="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                                        <img src="/api/v1/immich/proxy/thumbnail/{{$m.ImmichPerson.ID}}" />
+                                    </div>
+                                </div>
+                                <div class="text-xs font-black truncate w-24 mx-auto">{{$m.ImmichPerson.Name}}</div>
+                            </div>
+
+                        </div>
+
+                        <div class="card-actions w-full flex-col gap-2 mt-6 items-center">
+                            <button onclick="linkImmich(event)" class="btn btn-primary btn-block shadow-lg">Link Connection</button>
+                            <button onclick="UtilCommon.showNext(this.closest('.util-card'))" class="btn btn-ghost btn-sm opacity-70">Skip</button>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            {{else}}
+                <div class="text-center py-16 bg-base-200 rounded-3xl border-2 border-dashed border-base-300 animate-in fade-in zoom-in duration-300">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-2xl font-bold">All Caught Up!</h3>
+                    <p class="opacity-60 mb-8">This utility has no more pending items.</p>
+                    <div class="flex justify-center gap-4">
+                        <a href="/" class="btn btn-primary px-8">Return Home</a>
+                        <a href="/settings" class="btn btn-ghost">Settings</a>
+                    </div>
+                </div>
+            {{end}}
+        </div>
+
+        <div id="established-links">
+            
+            <div class="mt-6 text-center">
+                <a href="/utilities/immich-manage" class="btn btn-outline btn-lg gap-2 opacity-60 hover:opacity-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Manage Existing Links →
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="side-action-btn hidden md:block w-24"></div>
+    {{end}}
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/util-common.js"></script>
+<script src="/static/js/util-immich.js"></script>
+{{end}}
