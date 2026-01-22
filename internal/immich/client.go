@@ -77,7 +77,7 @@ func (c *Client) TestConnection() error {
 	}
 
 	if result.Result == "pong" {
-		logger.Info("[IMMICH] Connection successful")
+		logger.Debug("[IMMICH] Connection successful")
 		return nil
 	} else {
 		return fmt.Errorf("did not get expected 'pong'")
