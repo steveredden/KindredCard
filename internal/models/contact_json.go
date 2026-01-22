@@ -59,19 +59,13 @@ type OtherDateJSON struct {
 
 // ContactJSON is used for JSON marshaling/unmarshaling with proper date handling
 type ContactJSONPatch struct {
-	GivenName  *string `json:"given_name" example:"John"`
-	FamilyName *string `json:"family_name" example:"Doe"`
-	MiddleName *string `json:"middle_name" example:"J"`
-	Prefix     *string `json:"prefix" example:"Dr."`
-	Suffix     *string `json:"suffix" example:"Jr."`
-	Nickname   *string `json:"nickname" example:"Johnny"`
-	Gender     *string `json:"gender,omitempty" example:"M" enums:"M,F,O"`
-	// Birthday           *string               `json:"birthday,omitempty"` // String for flexible parsing
-	// BirthdayMonth      *int                  `json:"birthday_month,omitempty"`
-	// BirthdayDay        *int                  `json:"birthday_day,omitempty"`
-	// Anniversary        *string               `json:"anniversary,omitempty"` // String for flexible parsing
-	// AnniversaryMonth   *int                  `json:"anniversary_month,omitempty"`
-	// AnniversaryDay     *int                  `json:"anniversary_day,omitempty"`
+	GivenName       *string `json:"given_name" example:"John"`
+	FamilyName      *string `json:"family_name" example:"Doe"`
+	MiddleName      *string `json:"middle_name" example:"J"`
+	Prefix          *string `json:"prefix" example:"Dr."`
+	Suffix          *string `json:"suffix" example:"Jr."`
+	Nickname        *string `json:"nickname" example:"Johnny"`
+	Gender          *string `json:"gender,omitempty" example:"M" enums:"M,F,O"`
 	Notes           *string `json:"notes" example:"VIP"`
 	AvatarBase64    *string `json:"avatar_base64,omitempty"`
 	AvatarMimeType  *string `json:"avatar_mime_type,omitempty"`

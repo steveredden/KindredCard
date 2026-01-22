@@ -166,6 +166,8 @@ definitions:
         type: array
       user_id:
         type: integer
+      version_token:
+        type: integer
     type: object
   models.ContactDateJSONPatch:
     properties:
@@ -218,13 +220,6 @@ definitions:
         example: Johnny
         type: string
       notes:
-        description: |-
-          Birthday           *string               `json:"birthday,omitempty"` // String for flexible parsing
-          BirthdayMonth      *int                  `json:"birthday_month,omitempty"`
-          BirthdayDay        *int                  `json:"birthday_day,omitempty"`
-          Anniversary        *string               `json:"anniversary,omitempty"` // String for flexible parsing
-          AnniversaryMonth   *int                  `json:"anniversary_month,omitempty"`
-          AnniversaryDay     *int                  `json:"anniversary_day,omitempty"`
         example: VIP
         type: string
       prefix:
