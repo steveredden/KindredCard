@@ -8,6 +8,7 @@ import (
 	"github.com/steveredden/KindredCard/internal/db"
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 // SyncService handles syncing between Immich and KindredCard
@@ -70,6 +71,15 @@ func (s *SyncService) findBestMatch(person Person, contacts []*models.Contact) M
 			}
 		}
 
+		// Check given name (firstname) match
+		if contact.GivenName != "" && strings.ToLower(contact.GivenName) == personNameLower {
+			return Match{
+				ImmichPerson: person,
+				Contact:      contact,
+				MatchType:    "given",
+			}
+		}
+
 		// Regex: First Initial + Last Name
 		if contact.FamilyName != "" {
 			var firstInitials []string
@@ -111,18 +121,32 @@ func (s *SyncService) findBestMatch(person Person, contacts []*models.Contact) M
 func (s *SyncService) GetPotentialMatches() ([]Match, error) {
 	logger.Debug("[IMMICH] Getting potential matches")
 
-	people, err := s.client.GetAllPeople()
+	// Get existing links from DB
+	alreadyLinkedMap, _ := s.db.GetLinkedImmichIDs(s.userID)
+
+	// Get all people from Immich
+	allPeople, err := s.client.GetAllPeople()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get people: %w", err)
 	}
 
+	// Filter people: Only keep those NOT in the map
+	var availablePeople []Person
+	for _, p := range allPeople {
+		if !alreadyLinkedMap[p.ID] {
+			availablePeople = append(availablePeople, p)
+		}
+	}
+
+	// Get all contacts without an immich link
 	contacts, err := s.db.GetUnlinkedImmichContacts(s.userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contacts: %w", err)
 	}
 
+	// Match against the available pool
 	var matches []Match
-	for _, person := range people {
+	for _, person := range availablePeople {
 		match := s.findBestMatch(person, contacts)
 		if match.Contact != nil {
 			matches = append(matches, match)
@@ -149,9 +173,7 @@ func (s *SyncService) GetAllLinkedContacts() ([]Match, error) {
 			continue
 		}
 
-		url := contact.URLs[0].URL
-		parts := strings.Split(strings.TrimRight(url, "/"), "/")
-		personID := parts[len(parts)-1]
+		personID := utils.ExtractIDFromImmichURL(contact.URLs[0].URL)
 
 		immichPersonPTR, _ := s.client.GetPerson(personID)
 
