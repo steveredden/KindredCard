@@ -294,3 +294,9 @@ func Ordinal(n int) string {
 
 	return fmt.Sprintf("%d%s", n, suffix)
 }
+
+func ExtractIDFromImmichURL(url string) string {
+	parts := strings.Split(strings.TrimRight(url, "/"), "/")
+	personID := parts[len(parts)-1]
+	return personID
+}
