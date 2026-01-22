@@ -6,6 +6,7 @@ import (
 	"net/smtp"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
@@ -67,7 +68,7 @@ func BuildTodayEventsBody(events []models.UpcomingEvent, baseURL string) EmailCo
 	// Template for the "Embed" style email
 	const emailTemplate = `
 	<div style="font-family: sans-serif; max-width: 600px; border-left: 4px solid #5865F2; padding: 20px; background-color: #f9f9f9; border-radius: 4px;">
-		<h2 style="color: #1a1a1a; margin-top: 0;">🎉 Today's Events</h2>
+		<h2 style="color: #1a1a1a; margin-top: 0;">{{.Title}}</h2>
 		
 		{{if not .Events}}
 			<p style="color: #4a4a4a;">No birthdays or anniversaries today!</p>
@@ -106,12 +107,14 @@ func BuildTodayEventsBody(events []models.UpcomingEvent, baseURL string) EmailCo
 
 	// Grouping logic
 	data := struct {
+		Title         string
 		BaseURL       string
 		Events        []models.UpcomingEvent
 		Birthdays     []map[string]interface{}
 		Anniversaries []map[string]interface{}
 		Others        []map[string]interface{}
 	}{
+		Title:   fmt.Sprintf("🎉 Today's Events - %s", time.Now().Local().Format("Jan 2")),
 		BaseURL: baseURL,
 		Events:  events,
 	}
