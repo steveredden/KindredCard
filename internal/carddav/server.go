@@ -430,6 +430,7 @@ func (s *Server) respondAddressbookHome(w http.ResponseWriter, r *http.Request) 
 func (s *Server) respondCollection(w http.ResponseWriter, r *http.Request, depth string) {
 	collectionPath := fmt.Sprintf("/carddav/%s/contacts/", s.userPrincipal)
 	currentToken, _ := s.db.GetAddressBookSyncToken(s.userID)
+	tokenStr := strconv.Itoa(currentToken)
 
 	responses := []Response{
 		{
@@ -445,7 +446,11 @@ func (s *Server) respondCollection(w http.ResponseWriter, r *http.Request, depth
 							Value: "Contacts",
 						},
 						SyncToken: &SyncToken{
-							Value: fmt.Sprintf("%s%stoken/%d", s.baseURL, collectionPath, currentToken),
+							//Value: fmt.Sprintf("%s%stoken/%d", s.baseURL, collectionPath, currentToken),
+							Value: tokenStr,
+						},
+						GetCTag: &GetCTag{
+							Value: tokenStr,
 						},
 					},
 					Status: "HTTP/1.1 200 OK",
@@ -546,11 +551,12 @@ func (s *Server) respondSyncCollection(w http.ResponseWriter, req SyncCollection
 		}
 	}
 
-	nextTokenURL := fmt.Sprintf("%s%stoken/%d", s.baseURL, collectionPath, currentToken)
+	// nextTokenURL := fmt.Sprintf("%s%stoken/%d", s.baseURL, collectionPath, currentToken)
+	tokenStr := strconv.Itoa(currentToken)
 
 	s.writeXMLResponse(w, Multistatus{
 		Responses: responses,
-		SyncToken: nextTokenURL,
+		SyncToken: tokenStr,
 	})
 }
 
