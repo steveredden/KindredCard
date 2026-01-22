@@ -78,8 +78,11 @@ func SendDiscordNotification(webhookURL string, embeds []DiscordEmbed) error {
 
 // BuildTodayEventsEmbed creates a Discord embed for today's events
 func BuildTodayEventsEmbed(events []models.UpcomingEvent, baseURL string) DiscordEmbed {
+
+	title := fmt.Sprintf("🎉 Today's Events - %s", time.Now().Local().Format("Jan 2"))
+
 	embed := DiscordEmbed{
-		Title:     "🎉 Today's Events",
+		Title:     title,
 		Color:     0x5865F2, // Discord blurple
 		Timestamp: time.Now().Format(time.RFC3339),
 		Footer: &DiscordFooter{
@@ -195,8 +198,7 @@ func SendTestNotification(webhookURL string, baseURL string) error {
 	}
 
 	embed := BuildTodayEventsEmbed(dummyEvents, baseURL)
-	embed.Title = "🧪 Test Notification"
-	embed.Description = "This is a test notification from KindredCard!"
+	embed.Description = "This is a 🧪 test notification from KindredCard!"
 	embed.Color = 0xFFA500 // Orange for test
 
 	return SendDiscordNotification(webhookURL, []DiscordEmbed{embed})
