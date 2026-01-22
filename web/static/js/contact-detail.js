@@ -232,6 +232,7 @@
                 <option value="website">Website</option>
                 <option value="social">Social</option>
                 <option value="other">Other</option>
+                <option value="other">Immich</option>
             </select>
             <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -761,7 +762,7 @@
                 .filter(d => d.event_date || (d.event_date_month && d.event_date_day)); // Must have valid date
             
             try {
-                const response = await fetch(`/api/v1/contacts/${contactId}`, {
+                const response = await fetch(`/api/v1/contacts/${contactId}?source=GUI`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(contact)

@@ -48,6 +48,7 @@ type Contact struct {
 	Relationships      []Relationship      `json:"relationships,omitempty"`
 	OtherRelationships []OtherRelationship `json:"other_relationships,omitempty"`
 	DeletedAt          *time.Time
+	Metadata           string
 }
 
 // GenerateFullName computes the full name from name components

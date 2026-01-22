@@ -460,7 +460,15 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 	}
 
 	// Delete and re-insert related data
-	tables := []string{"emails", "phones", "addresses", "organizations", "urls", "other_dates", "relationships", "other_relationships"}
+	tables := []string{"emails", "phones", "addresses", "organizations", "urls", "other_dates", "other_relationships"}
+
+	// Quick fix for #6 - if saved from the GUI then don't delete and insert relationships
+	if contact.Metadata == "skip relationships" {
+		logger.Debug("[DATABASE] Skipping relationships rebuild due to GUI PUT")
+	} else {
+		tables = append(tables, "relationships")
+	}
+
 	for _, table := range tables {
 		query := fmt.Sprintf("DELETE FROM %s WHERE contact_id = $1", table)
 		if _, err := tx.Exec(query, contact.ID); err != nil {
@@ -487,8 +495,11 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 	if err := d.insertOtherDates(tx, contact.ID, contact.OtherDates); err != nil {
 		return err
 	}
-	if err := d.insertRelationships(tx, contact.ID, contact.Relationships); err != nil {
-		return err
+	// Quick fix for #6 - if saved from the GUI then don't delete and insert relationships
+	if contact.Metadata != "skip relationships" {
+		if err := d.insertRelationships(tx, contact.ID, contact.Relationships); err != nil {
+			return err
+		}
 	}
 	if err := d.insertOtherRelationships(tx, contact.ID, contact.OtherRelationships); err != nil {
 		return err

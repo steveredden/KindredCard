@@ -86,7 +86,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handlePropfind(w, r)
 	case "REPORT":
 		s.handleReport(w, r)
-	case "GET":
+	case "GET", "HEAD":
 		s.handleGet(w, r)
 	case "PUT":
 		s.handlePut(w, r)
@@ -254,7 +254,7 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 }
 
 // ========================================
-// GET, PUT, DELETE - Still use path (no XML to parse)
+// GET, HEAD, PUT, DELETE - Still use path (no XML to parse)
 // ========================================
 
 func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -277,6 +277,14 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/vcard; charset=utf-8")
 	w.Header().Set("ETag", fmt.Sprintf(`"%s"`, contact.ETag))
+	w.Header().Set("Last-Modified", formatUnixTimestamp(contact.LastModifiedToken))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+
+	if r.Method == "HEAD" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	w.Write(buf.Bytes())
 }
 

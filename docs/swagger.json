@@ -277,7 +277,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Contact"
+                            "$ref": "#/definitions/models.ContactJSON"
                         }
                     }
                 ],
@@ -1584,6 +1584,9 @@
                 "last_modified_token": {
                     "type": "integer"
                 },
+                "metadata": {
+                    "type": "string"
+                },
                 "middle_name": {
                     "type": "string",
                     "example": "Frank"
@@ -1682,6 +1685,130 @@
                 "other_date_id": {
                     "type": "integer",
                     "example": 456
+                }
+            }
+        },
+        "models.ContactJSON": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Address"
+                    }
+                },
+                "anniversary": {
+                    "description": "String for flexible parsing",
+                    "type": "string"
+                },
+                "anniversary_day": {
+                    "type": "integer"
+                },
+                "anniversary_month": {
+                    "type": "integer"
+                },
+                "avatar_base64": {
+                    "type": "string"
+                },
+                "avatar_mime_type": {
+                    "type": "string"
+                },
+                "birthday": {
+                    "description": "String for flexible parsing",
+                    "type": "string"
+                },
+                "birthday_day": {
+                    "type": "integer"
+                },
+                "birthday_month": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Email"
+                    }
+                },
+                "etag": {
+                    "type": "string"
+                },
+                "exclude_from_sync": {
+                    "type": "boolean"
+                },
+                "family_name": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "given_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "middle_name": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Organization"
+                    }
+                },
+                "other_dates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OtherDateJSON"
+                    }
+                },
+                "other_relationships": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OtherRelationship"
+                    }
+                },
+                "phones": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Phone"
+                    }
+                },
+                "prefix": {
+                    "type": "string"
+                },
+                "relationships": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Relationship"
+                    }
+                },
+                "suffix": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "urls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.URL"
+                    }
                 }
             }
         },
@@ -1832,6 +1959,27 @@
                 },
                 "event_date_month": {
                     "description": "1-12, for partial dates",
+                    "type": "integer"
+                },
+                "event_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OtherDateJSON": {
+            "type": "object",
+            "properties": {
+                "event_date": {
+                    "description": "Full date string \"2020-01-15\"",
+                    "type": "string"
+                },
+                "event_date_day": {
+                    "type": "integer"
+                },
+                "event_date_month": {
                     "type": "integer"
                 },
                 "event_name": {
