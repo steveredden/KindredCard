@@ -524,6 +524,7 @@
                                     <option value="website" {{if hasType $url.Type "website"}}selected{{end}}>Website</option>
                                     <option value="social" {{if hasType $url.Type "social"}}selected{{end}}>Social</option>
                                     <option value="other" {{if hasType $url.Type "other"}}selected{{end}}>Other</option>
+                                    <option value="immich" {{if hasType $url.Type "immich"}}selected{{end}}>Immich</option>
                                 </select>
                                 <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -13,7 +13,8 @@ Your personal CRM system built in Go with PostgreSQL backend and CardDAV server 
 
 - ✅ **Full Contact Management**: Names, emails, phones, addresses, organizations, notes, gender, and more
 - ✅ **Contact Utilities**: Easily transform Phone Numbers, assign contacts Genders, and more - [link](https://github.com/steveredden/KindredCard/wiki/Utilities)
-- ✅ **vCard Import/Export**: Import or Export your .vcf (vCard) files - link(coming)
+- ✅ **vCard Import/Export**: Import or Export your .vcf (vCard) files
+- ✅ **Immich Avatar Integration**: Pull Avatars and Birthdays from your [immich](https://immich.app) instance - [link](https://github.com/steveredden/KindredCard/wiki/Immich-Integration)
 - ✅ **Events Dashboard**: Keep track of your contacts' important life events - [link](https://github.com/steveredden/KindredCard/wiki/Events)
 - ✅ **CardDAV Server**: Sync contacts with any CardDAV-compatible client - [link](https://github.com/steveredden/KindredCard/wiki/CardDAV)
 - ✅ **RESTful API**: OpenAPI 3.0 specification for programmatic access - [link](https://github.com/steveredden/KindredCard/wiki/REST-API)
