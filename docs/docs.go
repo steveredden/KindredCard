@@ -1391,9 +1391,59 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns the health status of the application and its dependencies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Service is healthy",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service is unhealthy",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "checks": {
+                    "description": "Individual component checks",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "description": "\"ok\" or \"error\"",
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "Current time",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "App version",
+                    "type": "string"
+                }
+            }
+        },
         "models.APIToken": {
             "type": "object",
             "properties": {

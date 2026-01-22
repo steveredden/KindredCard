@@ -55,6 +55,13 @@ func (d *Database) Close() error {
 	return d.db.Close()
 }
 
+func (d *Database) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	return d.db.PingContext(ctx)
+}
+
 // User and Session Management
 
 // CreateUser creates a new user
