@@ -28,6 +28,7 @@ func (s *Scheduler) globalCleanup(runNow bool) {
 
 	logger.Info("[SCHEDULER] Deleting expired sessions")
 	s.db.CleanupExpiredSessions()
+	s.db.DeleteOldContacts()
 
 	logger.Info("[SCHEDULER] Global Clean-up complete!")
 }

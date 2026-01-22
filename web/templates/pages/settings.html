@@ -585,136 +585,106 @@
                 <h2 class="card-title">Account Security & Details</h2>
                 <p class="text-sm text-base-content/70 mb-4">Manage your account security and active sessions</p>
                 
-                <div class="grid grid-cols-1 md:grid-cols-[60%_40%] md:grid-rows-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-[60%_40%] gap-4 items-start">
 
-                    <!-- Account Information - Top left (col 1, row 1) -->
-                    <div class="card bg-base-200 shadow-md md:col-start-1 md:row-start-1">
-                        <div class="card-body">
-                            <h2 class="card-title">Account Information</h2>
-                            <div class="space-y-3">
-                                <div class="flex justify-between py-2 border-b border-base-300">
-                                    <span class="text-base-content/70">Email</span>
-                                    <span class="font-semibold">{{.User.Email}}</span>
+                    <div class="grid grid-cols-1 gap-4 md:col-start-1">
+                        
+                        <div class="card bg-base-200 shadow-md h-fit">
+                            <div class="card-body">
+                                <h2 class="card-title">Account Information</h2>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between py-2 border-b border-base-300">
+                                        <span class="text-base-content/70">Email</span>
+                                        <span class="font-semibold">{{.User.Email}}</span>
+                                    </div>
+                                    <div class="flex justify-between py-2 border-b border-base-300">
+                                        <span class="text-base-content/70">User ID</span>
+                                        <span class="font-semibold">{{.User.ID}}</span>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between py-2 border-b border-base-300">
-                                    <span class="text-base-content/70">User ID</span>
-                                    <span class="font-semibold">{{.User.ID}}</span>
-                                </div>
-                                {{/* <div class="flex justify-between py-2">
-                                    <span class="text-base-content/70">Timezone</span>
-                                    <span class="form-control flex flex-row gap-2">
-                                        <select id="timezone-select" onchange="updateTimezone(this.value)" class="select select-bordered grow">
-                                            {{$current := .CurrentTZ}}
-                                            {{range .Timezones}}
-                                            <option value="{{.}}" {{if eq . $current}}selected{{end}}>{{.}}</option>
-                                            {{end}}
-                                        </select>
-                                        <button type="button" onclick="detectTimezone()" class="btn btn-outline" title="Detect from browser">
-                                            🌐 Detect
-                                        </button>
-                                    </span>
-                                </div> */}}
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Active Sessions - Bottom left (col 1, row 2) -->
-                    <div class="card bg-base-200 shadow-md md:col-start-1 md:row-start-2">
-                        <div class="card-body">
-                            <h2 class="card-title">Active Sessions</h2>
-                            <p class="text-sm text-base-content/70 no-grow">Devices currently logged into your account</p>
-                            
-                            <div class="overflow-x-auto">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Device</th>
-                                            <th>Last Active</th>
-                                            <th>Expires</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {{range .Sessions}}
-                                        <tr class="hover">
-                                            <td>
-                                                <div class="flex items-center gap-2">
-                                                    <span>{{.GetDeviceIcon}}</span>
-                                                    <div>
-                                                        <div class="font-semibold text-sm">{{.GetHumanReadableDevice}}</div>
-                                                        <div class="text-xs text-base-content/60">{{.IPAddress}}</div>
+                        <div class="card bg-base-200 shadow-md">
+                            <div class="card-body">
+                                <h2 class="card-title">Active Sessions</h2>
+                                <p class="text-sm text-base-content/70">Devices currently logged into your account</p>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Device</th>
+                                                <th>Last Active</th>
+                                                <th>Expires</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {{range .Sessions}}
+                                            <tr class="hover">
+                                                <td>
+                                                    <div class="flex items-center gap-2">
+                                                        <span>{{.GetDeviceIcon}}</span>
+                                                        <div>
+                                                            <div class="font-semibold text-sm">{{.GetHumanReadableDevice}}</div>
+                                                            <div class="text-xs text-base-content/60">{{.IPAddress}}</div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div>
-                                                    <span class="text-sm">{{.TimeAgo}}</span>
-                                                </div>
-                                            </td>
-                                             <td>
-                                                <div>
-                                                    <span class="text-sm">{{.ExpirationTimeLeft}}</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {{if .IsCurrent}}
-                                                <span class="badge badge-primary badge-xs">Current</span>
-                                                {{else}}
-                                                <button onclick="revokeSession({{.ID}})" class="btn btn-ghost btn-xs text-error" title="Revoke session">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                                {{end}}
-                                            </td>
-                                        </tr>
-                                        {{else}}
-                                        <tr>
-                                            <td colspan="4" class="text-center text-base-content/60">No active sessions</td>
-                                        </tr>
-                                        {{end}}
-                                    </tbody>
-                                </table>
+                                                </td>
+                                                <td><span class="text-sm">{{.TimeAgo}}</span></td>
+                                                <td><span class="text-sm">{{.ExpirationTimeLeft}}</span></td>
+                                                <td>
+                                                    {{if .IsCurrent}}
+                                                    <span class="badge badge-primary badge-xs">Current</span>
+                                                    {{else}}
+                                                    <button onclick="revokeSession({{.ID}})" class="btn btn-ghost btn-xs text-error">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                    {{end}}
+                                                </td>
+                                            </tr>
+                                            {{else}}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-base-content/60">No active sessions</td>
+                                            </tr>
+                                            {{end}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {{if gt (len .Sessions) 1}}
+                                <div class="mt-4">
+                                    <button onclick="revokeAllOtherSessions()" class="btn btn-sm btn-outline btn-error">
+                                        Revoke All Other Sessions
+                                    </button>
+                                </div>
+                                {{end}}
                             </div>
-                            
-                            {{if gt (len .Sessions) 1}}
-                            <div class="mt-4">
-                                <button onclick="revokeAllOtherSessions()" class="btn btn-sm btn-outline btn-error">
-                                    Revoke All Other Sessions
-                                </button>
-                            </div>
-                            {{end}}
                         </div>
                     </div>
 
-                    <!-- Change Password - Takes up 2 rows on right -->
-                    <div class="card bg-base-200 shadow-md md:col-start-2 md:row-span-2 h-[520px]">
+                    <div class="card bg-base-200 shadow-md md:col-start-2">
                         <div class="card-body">
                             <h2 class="card-title">Change Password</h2>
                             <p class="text-sm text-base-content/70 mb-4">Update your account password</p>
 
                             <form action="/settings/password" method="POST" class="space-y-4">
                                 <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-semibold">Current Password</span>
-                                    </label>
+                                    <label class="label"><span class="label-text font-semibold">Current Password</span></label>
                                     <input type="password" name="current_password" class="input input-bordered" required>
                                 </div>
 
                                 <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-semibold">New Password</span>
-                                    </label>
+                                    <label class="label"><span class="label-text font-semibold">New Password</span></label>
                                     <input type="password" name="new_password" class="input input-bordered" required minlength="8">
-                                    <label class="label">
-                                        <span class="label-text-alt">Minimum 8 characters</span>
-                                    </label>
+                                    <label class="label"><span class="label-text-alt">Minimum 8 characters</span></label>
                                 </div>
 
                                 <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-semibold">Confirm New Password</span>
-                                    </label>
+                                    <label class="label"><span class="label-text font-semibold">Confirm New Password</span></label>
                                     <input type="password" name="confirm_password" class="input input-bordered" required minlength="8">
                                 </div>
 

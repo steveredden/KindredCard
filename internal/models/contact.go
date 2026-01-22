@@ -36,7 +36,8 @@ type Contact struct {
 	CreatedAt          time.Time           `json:"created_at"`
 	UpdatedAt          time.Time           `json:"updated_at"`
 	ETag               string              `json:"etag"`
-	LastModifiedToken  int                 `json:"last_modified_token"`
+	LastModifiedToken  int64               `json:"last_modified_token"`
+	VersionToken       int                 `json:"version_token"`
 	UserID             int                 `json:"user_id"`
 	Emails             []Email             `json:"emails,omitempty"`
 	Phones             []Phone             `json:"phones,omitempty"`

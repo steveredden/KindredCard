@@ -47,14 +47,14 @@ type Prop struct {
 
 type Multistatus struct {
 	XMLName   xml.Name   `xml:"DAV: multistatus"`
-	Responses []Response `xml:"response"`
-	SyncToken string     `xml:"sync-token,omitempty"`
+	Responses []Response `xml:"DAV: response"`
+	SyncToken string     `xml:"DAV: sync-token,omitempty"`
 }
 
 type Response struct {
 	XMLName  xml.Name   `xml:"DAV: response"`
-	Href     string     `xml:"href"`
-	Propstat []Propstat `xml:"propstat,omitempty"`
+	Href     string     `xml:"DAV: href"`
+	Propstat []Propstat `xml:"DAV: propstat"`
 	Status   string     `xml:"status,omitempty"` // For deleted items (404)
 }
 
@@ -69,6 +69,7 @@ type PropData struct {
 	ResourceType           *ResourceType           `xml:"resourcetype,omitempty"`
 	DisplayName            *DisplayName            `xml:"displayname,omitempty"`
 	GetETag                *GetETag                `xml:"getetag,omitempty"`
+	GetLastModified        *GetLastModified        `xml:"DAV: getlastmodified,omitempty"`
 	GetContentType         *GetContentType         `xml:"getcontenttype,omitempty"`
 	CurrentUserPrincipal   *CurrentUserPrincipal   `xml:"current-user-principal,omitempty"`
 	PrincipalURL           *PrincipalURL           `xml:"principal-URL,omitempty"`
@@ -199,6 +200,11 @@ type AddressBookDescription struct {
 
 type Href struct {
 	XMLName xml.Name `xml:"DAV: href"`
+	Value   string   `xml:",chardata"`
+}
+
+type GetLastModified struct {
+	XMLName xml.Name `xml:"DAV: getlastmodified"`
 	Value   string   `xml:",chardata"`
 }
 

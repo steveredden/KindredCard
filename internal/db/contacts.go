@@ -56,8 +56,8 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 	query := `
 		INSERT INTO contacts (uid, full_name, given_name, family_name, middle_name, prefix, suffix, 
 			nickname, gender, birthday, birthday_month, birthday_day, anniversary, anniversary_month,
-			anniversary_day, notes, avatar_base64, avatar_mime_type, exclude_from_sync, etag, user_id, last_modified_token)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+			anniversary_day, notes, avatar_base64, avatar_mime_type, exclude_from_sync, etag, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
 		RETURNING id, created_at, updated_at`
 
 	err = tx.QueryRow(query,
@@ -66,7 +66,7 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 		contact.Gender, contact.Birthday, contact.BirthdayMonth, contact.BirthdayDay,
 		contact.Anniversary, contact.AnniversaryMonth, contact.AnniversaryDay,
 		contact.Notes, contact.AvatarBase64, contact.AvatarMimeType,
-		contact.ExcludeFromSync, contact.ETag, userID, newSyncToken,
+		contact.ExcludeFromSync, contact.ETag, userID,
 	).Scan(&contact.ID, &contact.CreatedAt, &contact.UpdatedAt)
 
 	if err != nil {
@@ -100,7 +100,16 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	if err := d.bumpContactSyncToken(contact.ID, newSyncToken); err != nil {
+		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
+	}
+
+	return nil
 }
 
 // GetAllContactsAbbrv retrieves abbreviated contact information
@@ -434,14 +443,14 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 			full_name = $1, given_name = $2, family_name = $3, middle_name = $4,
 			prefix = $5, suffix = $6, nickname = $7, gender = $8, birthday = $9, birthday_month = $10,
 			birthday_day = $11, anniversary = $12, anniversary_month = $13, anniversary_day = $14, 
-			notes = $15, exclude_from_sync = $16, etag = $17, last_modified_token = $18
-		WHERE id = $19`
+			notes = $15, exclude_from_sync = $16, etag = $17
+		WHERE id = $18`
 
 	_, err = tx.Exec(query,
 		contact.FullName, contact.GivenName, contact.FamilyName, contact.MiddleName,
 		contact.Prefix, contact.Suffix, contact.Nickname, contact.Gender, contact.Birthday,
 		contact.BirthdayMonth, contact.BirthdayDay, contact.Anniversary, contact.AnniversaryMonth,
-		contact.AnniversaryDay, contact.Notes, contact.ExcludeFromSync, contact.ETag, newSyncToken,
+		contact.AnniversaryDay, contact.Notes, contact.ExcludeFromSync, contact.ETag,
 		contact.ID,
 	)
 
@@ -496,7 +505,16 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	if err := d.bumpContactSyncToken(contact.ID, newSyncToken); err != nil {
+		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
+	}
+
+	return nil
 }
 
 // DeleteContact deletes a contact
@@ -534,14 +552,14 @@ func (d *Database) DeleteContact(userID int, contactID int) error {
 	// and the last_modified_token to the new value.
 	contactQuery := `
         UPDATE contacts 
-        SET deleted_at = $1, last_modified_token = $2, etag = $3
-        WHERE id = $4 AND user_id = $5`
+        SET deleted_at = $1, version_token = $2, last_modified_token = $3, etag = $4
+        WHERE id = $5 AND user_id = $6`
 
 	// We generate a new ETag to signify a change in the resource state (from present to deleted/gone).
 	// Using the token itself or a derivative of the new token is a good practice for the ETag here.
 	newETag := fmt.Sprintf("DEL-%d", newSyncToken)
 
-	res, err := tx.Exec(contactQuery, time.Now(), newSyncToken, newETag, contactID, userID)
+	res, err := tx.Exec(contactQuery, time.Now(), newSyncToken, newSyncToken, newETag, contactID, userID)
 	if err != nil {
 		logger.Error("[DATABASE] Error soft-deleting contact: %v", err)
 		return fmt.Errorf("failed to soft-delete contact: %w", err)
@@ -748,7 +766,7 @@ func (d *Database) DeleteAvatar(userID int, contactID int) error {
 }
 
 // ListContactsChangedSince fetches all contacts (including soft-deleted ones)
-// for a user whose LastModifiedToken is greater than the client's last known token.
+// for a user whose version_token is greater than the client's last known token.
 func (d *Database) ListContactsChangedSince(userID int, clientToken int64, excludeFromSync bool) ([]models.Contact, error) {
 	logger.Debug("[DATABASE] Begin ListContactsChangedSince(userID:%d, clientToken:%d, excludeFromSync:%v)", userID, clientToken, excludeFromSync)
 
@@ -759,9 +777,9 @@ func (d *Database) ListContactsChangedSince(userID int, clientToken int64, exclu
 	// CRITICAL CHANGE: We now select the 'deleted_at' column.
 	// We do NOT use WHERE deleted_at IS NULL, because we need the deleted records (tombstones).
 	queryBuilder.WriteString(`
-        SELECT uid, etag, last_modified_token, deleted_at
+        SELECT uid, etag, last_modified_token, deleted_at, version_token
         FROM contacts 
-        WHERE user_id = $1 AND last_modified_token > $2 
+        WHERE user_id = $1 AND version_token > $2 
 	`)
 
 	params := []interface{}{userID, clientToken}
@@ -770,7 +788,7 @@ func (d *Database) ListContactsChangedSince(userID int, clientToken int64, exclu
 		queryBuilder.WriteString(" AND exclude_from_sync != true")
 	}
 
-	queryBuilder.WriteString(" ORDER BY last_modified_token ASC")
+	queryBuilder.WriteString(" ORDER BY version_token ASC")
 	query := queryBuilder.String()
 
 	rows, err := d.db.Query(query, params...)
@@ -782,12 +800,9 @@ func (d *Database) ListContactsChangedSince(userID int, clientToken int64, exclu
 
 	for rows.Next() {
 		var c models.Contact
-
-		// deleted_at is a nullable field, so we must scan into a sql.NullTime
 		var deletedAt sql.NullTime
 
-		// Scan order must match the SELECT order
-		err := rows.Scan(&c.UID, &c.ETag, &c.LastModifiedToken, &deletedAt)
+		err := rows.Scan(&c.UID, &c.ETag, &c.LastModifiedToken, &deletedAt, &c.VersionToken)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contacts: %v", err)
 			return nil, fmt.Errorf("error scanning contact row: %w", err)
@@ -1461,15 +1476,17 @@ func (d *Database) getAllRelationships(contactID int) ([]models.Relationship, er
 
 func (d *Database) bumpContactSyncToken(contactID int, token int) error {
 	newETag := fmt.Sprintf("%x", time.Now().UnixNano())
+	currentTimestamp := int(time.Now().Unix())
 
 	query := `
 		UPDATE contacts SET
-			last_modified_token = $1,
-			etag = $2
-		WHERE id = $3
+			version_token = $1,
+			last_modified_token = $2,
+			etag = $3
+		WHERE id = $4
 	`
 
-	_, err := d.db.Exec(query, token, newETag, contactID)
+	_, err := d.db.Exec(query, token, currentTimestamp, newETag, contactID)
 
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting contacts: %v", err)
@@ -1670,6 +1687,26 @@ func (d *Database) DeleteContactURL(userID int, contactID int, urlID int) error 
 
 	if err := d.bumpContactSyncToken(contactID, newSyncToken); err != nil {
 		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
+	}
+
+	return nil
+}
+
+// DeleteOldContacts removes expired contacts from the database
+func (d *Database) DeleteOldContacts() error {
+	logger.Debug("[DATABASE] Begin CleanupExpiredSessions()")
+
+	query := `DELETE FROM contacts WHERE deleted_at < NOW() - INTERVAL '30 days';`
+
+	result, err := d.db.Exec(query)
+	if err != nil {
+		logger.Error("[DATABASE] Error cleaning up deleted contacts: %v", err)
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected > 0 {
+		logger.Info("[DATABASE] Cleaned up %d deleted contacts", rowsAffected)
 	}
 
 	return nil

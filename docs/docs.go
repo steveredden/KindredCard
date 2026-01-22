@@ -1657,6 +1657,9 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                },
+                "version_token": {
+                    "type": "integer"
                 }
             }
         },
@@ -1729,7 +1732,6 @@ const docTemplate = `{
                     "example": "Johnny"
                 },
                 "notes": {
-                    "description": "Birthday           *string               ` + "`" + `json:\"birthday,omitempty\"` + "`" + ` // String for flexible parsing\nBirthdayMonth      *int                  ` + "`" + `json:\"birthday_month,omitempty\"` + "`" + `\nBirthdayDay        *int                  ` + "`" + `json:\"birthday_day,omitempty\"` + "`" + `\nAnniversary        *string               ` + "`" + `json:\"anniversary,omitempty\"` + "`" + ` // String for flexible parsing\nAnniversaryMonth   *int                  ` + "`" + `json:\"anniversary_month,omitempty\"` + "`" + `\nAnniversaryDay     *int                  ` + "`" + `json:\"anniversary_day,omitempty\"` + "`" + `",
                     "type": "string",
                     "example": "VIP"
                 },

@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/emersion/go-vcard"
 	"github.com/steveredden/KindredCard/internal/converter"
@@ -463,14 +464,16 @@ func (s *Server) respondCollection(w http.ResponseWriter, r *http.Request, depth
 	if depth == "1" {
 		contacts, _ := s.db.GetAllContactsAbbrv(s.userID, true)
 		for _, contact := range contacts {
+			lastModStr := formatUnixTimestamp(contact.LastModifiedToken)
 			responses = append(responses, Response{
 				Href: s.baseURL + collectionPath + contact.UID + ".vcf",
 				Propstat: []Propstat{
 					{
 						Prop: PropData{
-							ResourceType:   &ResourceType{},
-							GetETag:        &GetETag{Value: fmt.Sprintf(`"%s"`, contact.ETag)},
-							GetContentType: &GetContentType{Value: "text/vcard; charset=utf-8"},
+							ResourceType:    &ResourceType{},
+							GetETag:         &GetETag{Value: fmt.Sprintf(`"%s"`, contact.ETag)},
+							GetContentType:  &GetContentType{Value: "text/vcard; charset=utf-8"},
+							GetLastModified: &GetLastModified{Value: lastModStr},
 						},
 						Status: "HTTP/1.1 200 OK",
 					},
@@ -528,6 +531,7 @@ func (s *Server) respondSyncCollection(w http.ResponseWriter, req SyncCollection
 
 	for _, contact := range contacts {
 		hrefURL := s.baseURL + collectionPath + contact.UID + ".vcf"
+		lastModStr := formatUnixTimestamp(contact.LastModifiedToken)
 
 		if contact.DeletedAt != nil {
 			// Deleted contact
@@ -542,7 +546,8 @@ func (s *Server) respondSyncCollection(w http.ResponseWriter, req SyncCollection
 				Propstat: []Propstat{
 					{
 						Prop: PropData{
-							GetETag: &GetETag{Value: fmt.Sprintf(`"%s"`, contact.ETag)},
+							GetETag:         &GetETag{Value: fmt.Sprintf(`"%s"`, contact.ETag)},
+							GetLastModified: &GetLastModified{Value: lastModStr},
 						},
 						Status: "HTTP/1.1 200 OK",
 					},
@@ -724,4 +729,8 @@ func isAppleCardDAVClient(r *http.Request) bool {
 	// Check for strong indicators of an Apple CardDAV client
 	upperUA := strings.ToUpper(ua)
 	return strings.Contains(upperUA, "IOS") || strings.Contains(upperUA, "MACOS")
+}
+
+func formatUnixTimestamp(timestamp int64) string {
+	return time.Unix(timestamp, 0).UTC().Format(http.TimeFormat)
 }
