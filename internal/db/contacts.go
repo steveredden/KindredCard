@@ -1572,7 +1572,7 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) 
 	}
 
 	if urlType != "" {
-		query += fmt.Sprintf(" and $%d = any(u.type)", argIndex)
+		query += fmt.Sprintf(" and $%d = ANY(u.type)", argIndex)
 		args = append(args, urlType)
 	}
 
@@ -1679,6 +1679,39 @@ func (d *Database) GetUnlinkedImmichContacts(userID int) ([]*models.Contact, err
 	}
 
 	return contacts, nil
+}
+
+// GetLinkedImmichIDs retrieves people IDs from all contacts' URLs associated with this user
+func (d *Database) GetLinkedImmichIDs(userID int) (map[string]bool, error) {
+	logger.Debug("[DATABASE] Begin GetAlreadyLinkedImmichIDs(userID:%d)", userID)
+
+	query := `
+		SELECT u.url 
+		FROM urls u
+		JOIN contacts c ON u.contact_id = c.id
+		WHERE c.user_id = $1 
+		AND 'immich' = ANY(u.type);
+	`
+
+	rows, err := d.db.Query(query, userID)
+	if err != nil {
+		logger.Error("Error querying URLs: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	linkedMap := make(map[string]bool)
+	for rows.Next() {
+		var urlStr string
+		err := rows.Scan(&urlStr)
+		if err != nil {
+			logger.Error("Error scanning URLs: %v", err)
+			continue
+		}
+		id := utils.ExtractIDFromImmichURL(urlStr)
+		linkedMap[id] = true
+	}
+	return linkedMap, nil
 }
 
 func (d *Database) DeleteContactURL(userID int, contactID int, urlID int) error {
