@@ -54,7 +54,11 @@ func (s *Session) IsExpired() bool {
 
 // TimeAgo returns a human-readable string for last activity
 func (s *Session) TimeAgo() string {
-	duration := time.Since(s.LastActivity.UTC())
+	duration := time.Since(s.LastActivity)
+
+	if duration < 0 {
+		return "just now"
+	}
 
 	switch {
 	case duration < time.Minute:
