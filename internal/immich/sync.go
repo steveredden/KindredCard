@@ -2,6 +2,7 @@ package immich
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/steveredden/KindredCard/internal/db"
@@ -68,8 +69,41 @@ func (s *SyncService) findBestMatch(person Person, contacts []*models.Contact) M
 				MatchType:    "nickname",
 			}
 		}
+
+		// Regex: First Initial + Last Name
+		if contact.FamilyName != "" {
+			var firstInitials []string
+			if contact.GivenName != "" {
+				firstInitials = append(firstInitials, strings.ToLower(string(contact.GivenName[0])))
+			}
+			if contact.Nickname != "" {
+				firstInitials = append(firstInitials, strings.ToLower(string(contact.Nickname[0])))
+			}
+
+			if len(firstInitials) > 0 {
+				// Joins initials into (a|b)
+				initialPattern := strings.Join(firstInitials, "|")
+
+				// QuoteMeta ensures a last name like "St. John" doesn't treat the "." as a regex wildcard
+				familyNameEscaped := regexp.QuoteMeta(strings.ToLower(contact.FamilyName))
+
+				// Pattern: Starts with initial, followed by anything, ending with family name
+				// Example: ^(a|b).*doe$
+				pattern := fmt.Sprintf("^(%s).*%s$", initialPattern, familyNameEscaped)
+
+				matched, _ := regexp.MatchString(pattern, personNameLower)
+				if matched {
+					return Match{
+						ImmichPerson: person,
+						Contact:      contact,
+						MatchType:    "regex",
+					}
+				}
+			}
+		}
 	}
 
+	bestMatch.MatchType = "none"
 	return bestMatch
 }
 
