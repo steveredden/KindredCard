@@ -15,8 +15,9 @@ import (
 
 // XML Namespaces
 const (
-	NamespaceDAV     = "DAV:"
-	NamespaceCardDAV = "urn:ietf:params:xml:ns:carddav"
+	NamespaceDAV            = "DAV:"
+	NamespaceCardDAV        = "urn:ietf:params:xml:ns:carddav"
+	NamespaceCalendarServer = "http://calendarserver.org/ns/"
 )
 
 // ========================================
@@ -76,6 +77,7 @@ type PropData struct {
 	AddressData            *AddressData            `xml:"urn:ietf:params:xml:ns:carddav address-data,omitempty"`
 	SyncToken              *SyncToken              `xml:"sync-token,omitempty"`
 	AddressBookDescription *AddressBookDescription `xml:"urn:ietf:params:xml:ns:carddav addressbook-description,omitempty"`
+	GetCTag                *GetCTag                `xml:"http://calendarserver.org/ns/ getctag,omitempty"`
 }
 
 // ========================================
@@ -197,5 +199,10 @@ type AddressBookDescription struct {
 
 type Href struct {
 	XMLName xml.Name `xml:"DAV: href"`
+	Value   string   `xml:",chardata"`
+}
+
+type GetCTag struct {
+	XMLName xml.Name `xml:"http://calendarserver.org/ns/ getctag"`
 	Value   string   `xml:",chardata"`
 }

@@ -51,7 +51,7 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 	}
 
 	// Generate ETag
-	contact.ETag = fmt.Sprintf("%d", time.Now().UnixNano())
+	contact.ETag = fmt.Sprintf("%x", time.Now().UnixNano())
 
 	query := `
 		INSERT INTO contacts (uid, full_name, given_name, family_name, middle_name, prefix, suffix, 
@@ -421,7 +421,7 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 	defer tx.Rollback()
 
 	// Update ETag
-	contact.ETag = fmt.Sprintf("%d", time.Now().UnixNano())
+	contact.ETag = fmt.Sprintf("%x", time.Now().UnixNano())
 
 	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
 	if err != nil {
@@ -1460,14 +1460,16 @@ func (d *Database) getAllRelationships(contactID int) ([]models.Relationship, er
 }
 
 func (d *Database) bumpContactSyncToken(contactID int, token int) error {
+	newETag := fmt.Sprintf("%x", time.Now().UnixNano())
+
 	query := `
 		UPDATE contacts SET
 			last_modified_token = $1,
-			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $2
+			etag = $2
+		WHERE id = $3
 	`
 
-	_, err := d.db.Exec(query, token, contactID)
+	_, err := d.db.Exec(query, token, newETag, contactID)
 
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting contacts: %v", err)
