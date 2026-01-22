@@ -138,6 +138,14 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get current session token
+	currentToken, _ := middleware.GetTokenFromCurrentSession(r)
+
+	// premptively update session activity, since we're soon hitting the page that renders said last_activity
+	if currentToken != "" {
+		h.db.UpdateSessionActivity(currentToken)
+	}
+
 	// Get all sessions for this user
 	sessions, err := h.db.GetUserSessions(user.ID)
 	if err != nil {
@@ -145,20 +153,12 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current session token
-	currentToken, _ := middleware.GetTokenFromCurrentSession(r)
-
 	// Mark current session
 	for i := range sessions {
 		if sessions[i].Token == currentToken {
 			sessions[i].IsCurrent = true
 		}
 	}
-
-	// commonZones := []string{
-	// 	"UTC", "America/New_York", "America/Chicago", "America/Denver",
-	// 	"America/Los_Angeles", "Europe/London", "Europe/Paris", "Asia/Tokyo",
-	// }
 
 	h.renderTemplate(w, r, "settings.html", map[string]interface{}{
 		"User":                 user,
@@ -168,8 +168,6 @@ func (h *Handler) ShowSettings(w http.ResponseWriter, r *http.Request) {
 		"APITokens":            tokens,
 		"Sessions":             sessions,
 		"NotificationSettings": userNotifications,
-		// "Timezones":            commonZones,
-		// "CurrentTZ":            userPreferences.Timezone,
 	})
 }
 
