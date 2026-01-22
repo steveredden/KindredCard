@@ -118,6 +118,7 @@ func main() {
 	r.Use(middleware.SetupCheckMiddleware(database))
 
 	// Public routes (no auth required)
+	r.HandleFunc("/health", handler.HandleHealth).Methods("GET")
 	r.HandleFunc("/setup", handler.ShowSetup).Methods("GET")
 	r.HandleFunc("/setup", handler.ProcessSetup).Methods("POST")
 	r.HandleFunc("/login", handler.ShowLogin).Methods("GET")
@@ -217,10 +218,6 @@ func main() {
 	// immich APIs
 	api.HandleFunc("/immich/proxy/thumbnail/{personID}", handler.GetImmichThumbnailProxy).Methods("GET")
 	api.HandleFunc("/immich/link", handler.PostImmichLinkAPI).Methods("POST")
-	//api.HandleFunc("/sync/immich/status", handler.ImmichSyncAPIStatus).Methods("GET")
-	//api.HandleFunc("/sync/immich/test", handler.ImmichTestConnectionAPI).Methods("GET")
-	// api.HandleFunc("/sync/immich", handler.ImmichSyncAPI).Methods("POST")
-	// api.HandleFunc("/sync/immich/matches", handler.ImmichGetMatchesAPI).Methods("GET")
 
 	// CardDAV routes (Basic Auth)
 	carddav := r.PathPrefix("/carddav").Subrouter()

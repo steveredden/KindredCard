@@ -75,7 +75,7 @@ func (s *SyncService) findBestMatch(person Person, contacts []*models.Contact) M
 
 // GetPotentialMatches returns potential matches for review
 func (s *SyncService) GetPotentialMatches() ([]Match, error) {
-	logger.Debug("[IMMICH_SYNC] Getting potential matches")
+	logger.Debug("[IMMICH] Getting potential matches")
 
 	people, err := s.client.GetAllPeople()
 	if err != nil {
@@ -95,13 +95,13 @@ func (s *SyncService) GetPotentialMatches() ([]Match, error) {
 		}
 	}
 
-	logger.Info("[IMMICH_SYNC] Found %d potential matches", len(matches))
+	logger.Info("[IMMICH] Found %d potential matches", len(matches))
 	return matches, nil
 }
 
 // GetPotentialMatches returns potential matches for review
 func (s *SyncService) GetAllLinkedContacts() ([]Match, error) {
-	logger.Debug("[IMMICH_SYNC] Getting linked contacts")
+	logger.Debug("[IMMICH] Getting linked contacts")
 
 	contacts, err := s.db.GetContactsByURL(s.userID, s.client.BaseURL, "immich")
 	if err != nil {
@@ -128,6 +128,6 @@ func (s *SyncService) GetAllLinkedContacts() ([]Match, error) {
 		})
 	}
 
-	logger.Info("[IMMICH_SYNC] Found %d linked matches", len(matches))
+	logger.Info("[IMMICH] Found %d linked matches", len(matches))
 	return matches, nil
 }

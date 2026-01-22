@@ -28,10 +28,11 @@ import (
 )
 
 type Handler struct {
-	db        *db.Database
-	templates *template.Template
-	user      *models.User
-	baseURL   string
+	db             *db.Database
+	templates      *template.Template
+	user           *models.User
+	baseURL        string
+	releaseVersion string
 }
 
 func NewHandler(database *db.Database, templatesPath string, baseURL string, releaseVersion string) (*Handler, error) {
@@ -80,9 +81,10 @@ func NewHandler(database *db.Database, templatesPath string, baseURL string, rel
 	}
 
 	return &Handler{
-		db:        database,
-		templates: tmpl,
-		baseURL:   baseURL,
+		db:             database,
+		templates:      tmpl,
+		baseURL:        baseURL,
+		releaseVersion: releaseVersion,
 	}, nil
 }
 
