@@ -289,7 +289,7 @@ func (h *Handler) CreateContactAPI(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int					true	"Contact ID"	minimum(1)
-//	@Param			contact	body		models.Contact		true	"Updated contact information"
+//	@Param			contact	body		models.ContactJSON	true	"Updated contact information"
 //	@Success		200		{object}	models.Contact		"Updated contact"
 //	@Failure		400		{object}	map[string]string	"Invalid request body or contact ID"
 //	@Failure		401		{object}	map[string]string	"Unauthorized"
@@ -322,6 +322,12 @@ func (h *Handler) UpdateContactAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Invalid contact data", http.StatusBadRequest)
 		return
+	}
+
+	// Quick fix for #6 - if saved from the GUI then don't delete and insert relationships
+	queryParams := r.URL.Query().Get("source")
+	if queryParams != "" && queryParams == "GUI" {
+		contact.Metadata = "skip relationships"
 	}
 
 	contact.ID = id

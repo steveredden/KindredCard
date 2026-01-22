@@ -120,6 +120,8 @@ definitions:
         type: integer
       last_modified_token:
         type: integer
+      metadata:
+        type: string
       middle_name:
         example: Frank
         type: string
@@ -190,6 +192,89 @@ definitions:
       other_date_id:
         example: 456
         type: integer
+    type: object
+  models.ContactJSON:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/models.Address'
+        type: array
+      anniversary:
+        description: String for flexible parsing
+        type: string
+      anniversary_day:
+        type: integer
+      anniversary_month:
+        type: integer
+      avatar_base64:
+        type: string
+      avatar_mime_type:
+        type: string
+      birthday:
+        description: String for flexible parsing
+        type: string
+      birthday_day:
+        type: integer
+      birthday_month:
+        type: integer
+      created_at:
+        type: string
+      emails:
+        items:
+          $ref: '#/definitions/models.Email'
+        type: array
+      etag:
+        type: string
+      exclude_from_sync:
+        type: boolean
+      family_name:
+        type: string
+      full_name:
+        type: string
+      gender:
+        type: string
+      given_name:
+        type: string
+      id:
+        type: integer
+      middle_name:
+        type: string
+      nickname:
+        type: string
+      notes:
+        type: string
+      organizations:
+        items:
+          $ref: '#/definitions/models.Organization'
+        type: array
+      other_dates:
+        items:
+          $ref: '#/definitions/models.OtherDateJSON'
+        type: array
+      other_relationships:
+        items:
+          $ref: '#/definitions/models.OtherRelationship'
+        type: array
+      phones:
+        items:
+          $ref: '#/definitions/models.Phone'
+        type: array
+      prefix:
+        type: string
+      relationships:
+        items:
+          $ref: '#/definitions/models.Relationship'
+        type: array
+      suffix:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      urls:
+        items:
+          $ref: '#/definitions/models.URL'
+        type: array
     type: object
   models.ContactJSONPatch:
     properties:
@@ -294,6 +379,20 @@ definitions:
         type: integer
       event_date_month:
         description: 1-12, for partial dates
+        type: integer
+      event_name:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.OtherDateJSON:
+    properties:
+      event_date:
+        description: Full date string "2020-01-15"
+        type: string
+      event_date_day:
+        type: integer
+      event_date_month:
         type: integer
       event_name:
         type: string
@@ -711,7 +810,7 @@ paths:
         name: contact
         required: true
         schema:
-          $ref: '#/definitions/models.Contact'
+          $ref: '#/definitions/models.ContactJSON'
       produces:
       - application/json
       responses:
