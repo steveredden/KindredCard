@@ -69,8 +69,12 @@
                 // Pull the date string directly from the Immich column in the UI
                 const row = btn.closest('tr');
                 const immichDate = row.querySelector('.immich-birthdate').innerText.trim();
-                
-                if (!immichDate || immichDate === "No Immich Metadata") return;
+
+                if (!immichDate || immichDate === "No Birthday Saved") {
+                    btn.classList.remove('loading');
+                    console.log("No birthday to sync! Skipping!")
+                    return;
+                }
                 
                 url = `/api/v1/contacts/${contactId}/birthday`;
                 body = {
@@ -106,7 +110,7 @@
             if (res.ok) {
                 btn.classList.remove('loading');
                 btn.innerHTML = '✅';
-                setTimeout(() => window.location.reload(), 500);
+                setTimeout(() => window.location.reload(), 200);
             }
         } catch (err) {
             console.error(err);

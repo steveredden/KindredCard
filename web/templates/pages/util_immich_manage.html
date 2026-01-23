@@ -48,7 +48,12 @@
                             <div class="ml-2">
                                 <div class="font-black text-lg"><a class="link" target="_blank" href="/contacts/{{.Contact.ID}}">{{.Contact.FullName}}</a></div>
                                 <div class="text-sm font-bold opacity-40 tracking-tighter">
-                                    {{if .Contact.Birthday}}{{.Contact.Birthday.Format "2006-01-02"}}{{else}}No Birthday Saved{{end}}
+                                    {{if .Contact.Birthday}}
+                                        {{.Contact.Birthday.Format "2006-01-02"}}
+                                    {{else if and .Contact.BirthdayMonth .Contact.BirthdayDay}}
+                                        xxxx-{{.Contact.BirthdayMonth}}-{{.Contact.BirthdayDay}}
+                                    {{else}}No Birthday Saved
+                                    {{end}}
                                 </div>
                             </div>
                         </div>
