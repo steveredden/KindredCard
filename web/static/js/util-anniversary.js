@@ -16,15 +16,24 @@
         const card = btn.closest('.util-card');
         btn.disabled = true;
 
-        let payload = {};
+        let body = {};
+
         const parts = val.split('-');
-        if (parts.length === 3) payload.anniversary = val + "T00:00:00Z";
-        else { payload.anniversary_month = parseInt(parts[0]); payload.anniversary_day = parseInt(parts[1]); }
+        if (parts.length === 3) {
+            body = {
+                date: new Date(val).toISOString()
+            };
+        } else { 
+            body = {
+                date_month: parseInt(parts[0]),
+                date_day: parseInt(parts[1])
+            };
+        }
 
         const res = await fetch(`/api/v1/contacts/${targetId}/anniversary`, {
             method: 'PATCH',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+            body: JSON.stringify(body)
         });
 
         if (res.ok) UtilCommon.showNext(card);
