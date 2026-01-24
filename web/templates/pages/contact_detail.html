@@ -240,11 +240,16 @@
                                     </div>
                                 </div>
                                 <div class="space-y-2">
-                                    <input type="text" name="addresses[{{$index}}][street]" value="{{$addr.Street}}" placeholder="Street Address" class="input input-bordered input-sm w-full">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <input type="text" name="addresses[{{$index}}][city]" value="{{$addr.City}}" placeholder="City" class="input input-bordered input-sm">
-                                        <input type="text" name="addresses[{{$index}}][state]" value="{{$addr.State}}" placeholder="State" class="input input-bordered input-sm">
+                                    <div class="grid grid-cols-5 gap-2">
+                                        <input type="text" name="addresses[{{$index}}][street]" value="{{$addr.Street}}" placeholder="Street Address" class="input input-bordered input-sm col-span-3">
+                                        <input type="text" name="addresses[{{$index}}][extended_street]" value="{{$addr.ExtendedStreet}}" placeholder="Apt/Ste" class="input input-bordered input-sm col-span-2">
                                     </div>
+
+                                    <div class="grid grid-cols-5 gap-2">
+                                        <input type="text" name="addresses[{{$index}}][city]" value="{{$addr.City}}" placeholder="City" class="input input-bordered input-sm col-span-3">
+                                        <input type="text" name="addresses[{{$index}}][state]" value="{{$addr.State}}" placeholder="State" class="input input-bordered input-sm col-span-2">
+                                    </div>
+
                                     <div class="grid grid-cols-2 gap-2">
                                         <input type="text" name="addresses[{{$index}}][postal_code]" value="{{$addr.PostalCode}}" placeholder="ZIP" class="input input-bordered input-sm">
                                         <input type="text" name="addresses[{{$index}}][country]" value="{{$addr.Country}}" placeholder="Country" class="input input-bordered input-sm">

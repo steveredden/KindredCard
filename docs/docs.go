@@ -1482,6 +1482,9 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
+                "extended_street": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -2040,7 +2043,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "description": "home, work, mobile, fax, other",
+                    "description": "home, work, cell, fax, other",
                     "type": "array",
                     "items": {
                         "type": "string"

@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS phones (
     id SERIAL PRIMARY KEY,
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
     phone VARCHAR(50) NOT NULL,
-    type TEXT[], -- home, work, mobile, fax, other
+    type TEXT[], -- home, work, cell, fax, other
     is_primary BOOLEAN DEFAULT FALSE
 );
 
