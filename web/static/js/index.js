@@ -205,5 +205,53 @@
         });
     }
 
+    window.sortContacts = function(criteria) {
+        const container = document.getElementById('contactsGallery');
+        const cards = Array.from(container.getElementsByClassName('contact-card'));
+
+        cards.sort((a, b) => {
+            // Helper to safely get attributes
+            const getAttr = (el, attr) => (el.getAttribute(attr) || "").toLowerCase();
+            const getId = (el) => parseInt(el.getAttribute('data-contact-id') || 0);
+
+            switch (criteria) {
+                case 'lastname-asc': {
+                    const lastA = getAttr(a, 'data-contact-lastname');
+                    const lastB = getAttr(b, 'data-contact-lastname');
+                    
+                    // 1. Primary Sort: Last Name
+                    const primarySort = lastA.localeCompare(lastB);
+                    
+                    // 2. Secondary Sort: If last names are equal, sort by First Name
+                    if (primarySort === 0) {
+                        const firstA = getAttr(a, 'data-contact-name');
+                        const firstB = getAttr(b, 'data-contact-name');
+                        return firstA.localeCompare(firstB);
+                    }
+                    
+                    return primarySort;
+                }
+
+                case 'name-asc': {
+                    const nameA = getAttr(a, 'data-contact-name');
+                    const nameB = getAttr(b, 'data-contact-name');
+                    return nameA.localeCompare(nameB);
+                }
+
+                case 'id-desc':
+                    return getId(b) - getId(a);
+
+                case 'id-asc':
+                    return getId(a) - getId(b);
+
+                default:
+                    return 0;
+            }
+        });
+
+        // Re-append cards in the new order
+        cards.forEach(card => container.appendChild(card));
+    };
+
     console.log('Index page initialized (simplified)');
 })();

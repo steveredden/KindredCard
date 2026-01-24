@@ -45,6 +45,14 @@
 
 <!-- Search and Actions Bar -->
 <div class="flex flex-col md:flex-row gap-4 mb-6">
+    <div class="flex">
+        <select id="sortSelect" class="select select-bordered" onchange="sortContacts(this.value)">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="lastname-asc">Last Name (A-Z)</option>
+            <option value="id-desc">Newest First</option>
+            <option value="id-asc">Oldest First</option>
+        </select>
+    </div>
     <div class="flex-1">
         <div class="form-control">
             <div class="input-group">
@@ -72,6 +80,7 @@
     <div class="contact-card cursor-pointer hover:scale-105 transition-transform duration-200" 
         data-contact-id="{{.ID}}"
         data-contact-name="{{.FullName}}"
+        data-contact-lastname="{{if .FamilyName}}{{.FamilyName}}{{else}}{{.FullName}}{{end}}"
         data-contact-nickname="{{.Nickname}}"
         data-contact-email="{{if .Emails}}{{with index .Emails 0}}{{.Email}}{{end}}{{end}}"
         data-contact-phone="{{if .Phones}}{{with index .Phones 0}}{{.Phone}}{{end}}{{end}}"
