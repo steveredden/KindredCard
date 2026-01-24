@@ -849,6 +849,61 @@ paths:
       summary: Update a contact (full replacement)
       tags:
       - contacts
+  /api/v1/contacts/{id}/address:
+    post:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Address fields
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.Address'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
   /api/v1/contacts/{id}/anniversary:
     patch:
       consumes:

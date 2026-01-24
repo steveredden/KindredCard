@@ -1755,3 +1755,109 @@ func (d *Database) DeleteOldContacts() error {
 
 	return nil
 }
+
+// GetContactAnniversaryByID retrieves a contact by UID
+func (d *Database) GetContactAnniversaryByID(userID int, contactID int) (*models.Contact, error) {
+	logger.Debug("[DATABASE] Begin GetContactAnniversaryByID(userID:%d, contactID:%d)", userID, contactID)
+
+	contact := &models.Contact{}
+
+	var anniversary_day sql.NullInt64
+	var anniversary_month sql.NullInt64
+	var anniversary sql.NullTime
+
+	query := `
+		SELECT id, full_name, anniversary, anniversary_month, anniversary_day
+		FROM contacts WHERE id = $1 AND deleted_at IS NULL AND user_id = $2
+	`
+
+	err := d.db.QueryRow(query, contactID, userID).Scan(
+		&contact.ID, &contact.FullName, &anniversary, &anniversary_month, &anniversary_day,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("not found")
+	} else if err != nil {
+		logger.Error("[DATABASE] Error selecting contacts: %v", err)
+		return nil, err
+	}
+
+	// Load int conversions
+	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
+	contact.AnniversaryMonth = utils.ScanNullInt(anniversary_month)
+
+	// Load time conversions
+	contact.Anniversary = utils.ScanNullTime(anniversary)
+
+	return contact, nil
+}
+
+// GetContactByUID retrieves a contact by UID
+func (d *Database) GetContactAddressesByID(userID int, contactID int) (*models.Contact, error) {
+	logger.Debug("[DATABASE] Begin GetContactByUID(userID:%d, contactID:%d)", userID, contactID)
+
+	contact := &models.Contact{}
+
+	var anniversary_day sql.NullInt64
+	var anniversary_month sql.NullInt64
+	var anniversary sql.NullTime
+
+	query := `
+		SELECT id, anniversary, anniversary_month, anniversary_day
+		FROM contacts WHERE id = $1 AND deleted_at IS NULL AND user_id = $2
+	`
+
+	err := d.db.QueryRow(query, contactID).Scan(
+		&contact.ID, &anniversary, &anniversary_month, &anniversary_day,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("not found")
+	} else if err != nil {
+		logger.Error("[DATABASE] Error selecting contacts: %v", err)
+		return nil, err
+	}
+
+	// Load int conversions
+	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
+	contact.AnniversaryMonth = utils.ScanNullInt(anniversary_month)
+
+	// Load time conversions
+	contact.Anniversary = utils.ScanNullTime(anniversary)
+
+	return contact, nil
+}
+
+func (d *Database) CreateContactAddress(userID int, body models.Address) (int, error) {
+	logger.Debug("[DATABASE] Begin CreateContactURL(userID:%d, body:--)", userID)
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[DATABSE] Dump of Address:")
+		utils.Dump(body)
+	}
+
+	err := d.db.QueryRow(
+		"INSERT INTO addresses (contact_id, street, extended_street, city, state, postal_code, country, type, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+		body.ContactID, body.Street, body.ExtendedStreet, body.City, body.State, body.PostalCode, body.Country, pq.Array(body.Type), body.IsPrimary,
+	).Scan(&body.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Error("No addresses inserted: %v", err)
+			return 0, fmt.Errorf("unauthorized")
+		}
+		logger.Error("Error creating address: %v", err)
+		return 0, fmt.Errorf("failed to create address: %w", err)
+	}
+
+	// Sync token update
+	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
+	if err != nil {
+		return body.ID, fmt.Errorf("failed to increment sync token: %w", err)
+	}
+
+	if err := d.bumpContactSyncToken(body.ContactID, newSyncToken); err != nil {
+		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
+	}
+
+	return body.ID, nil
+}

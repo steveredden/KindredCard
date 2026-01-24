@@ -120,3 +120,29 @@ func (h *Handler) AnniversaryProposalPage(w http.ResponseWriter, r *http.Request
 		"Count": len(suggestions),
 	})
 }
+
+func (h *Handler) AddressProposalPage(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	suggestions, err := h.db.GetAddressSuggestions(user.ID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if logger.GetLevel() == logger.TRACE {
+		logger.Trace("[HANDLER] Dump of suggestions:")
+		utils.Dump(suggestions)
+	}
+
+	h.renderTemplate(w, r, "util_address_proposer.html", map[string]interface{}{
+		"Title": "Address Proposal",
+		"User":  user,
+		"Items": suggestions,
+		"Count": len(suggestions),
+	})
+}

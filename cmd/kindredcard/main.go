@@ -144,6 +144,7 @@ func main() {
 	web.HandleFunc("/utilities/phone-formatter", handler.PhoneFormatterPage).Methods("GET")
 	web.HandleFunc("/utilities/relationship-assignment", handler.RelationshipAssignmentPage).Methods("GET")
 	web.HandleFunc("/utilities/anniversary-proposal", handler.AnniversaryProposalPage).Methods("GET")
+	web.HandleFunc("/utilities/address-proposal", handler.AddressProposalPage).Methods("GET")
 
 	// immich pages
 	web.HandleFunc("/utilities/immich-link", handler.ImmichLinkPage).Methods("GET")
@@ -169,6 +170,7 @@ func main() {
 	api.HandleFunc("/other-dates/{oid:[0-9]+}", handler.UpdateOtherDateAPI).Methods("PATCH")
 	api.HandleFunc("/contacts/{id:[0-9]+}/url", handler.NewURLAPI).Methods("POST")
 	api.HandleFunc("/contacts/{cid:[0-9]+}/url/{urlid:[0-9]+}", handler.DeleteURLAPI).Methods("DELETE")
+	api.HandleFunc("/contacts/{id:[0-9]+}/address", handler.NewAddressAPI).Methods("POST")
 
 	// Preferences / Theme
 	api.HandleFunc("/user/preferences", handler.UpdatePreferencesAPI).Methods("PUT")

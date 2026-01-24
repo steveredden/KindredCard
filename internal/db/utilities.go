@@ -14,6 +14,7 @@ import (
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error) {
@@ -298,8 +299,8 @@ func (d *Database) GetAnniversarySuggestions(userID int) ([]models.RelationshipS
 		}
 
 		// 2. Get full contact details to check anniversary fields
-		source, _ := d.GetContactByID(userID, contactID)
-		target, _ := d.GetContactByID(userID, relatedID)
+		source, _ := d.GetContactAnniversaryByID(userID, contactID)
+		target, _ := d.GetContactAnniversaryByID(userID, relatedID)
 
 		// Check Case A: Source has it, Target does not
 		if source.HasAnniversary() && !target.HasAnniversary() {
@@ -333,5 +334,92 @@ func (d *Database) buildAnniversarySuggestion(from *models.Contact, to *models.C
 		SourceName:  from.FullName,
 		ProposedVal: displayValue, // This will now be "YYYY-MM-DD" or "MM-DD"
 		Reason:      fmt.Sprintf("%s has an anniversary set (%s). Since %s is their spouse, they likely share this date.", from.FullName, displayValue, to.FullName),
+	}
+}
+
+func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion, error) {
+	var suggestions []models.AddressSuggestion
+
+	// 1. Fetch all spouse relationships for this user
+	rows, err := d.db.Query(`
+		SELECT r.contact_id, c1.full_name, r.related_contact_id, c2.full_name
+		FROM relationships r
+		JOIN contacts c1 ON r.contact_id = c1.id
+		JOIN contacts c2 ON r.related_contact_id = c2.id
+		JOIN relationship_types rt ON r.relationship_type_id = rt.id
+		WHERE c1.user_id = $1 AND rt.name IN ('Spouse', 'Husband', 'Wife')`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var contactID, relatedID int
+		var contactName, relatedName string
+		if err := rows.Scan(&contactID, &contactName, &relatedID, &relatedName); err != nil {
+			continue
+		}
+
+		sourceContact := &models.Contact{
+			ID:        contactID,
+			FullName:  contactName,
+			Addresses: make([]models.Address, 0),
+		}
+
+		sourceAddresses, _ := d.getAddresses(contactID)
+		if len(sourceAddresses) > 0 {
+			for _, addr := range sourceAddresses {
+				if utils.HasType(addr.Type, "home") {
+					sourceContact.Addresses = append(sourceContact.Addresses, addr)
+					break
+				}
+			}
+		}
+
+		targetContact := &models.Contact{
+			ID:        relatedID,
+			FullName:  relatedName,
+			Addresses: make([]models.Address, 0),
+		}
+
+		targetAddresses, _ := d.getAddresses(relatedID)
+		if len(targetAddresses) > 0 {
+			for _, addr := range targetAddresses {
+				if utils.HasType(addr.Type, "home") {
+					targetContact.Addresses = append(targetContact.Addresses, addr)
+					break
+				}
+			}
+		}
+
+		// Check Case A: Source has it, Target does not
+		if len(sourceContact.Addresses) > 0 && len(targetContact.Addresses) == 0 {
+			suggestions = append(suggestions, d.buildAddressSuggestion(sourceContact, targetContact))
+		}
+
+		// Check Case B: Target has it, Source does not
+		if len(targetContact.Addresses) > 0 && len(sourceContact.Addresses) == 0 {
+			suggestions = append(suggestions, d.buildAddressSuggestion(targetContact, sourceContact))
+		}
+	}
+
+	return suggestions, nil
+}
+
+// Helper to format the display value and build the suggestion object
+func (d *Database) buildAddressSuggestion(from *models.Contact, to *models.Contact) models.AddressSuggestion {
+
+	suggestedAddr := from.Addresses[0]
+	displayValue := fmt.Sprintf("%s, %s", suggestedAddr.Street, suggestedAddr.City)
+
+	return models.AddressSuggestion{
+		Type:        "Address",
+		TargetID:    to.ID,
+		TargetName:  to.FullName,
+		ProposedID:  from.ID,
+		SourceName:  from.FullName,
+		ProposedVal: suggestedAddr,
+		DisplayVal:  displayValue,
+		Reason:      fmt.Sprintf("%s has an address set (%s). Since %s is their spouse, they likely share this address.", from.FullName, displayValue, to.FullName),
 	}
 }
