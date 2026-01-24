@@ -1,0 +1,58 @@
+{{define "content"}}
+    {{template "util_layout" .}}
+{{end}}
+
+{{define "util_body"}}
+    <div class="side-action-btn hidden md:block w-24"></div>
+
+    <div id="contact-deck" class="w-full max-w-lg">
+        {{if .Items}}
+            {{range $index, $s := .Items}}
+            <div class="util-card {{if ne $index 0}}hidden{{end}} card bg-base-100 shadow-xl border border-base-300"
+                 data-id="{{$s.TargetID}}">
+                <div class="card-body">
+                    <h2 class="card-title justify-center opacity-50 text-xs uppercase tracking-widest mb-4">Proposed Address</h2>
+                    
+                    <div class="flex items-center justify-between my-4 gap-4 bg-base-200 p-6 rounded-2xl">
+                        <div class="text-center flex-1">
+                            <div class="text-xs opacity-50 mb-1">Source</div>
+                            <div class="font-bold leading-tight">{{$s.SourceName}}</div>
+                            <div class="badge badge-success mt-2 font-mono text-xs">{{$s.DisplayVal}}</div>
+                        </div>
+                        
+                        <div class="text-2xl opacity-30">➔</div>
+                        
+                        <div class="text-center flex-1">
+                            <div class="text-xs opacity-50 mb-1">Target</div>
+                            <div class="font-bold leading-tight">{{$s.TargetName}}</div>
+                            <div class="text-error text-[10px] mt-2 italic">Missing Address</div>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-center opacity-70 italic mb-6">"{{$s.Reason}}"</p>
+
+                    <div class="card-actions flex-col items-center gap-3">
+                        <button onclick="syncAddress(event, '{{$s.TargetID}}', {{$s.ProposedVal}})" 
+                                class="btn btn-primary btn-block shadow-lg">
+                            Apply Shared Address
+                        </button>
+                        <button onclick="UtilCommon.showNext(this.closest('.util-card'))" 
+                                class="btn btn-ghost btn-sm">
+                            Skip for now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        {{else}}
+            <script>document.addEventListener('DOMContentLoaded', () => UtilCommon.showFinishedState())</script>
+        {{end}}
+    </div>
+
+    <div class="side-action-btn hidden md:block w-24"></div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/util-common.js"></script>
+<script src="/static/js/util-address.js"></script>
+{{end}}

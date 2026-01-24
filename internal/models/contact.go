@@ -178,3 +178,16 @@ type OtherDate struct {
 	EventDateMonth *int       `json:"event_date_month,omitempty"` // 1-12, for partial dates
 	EventDateDay   *int       `json:"event_date_day,omitempty"`   // 1-31, for partial dates
 }
+
+// Suggestion defines the proposed action for the UI
+type AddressSuggestion struct {
+	Type               string // "Address"
+	TargetID           int    // The ID of the person we are ADDING the link to
+	TargetName         string
+	ProposedID         int // The ID of the person they are related to
+	SourceName         string
+	RelationshipTypeID int     // The ID for "Brother", "Father", etc.
+	ProposedVal        Address `json:"proposed_val"`
+	DisplayVal         string
+	Reason             string // Your logic description
+}
