@@ -21,13 +21,19 @@
                         id="search-input"
                         name="q" 
                         placeholder="Search contacts..." 
-                        class="input input-bordered w-full focus:input-primary pr-20"
+                        class="input input-bordered w-full focus:input-primary pl-10 pr-20"
                         hx-get="/contacts/search-header" 
                         hx-trigger="keyup changed delay:300ms" 
                         hx-target="#search-results" 
                         hx-indicator="#search-spinner"
                         oninput="toggleClearButton(this)"
                         autocomplete="off" />
+                    
+                    <div class="absolute left-3 top-3.5 text-base-content/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
+                            <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
                     
                     <div class="absolute right-3 top-3 flex items-center gap-2">
                         <span id="search-spinner" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
