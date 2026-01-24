@@ -130,7 +130,7 @@
         div.innerHTML = `
             <input type="tel" name="phones[${index}][phone]" placeholder="(555) 123-4567" class="input input-bordered flex-1" required>
             <select name="phones[${index}][type]" class="select select-bordered">
-                <option value="mobile">Mobile</option>
+                <option value="cell">Cell</option>
                 <option value="home">Home</option>
                 <option value="work">Work</option>
                 <option value="other">Other</option>
@@ -232,7 +232,6 @@
                 <option value="website">Website</option>
                 <option value="social">Social</option>
                 <option value="other">Other</option>
-                <option value="other">Immich</option>
             </select>
             <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -674,54 +673,45 @@
             contact.other_dates = [];
             
             // Process form data
-            for (let [key, value] of formData.entries()) {
-                const match = key.match(/^(\w+)\[(\d+)\]\[(\w+)\]$/);
-                if (match) {
-                    const [, type, index, field] = match;
-                    const idx = parseInt(index);
+            const uniqueKeys = new Set(formData.keys());
 
-                    let processedValue = value;
-                    if (field === 'is_primary') {
-                        // If the checkbox is checked, it will send 'on'. Convert to true.
-                        processedValue = (value === 'on');
-                    }
-                    
-                    if (type === 'emails') {
-                        if (!contact.emails[idx]) contact.emails[idx] = {};
-                        contact.emails[idx][field] = processedValue;
-                    } else if (type === 'phones') {
-                        if (!contact.phones[idx]) contact.phones[idx] = {};
-                        contact.phones[idx][field] = processedValue;
-                    } else if (type === 'addresses') {
-                        if (!contact.addresses[idx]) contact.addresses[idx] = {};
-                        contact.addresses[idx][field] = processedValue;
-                    } else if (type === 'organizations') {
-                        if (!contact.organizations[idx]) contact.organizations[idx] = {};
-                        contact.organizations[idx][field] = processedValue;
-                    } else if (type === 'urls') {
-                        if (!contact.urls[idx]) contact.urls[idx] = {};
-                        contact.urls[idx][field] = processedValue;
-                    } else if (type === 'other_dates') {
-                        if (!contact.other_dates[idx]) contact.other_dates[idx] = {};
-                        contact.other_dates[idx][field] = processedValue;
-                    }
+            for (let key of uniqueKeys) {
+                const match = key.match(/^(\w+)\[(\d+)\]\[(\w+)\]$/);
+                if (!match) continue;
+
+                const [, collection, index, field] = match;
+                const idx = parseInt(index);
+
+                if (!contact[collection]) contact[collection] = [];
+                if (!contact[collection][idx]) contact[collection][idx] = {};
+
+                let processedValue;
+
+                if (field === 'is_primary') {
+                    processedValue = (formData.get(key) === 'on');
+                } else if (field === 'type') {
+                    processedValue = formData.getAll(key).filter(v => v !== "" && v !== "other");
+                } else {
+                    processedValue = formData.get(key);
                 }
+
+                contact[collection][idx][field] = processedValue;
             }
             
             // Clean up arrays AND format 'type' for Go compatibility
-            contact.emails = contact.emails
+            contact.emails = (contact.emails || [])
                 .filter(e => e && e.email)
                 .map(e => ({ ...e, type: Array.isArray(e.type) ? e.type : (e.type ? [e.type] : []) }));
 
-            contact.phones = contact.phones
+            contact.phones = (contact.phones || [])
                 .filter(p => p && p.phone)
                 .map(p => ({ ...p, type: Array.isArray(p.type) ? p.type : (p.type ? [p.type] : []) }));
 
-            contact.addresses = contact.addresses
+            contact.addresses = (contact.addresses || [])
                 .filter(a => a && (a.street || a.city))
                 .map(a => ({ ...a, type: Array.isArray(a.type) ? a.type : (a.type ? [a.type] : []) }));
 
-            contact.urls = contact.urls
+            contact.urls = (contact.urls || [])
                 .filter(u => u && u.url)
                 .map(u => ({ ...u, type: Array.isArray(u.type) ? u.type : (u.type ? [u.type] : []) }));
 

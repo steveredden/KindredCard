@@ -174,7 +174,14 @@
                             <div class="flex gap-2 items-start">
                                 <input type="tel" name="phones[{{$index}}][phone]" value="{{$phone.Phone}}" placeholder="(555) 123-4567" class="input input-bordered flex-1" required>
                                 <select name="phones[{{$index}}][type]" class="select select-bordered">
-                                    <option value="mobile" {{if hasType $phone.Type "mobile"}}selected{{end}}>Mobile</option>
+
+                                    {{$types := $phone.Type}}
+                                    {{$custom := isCustom $types}}
+                                    {{if $custom}}
+                                        <option value="{{$custom}}" selected>{{$custom}}</option>
+                                    {{end}}
+
+                                    <option value="cell" {{if hasType $phone.Type "cell"}}selected{{end}}>Cell</option>
                                     <option value="home" {{if hasType $phone.Type "home"}}selected{{end}}>Home</option>
                                     <option value="work" {{if hasType $phone.Type "work"}}selected{{end}}>Work</option>
                                     <option value="other" {{if hasType $phone.Type "other"}}selected{{end}}>Other</option>
@@ -209,6 +216,13 @@
                             <div class="card bg-base-200 shadow-md p-4">
                                 <div class="flex justify-between items-start mb-3">
                                     <select name="addresses[{{$index}}][type]" class="select select-bordered select-sm">
+
+                                    {{$types := $addr.Type}}
+                                    {{$custom := isCustom $types}}
+                                    {{if $custom}}
+                                        <option value="{{$custom}}" selected>{{$custom}}</option>
+                                    {{end}}
+
                                         <option value="home" {{if hasType $addr.Type "home"}}selected{{end}}>Home</option>
                                         <option value="work" {{if hasType $addr.Type "work"}}selected{{end}}>Work</option>
                                         <option value="other" {{if hasType $addr.Type "other"}}selected{{end}}>Other</option>
@@ -257,6 +271,13 @@
                             <div class="flex gap-2 items-start">
                                 <input type="email" name="emails[{{$index}}][email]" value="{{$email.Email}}" placeholder="email@example.com" class="input input-bordered flex-1" required>
                                 <select name="emails[{{$index}}][type]" class="select select-bordered">
+
+                                {{$types := $email.Type}}
+                                {{$custom := isCustom $types}}
+                                {{if $custom}}
+                                    <option value="{{$custom}}" selected>{{$custom}}</option>
+                                {{end}}
+
                                     <option value="home" {{if hasType $email.Type "home"}}selected{{end}}>Home</option>
                                     <option value="work" {{if hasType $email.Type "work"}}selected{{end}}>Work</option>
                                     <option value="other" {{if hasType $email.Type "other"}}selected{{end}}>Other</option>
@@ -521,10 +542,16 @@
                             <div class="flex gap-2 items-center">
                                 <input type="url" name="urls[{{$index}}][url]" value="{{$url.URL}}" placeholder="https://example.com" class="input input-bordered input-sm flex-1">
                                 <select name="urls[{{$index}}][type]" class="select select-bordered select-sm">
+
+                                {{$types := $url.Type}}
+                                {{$custom := isCustom $types}}
+                                {{if $custom}}
+                                    <option value="{{$custom}}" selected>{{$custom}}</option>
+                                {{end}}
+
                                     <option value="website" {{if hasType $url.Type "website"}}selected{{end}}>Website</option>
                                     <option value="social" {{if hasType $url.Type "social"}}selected{{end}}>Social</option>
                                     <option value="other" {{if hasType $url.Type "other"}}selected{{end}}>Other</option>
-                                    <option value="immich" {{if hasType $url.Type "immich"}}selected{{end}}>Immich</option>
                                 </select>
                                 <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -99,7 +99,7 @@ func parseVCardPhotoProperty(field *vcard.Field) (photoParts, error) {
 			}
 		}
 
-		// --- Fallback Logic: Check Base64 Signature (Handles Usah_Fake.vcf HEIC) ---
+		// --- Fallback Logic: Check Base64 Signature (Handles HEIC) ---
 		if mimeType == "" || mimeType == "image/HEIC" {
 			// The first 16 characters of HEIC Base64 data are a known signature
 			const heicSignaturePrefix = "AAAAJGZ0eXBoZWlj"
@@ -119,4 +119,32 @@ func parseVCardPhotoProperty(field *vcard.Field) (photoParts, error) {
 	}
 
 	return photoParts{}, fmt.Errorf("vcard photo: unrecognized photo property format or missing ENCODING=B")
+}
+
+// extractCustomLabel looks for a grouped X-ABLABEL and cleans it
+func extractCustomLabel(card vcard.Card, group string) string {
+	if group == "" {
+		return ""
+	}
+	for _, label := range card[XLabelField] {
+		if label.Group == group {
+			// Strip Apple markers and return clean text
+			clean := strings.TrimSuffix(strings.TrimPrefix(label.Value, "_$!<"), ">!$_")
+			return strings.ToLower(clean)
+		}
+	}
+	return ""
+}
+
+// addCustomLabel adds an X-ABLABEL field to the card linked to a group
+func addCustomLabel(card vcard.Card, group string, label string) {
+	if label == "" {
+		return
+	}
+
+	labelField := &vcard.Field{
+		Group: group,
+		Value: label,
+	}
+	card.Add(XLabelField, labelField)
 }
