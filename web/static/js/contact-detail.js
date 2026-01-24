@@ -177,11 +177,16 @@
                 </div>
             </div>
             <div class="space-y-2">
-                <input type="text" name="addresses[${index}][street]" placeholder="Street Address" class="input input-bordered input-sm w-full">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="addresses[${index}][city]" placeholder="City" class="input input-bordered input-sm">
-                    <input type="text" name="addresses[${index}][state]" placeholder="State" class="input input-bordered input-sm">
+                <div class="grid grid-cols-5 gap-2">
+                    <input type="text" name="addresses[${index}][street]" placeholder="Street Address" class="input input-bordered input-sm col-span-3">
+                    <input type="text" name="addresses[${index}][extended_street]" placeholder="Apt/Ste" class="input input-bordered input-sm col-span-2">
                 </div>
+
+                <div class="grid grid-cols-5 gap-2">
+                    <input type="text" name="addresses[${index}][city]" placeholder="City" class="input input-bordered input-sm col-span-3">
+                    <input type="text" name="addresses[${index}][state]" placeholder="State" class="input input-bordered input-sm col-span-2">
+                </div>
+
                 <div class="grid grid-cols-2 gap-2">
                     <input type="text" name="addresses[${index}][postal_code]" placeholder="ZIP" class="input input-bordered input-sm">
                     <input type="text" name="addresses[${index}][country]" placeholder="Country" class="input input-bordered input-sm">

@@ -119,22 +119,23 @@ type Phone struct {
 	ID            int        `json:"id"`
 	ContactID     int        `json:"contact_id"`
 	Phone         string     `json:"phone"`
-	Type          []string   `json:"type"` // home, work, mobile, fax, other
+	Type          []string   `json:"type"` // home, work, cell, fax, other
 	IsPrimary     bool       `json:"is_primary"`
 	LastFormatted *time.Time `json:"last_formatted_at"`
 }
 
 // Address represents a physical address
 type Address struct {
-	ID         int      `json:"id"`
-	ContactID  int      `json:"contact_id"`
-	Street     string   `json:"street"`
-	City       string   `json:"city"`
-	State      string   `json:"state"`
-	PostalCode string   `json:"postal_code"`
-	Country    string   `json:"country"`
-	Type       []string `json:"type"` // home, work, other
-	IsPrimary  bool     `json:"is_primary"`
+	ID             int      `json:"id"`
+	ContactID      int      `json:"contact_id"`
+	Street         string   `json:"street"`
+	ExtendedStreet string   `json:"extended_street"`
+	City           string   `json:"city"`
+	State          string   `json:"state"`
+	PostalCode     string   `json:"postal_code"`
+	Country        string   `json:"country"`
+	Type           []string `json:"type"` // home, work, other
+	IsPrimary      bool     `json:"is_primary"`
 }
 
 // Organization represents a company/organization affiliation

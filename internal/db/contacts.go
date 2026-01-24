@@ -1115,8 +1115,8 @@ func (d *Database) insertPhones(tx *sql.Tx, contactID int, phones []models.Phone
 func (d *Database) insertAddresses(tx *sql.Tx, contactID int, addresses []models.Address) error {
 	for _, addr := range addresses {
 		_, err := tx.Exec(
-			"INSERT INTO addresses (contact_id, street, city, state, postal_code, country, type, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-			contactID, addr.Street, addr.City, addr.State, addr.PostalCode, addr.Country, pq.Array(addr.Type), addr.IsPrimary,
+			"INSERT INTO addresses (contact_id, street, extended_street, city, state, postal_code, country, type, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+			contactID, addr.Street, addr.ExtendedStreet, addr.City, addr.State, addr.PostalCode, addr.Country, pq.Array(addr.Type), addr.IsPrimary,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error inserting Addresses: %v", err)
@@ -1268,7 +1268,7 @@ func (d *Database) getPhones(contactID int) ([]models.Phone, error) {
 }
 
 func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, street, city, state, postal_code, country, type, is_primary FROM addresses WHERE contact_id = $1", contactID)
+	rows, err := d.db.Query("SELECT id, contact_id, street, extended_street, city, state, postal_code, country, type, is_primary FROM addresses WHERE contact_id = $1", contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Addresses: %v", err)
 		return nil, err
@@ -1278,7 +1278,7 @@ func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
 	var addresses []models.Address
 	for rows.Next() {
 		var addr models.Address
-		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, pq.Array(&addr.Type), &addr.IsPrimary); err != nil {
+		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &addr.ExtendedStreet, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, pq.Array(&addr.Type), &addr.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Addresses: %v", err)
 			return nil, err
 		}

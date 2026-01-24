@@ -240,11 +240,12 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 	// Addresses
 	for _, addr := range contact.Addresses {
 		address := &vcard.Address{
-			StreetAddress: addr.Street,
-			Locality:      addr.City,
-			Region:        addr.State,
-			PostalCode:    addr.PostalCode,
-			Country:       addr.Country,
+			StreetAddress:   addr.Street,
+			ExtendedAddress: addr.ExtendedStreet,
+			Locality:        addr.City,
+			Region:          addr.State,
+			PostalCode:      addr.PostalCode,
+			Country:         addr.Country,
 			Field: &vcard.Field{
 				Params: make(vcard.Params),
 			},
@@ -533,12 +534,13 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	// Addresses
 	for _, addr := range card.Addresses() {
 		address := models.Address{
-			Street:     addr.StreetAddress,
-			City:       addr.Locality,
-			State:      addr.Region,
-			PostalCode: addr.PostalCode,
-			Country:    addr.Country,
-			IsPrimary:  addr.Field.Params.Get(vcard.ParamPreferred) == "1",
+			Street:         addr.StreetAddress,
+			ExtendedStreet: addr.ExtendedAddress,
+			City:           addr.Locality,
+			State:          addr.Region,
+			PostalCode:     addr.PostalCode,
+			Country:        addr.Country,
+			IsPrimary:      addr.Field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
 		// add custom labels at type[0]
