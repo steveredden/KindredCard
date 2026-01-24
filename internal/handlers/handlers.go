@@ -63,6 +63,7 @@ func NewHandler(database *db.Database, templatesPath string, baseURL string, rel
 			"formatDateTimePtr":    utils.FormatDateTimePtr,
 			"formatDateTime":       utils.FormatDateTime,
 			"hasType":              utils.HasType,
+			"isCustom":             utils.IsCustom,
 		}).
 		ParseGlob(templatesPath + "/*.html")
 

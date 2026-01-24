@@ -300,3 +300,22 @@ func ExtractIDFromImmichURL(url string) string {
 	personID := parts[len(parts)-1]
 	return personID
 }
+
+func IsCustom(types []string) string {
+	if len(types) == 0 {
+		return ""
+	}
+	// Clean the input
+	t := strings.ToLower(strings.TrimSpace(types[0]))
+	if t == "" {
+		return ""
+	}
+
+	standards := []string{"cell", "home", "work", "other", "fax", "pager", "voice", "video", "text", "msg", "pref", "social"}
+	for _, s := range standards {
+		if t == s {
+			return ""
+		}
+	}
+	return types[0]
+}

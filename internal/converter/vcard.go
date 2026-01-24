@@ -11,6 +11,7 @@ package converter
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -183,15 +184,20 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 	// Emails
 	for _, email := range contact.Emails {
 
-		field := &vcard.Field{Value: email.Email}
-		if field.Params == nil {
-			field.Params = make(vcard.Params)
+		field := &vcard.Field{
+			Value:  email.Email,
+			Params: make(vcard.Params),
 		}
 
 		if len(email.Type) > 0 {
 			for _, t := range email.Type {
 				field.Params.Add(vcard.ParamType, t)
 			}
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			field.Group = itemKey
+			addCustomLabel(card, itemKey, email.Type[0]) //add an X-ABLABEL custom label name
 		}
 
 		if email.IsPrimary {
@@ -206,16 +212,22 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 	// Phones
 	for _, phone := range contact.Phones {
 
-		field := &vcard.Field{Value: phone.Phone}
-		if field.Params == nil {
-			field.Params = make(vcard.Params)
+		field := &vcard.Field{
+			Value:  phone.Phone,
+			Params: make(vcard.Params),
 		}
 
 		if len(phone.Type) > 0 {
 			for _, t := range phone.Type {
 				field.Params.Add(vcard.ParamType, t)
 			}
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			field.Group = itemKey
+			addCustomLabel(card, itemKey, phone.Type[0]) //add an X-ABLABEL custom label name
 		}
+
 		if phone.IsPrimary {
 			field.Params.Set(vcard.ParamPreferred, "1")
 			if isAppleClient {
@@ -233,19 +245,22 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 			Region:        addr.State,
 			PostalCode:    addr.PostalCode,
 			Country:       addr.Country,
-		}
-		if address.Field == nil {
-			address.Field = &vcard.Field{}
+			Field: &vcard.Field{
+				Params: make(vcard.Params),
+			},
 		}
 
-		if address.Field.Params == nil {
-			address.Field.Params = make(vcard.Params) // Assuming vcard.Params is a map type
-		}
 		if len(addr.Type) > 0 {
 			for _, t := range addr.Type {
 				address.Field.Params.Add(vcard.ParamType, t)
 			}
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			address.Group = itemKey
+			addCustomLabel(card, itemKey, addr.Type[0]) //add an X-ABLABEL custom label name
 		}
+
 		if addr.IsPrimary {
 			address.Field.Params.Set(vcard.ParamPreferred, "1")
 			if isAppleClient {
@@ -271,17 +286,22 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 
 	// URLs
 	for _, url := range contact.URLs {
-
-		field := &vcard.Field{Value: url.URL}
-		if field.Params == nil {
-			field.Params = make(vcard.Params)
+		field := &vcard.Field{
+			Value:  url.URL,
+			Params: make(vcard.Params),
 		}
 
 		if len(url.Type) > 0 {
 			for _, t := range url.Type {
 				field.Params.Add(vcard.ParamType, t)
 			}
+			itemKey := "item" + strconv.Itoa(extraItemIndex)
+			extraItemIndex++
+
+			field.Group = itemKey
+			addCustomLabel(card, itemKey, url.Type[0]) //add an X-ABLABEL custom label name
 		}
+
 		if url.IsPrimary {
 			field.Params.Set(vcard.ParamPreferred, "1")
 			if isAppleClient {
@@ -463,11 +483,18 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
+		// add custom labels at type[0]
+		if label := extractCustomLabel(card, field.Group); label != "" {
+			email.Type = append(email.Type, label)
+		}
+
 		for _, t := range field.Params.Types() {
 			if t == "pref" { //apple or v3 includes primary as a type?
 				email.IsPrimary = true
 			} else {
-				email.Type = append(email.Type, t)
+				if !slices.Contains(email.Type, t) {
+					email.Type = append(email.Type, t)
+				}
 			}
 		}
 		if len(email.Type) < 1 {
@@ -483,17 +510,22 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
+		// add custom labels at type[0]
+		if label := extractCustomLabel(card, field.Group); label != "" {
+			phone.Type = append(phone.Type, label)
+		}
+
 		for _, t := range field.Params.Types() {
 			if t == "pref" { //apple or v3 includes primary as a type?
 				phone.IsPrimary = true
-			} else if t == "voice" {
-				continue //discard
 			} else {
-				phone.Type = append(phone.Type, t)
+				if !slices.Contains(phone.Type, t) {
+					phone.Type = append(phone.Type, t)
+				}
 			}
 		}
 		if len(phone.Type) < 1 {
-			phone.Type = append(phone.Type, "mobile")
+			phone.Type = append(phone.Type, "cell")
 		}
 		contact.Phones = append(contact.Phones, phone)
 	}
@@ -508,13 +540,22 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			Country:    addr.Country,
 			IsPrimary:  addr.Field.Params.Get(vcard.ParamPreferred) == "1",
 		}
+
+		// add custom labels at type[0]
+		if label := extractCustomLabel(card, addr.Field.Group); label != "" {
+			address.Type = append(address.Type, label)
+		}
+
 		for _, t := range addr.Params.Types() {
 			if t == "pref" { //apple or v3 includes primary as a type?
 				address.IsPrimary = true
 			} else {
-				address.Type = append(address.Type, t)
+				if !slices.Contains(address.Type, t) {
+					address.Type = append(address.Type, t)
+				}
 			}
 		}
+
 		if len(address.Type) < 1 {
 			address.Type = append(address.Type, "home")
 		}
@@ -536,13 +577,22 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	// URLs
 	for _, field := range card[vcard.FieldURL] {
 		url := models.URL{URL: field.Value}
+
+		// add custom labels at type[0]
+		if label := extractCustomLabel(card, field.Group); label != "" {
+			url.Type = append(url.Type, label)
+		}
+
 		for _, t := range field.Params.Types() {
 			if t == "pref" { //apple or v3 includes primary as a type?
 				url.IsPrimary = true
 			} else {
-				url.Type = append(url.Type, t)
+				if !slices.Contains(url.Type, t) {
+					url.Type = append(url.Type, t)
+				}
 			}
 		}
+
 		if len(url.Type) < 1 {
 			url.Type = append(url.Type, "other")
 		}
@@ -568,12 +618,22 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	// X-SOCIALPROFILE (iOS) -> convert to URL directly
 	for _, field := range card[XSocialProfileField] {
 		url := models.URL{URL: field.Value}
-		for _, t := range field.Params.Types() {
-			url.Type = append(url.Type, t)
+
+		// add custom labels at type[0]
+		if label := extractCustomLabel(card, field.Group); label != "" {
+			url.Type = append(url.Type, label)
 		}
+
+		for _, t := range field.Params.Types() {
+			if !slices.Contains(url.Type, t) {
+				url.Type = append(url.Type, t)
+			}
+		}
+
 		if len(url.Type) < 1 {
 			url.Type = append(url.Type, "other")
 		}
+
 		contact.URLs = append(contact.URLs, url)
 	}
 
