@@ -1278,10 +1278,12 @@ func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
 	var addresses []models.Address
 	for rows.Next() {
 		var addr models.Address
-		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &addr.ExtendedStreet, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, pq.Array(&addr.Type), &addr.IsPrimary); err != nil {
+		var extendedStreet sql.NullString
+		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &extendedStreet, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, pq.Array(&addr.Type), &addr.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Addresses: %v", err)
 			return nil, err
 		}
+		addr.ExtendedStreet = utils.ScanNullString(extendedStreet)
 		addresses = append(addresses, addr)
 	}
 	return addresses, nil
