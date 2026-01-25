@@ -395,7 +395,7 @@
                                 <div class="text-base">
                                     {{if .Street}}<div>{{.Street}}</div>{{end}}
                                     <div>
-                                        {{if .City}}{{.City}}{{end}}{{if and .City .State}}, {{end}}{{if .State}}{{.State}}{{end}} {{.PostalCode}}
+                                        {{if .City}}{{.City}}{{end}}{{if and .City .State}}, {{end}}{{if .State}}{{.State}}{{end}} {{if .PostalCode}}{{.PostalCode}}{{end}}
                                     </div>
                                     {{if .Country}}<div>{{.Country}}</div>{{end}}
                                     <span class="badge badge-sm mt-1">{{index .Type 0}}</span>
