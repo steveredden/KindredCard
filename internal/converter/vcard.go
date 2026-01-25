@@ -277,9 +277,15 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 	// Organizations -- only do the first for now
 	if len(contact.Organizations) > 0 {
 		org := contact.Organizations[0]
-		if org.Name != "" {
-			card.SetValue(vcard.FieldOrganization, org.Name)
+
+		if org.Name != "" || org.Department != "" {
+			orgValue := org.Name
+			if org.Department != "" {
+				orgValue += ";" + org.Department
+			}
+			card.SetValue(vcard.FieldOrganization, orgValue)
 		}
+
 		if org.Title != "" {
 			card.SetValue(vcard.FieldTitle, org.Title)
 		}
@@ -567,9 +573,17 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	// Organization
 	if org := card.Get(vcard.FieldOrganization); org != nil {
 		organization := models.Organization{
-			Name:      org.Value,
 			IsPrimary: true,
 		}
+
+		parts := strings.Split(org.Value, ";")
+		if len(parts) > 0 && parts[0] != "" {
+			organization.Name = parts[0] // Company
+		}
+		if len(parts) > 1 && parts[1] != "" {
+			organization.Department = parts[1] // Department
+		}
+
 		if title := card.Get(vcard.FieldTitle); title != nil {
 			organization.Title = title.Value
 		}
