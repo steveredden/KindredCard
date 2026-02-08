@@ -625,8 +625,10 @@ func (h *Handler) ExportContactVCardAPI(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	labelMap, _ := h.db.GetLabelMap()
+
 	// Convert to vCard
-	card := converter.ContactToVCard(contact, false)
+	card := converter.ContactToVCard(contact, labelMap, false)
 
 	var buf bytes.Buffer
 	encoder := vcard.NewEncoder(&buf)
@@ -672,8 +674,10 @@ func (h *Handler) ExportAllVCardsAPI(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	encoder := vcard.NewEncoder(&buf)
 
+	labelMap, _ := h.db.GetLabelMap()
+
 	for _, contact := range contacts {
-		card := converter.ContactToVCard(contact, false)
+		card := converter.ContactToVCard(contact, labelMap, false)
 		if err := encoder.Encode(card); err != nil {
 			continue
 		}
@@ -764,6 +768,7 @@ func (h *Handler) ImportVCardsAPI(w http.ResponseWriter, r *http.Request) {
 	// Fetch current state for relationship matching
 	allContacts, _ := h.db.GetAllContactsAbbrv(user.ID, false)
 	allRelTypes, _ := h.db.GetRelationshipTypes()
+	revMap, _ := h.db.GetLabelReverseMap()
 
 	// Create a quick lookup map: UID -> Internal ID
 	uidToID := make(map[string]int)
@@ -780,7 +785,20 @@ func (h *Handler) ImportVCardsAPI(w http.ResponseWriter, r *http.Request) {
 	// Now converter.VCardToContact can find the related contacts in allContacts
 	imported := 0
 	for _, card := range cards {
-		contact, err := converter.VCardToContact(card, allContacts, allRelTypes)
+
+		missingLabels := converter.FindNewLabels(card, revMap)
+		for category, names := range missingLabels {
+			for _, name := range names {
+				newID, err := h.db.NewLabel(name, category)
+				if err != nil {
+					continue
+				}
+				// Update the map locally so the converter can find it immediately
+				revMap[category+":"+name] = newID
+			}
+		}
+
+		contact, err := converter.VCardToContact(card, allContacts, allRelTypes, revMap)
 		if err != nil {
 			logger.Debug("[HANDLER] Error converting vCard to Contact: %v", err)
 			continue

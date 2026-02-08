@@ -128,14 +128,20 @@ func (h *Handler) PostImmichLinkAPI(w http.ResponseWriter, r *http.Request) {
 
 	url := fmt.Sprintf("%s/people/%s", os.Getenv("IMMICH_URL"), req.PersonID)
 
+	immichTypeID, err := h.db.GetLabelID("immich", "url")
+	if err != nil {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
 	// Create the URL record with type ["immich"]
 	newURL := models.URL{
 		ContactID: req.ContactID,
 		URL:       url,
-		Type:      []string{"immich"},
+		Type:      immichTypeID,
 	}
 
-	_, err := h.db.CreateContactURL(user.ID, newURL)
+	_, err = h.db.CreateContactURL(user.ID, newURL)
 	if err != nil {
 		http.Error(w, "Failed to save link", http.StatusInternalServerError)
 		return

@@ -14,7 +14,6 @@ import (
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
-	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error) {
@@ -340,6 +339,8 @@ func (d *Database) buildAnniversarySuggestion(from *models.Contact, to *models.C
 func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion, error) {
 	var suggestions []models.AddressSuggestion
 
+	homeLabelID, _ := d.GetLabelID("home", "address")
+
 	// 1. Fetch all spouse relationships for this user
 	rows, err := d.db.Query(`
 		SELECT r.contact_id, c1.full_name, r.related_contact_id, c2.full_name
@@ -369,7 +370,7 @@ func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion
 		sourceAddresses, _ := d.getAddresses(contactID)
 		if len(sourceAddresses) > 0 {
 			for _, addr := range sourceAddresses {
-				if utils.HasType(addr.Type, "home") {
+				if addr.Type == homeLabelID {
 					sourceContact.Addresses = append(sourceContact.Addresses, addr)
 					break
 				}
@@ -385,7 +386,7 @@ func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion
 		targetAddresses, _ := d.getAddresses(relatedID)
 		if len(targetAddresses) > 0 {
 			for _, addr := range targetAddresses {
-				if utils.HasType(addr.Type, "home") {
+				if addr.Type == homeLabelID {
 					targetContact.Addresses = append(targetContact.Addresses, addr)
 					break
 				}

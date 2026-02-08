@@ -11,7 +11,6 @@ package converter
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +35,7 @@ const (
 )
 
 // ContactToVCard converts a Contact model to a vCard
-func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
+func ContactToVCard(contact *models.Contact, labelMap map[int]models.ContactLabelType, isAppleClient bool) vcard.Card {
 	var extraItemIndex int = 1 //function-global extra item index
 
 	card := make(vcard.Card)
@@ -189,15 +188,16 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 			Params: make(vcard.Params),
 		}
 
-		if len(email.Type) > 0 {
-			for _, t := range email.Type {
-				field.Params.Add(vcard.ParamType, t)
-			}
-			itemKey := "item" + strconv.Itoa(extraItemIndex)
-			extraItemIndex++
+		if label, ok := labelMap[email.Type]; ok {
+			if label.IsSystem {
+				field.Params.Add(vcard.ParamType, label.Name)
+			} else {
+				itemKey := "item" + strconv.Itoa(extraItemIndex)
+				extraItemIndex++
 
-			field.Group = itemKey
-			addCustomLabel(card, itemKey, email.Type[0]) //add an X-ABLABEL custom label name
+				field.Group = itemKey
+				addCustomLabel(card, itemKey, label.Name) //add an X-ABLABEL custom label name
+			}
 		}
 
 		if email.IsPrimary {
@@ -217,15 +217,16 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 			Params: make(vcard.Params),
 		}
 
-		if len(phone.Type) > 0 {
-			for _, t := range phone.Type {
-				field.Params.Add(vcard.ParamType, t)
-			}
-			itemKey := "item" + strconv.Itoa(extraItemIndex)
-			extraItemIndex++
+		if label, ok := labelMap[phone.Type]; ok {
+			if label.IsSystem {
+				field.Params.Add(vcard.ParamType, label.Name)
+			} else {
+				itemKey := "item" + strconv.Itoa(extraItemIndex)
+				extraItemIndex++
 
-			field.Group = itemKey
-			addCustomLabel(card, itemKey, phone.Type[0]) //add an X-ABLABEL custom label name
+				field.Group = itemKey
+				addCustomLabel(card, itemKey, label.Name) //add an X-ABLABEL custom label name
+			}
 		}
 
 		if phone.IsPrimary {
@@ -251,15 +252,16 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 			},
 		}
 
-		if len(addr.Type) > 0 {
-			for _, t := range addr.Type {
-				address.Field.Params.Add(vcard.ParamType, t)
-			}
-			itemKey := "item" + strconv.Itoa(extraItemIndex)
-			extraItemIndex++
+		if label, ok := labelMap[addr.Type]; ok {
+			if label.IsSystem {
+				address.Field.Params.Add(vcard.ParamType, label.Name)
+			} else {
+				itemKey := "item" + strconv.Itoa(extraItemIndex)
+				extraItemIndex++
 
-			address.Group = itemKey
-			addCustomLabel(card, itemKey, addr.Type[0]) //add an X-ABLABEL custom label name
+				address.Group = itemKey
+				addCustomLabel(card, itemKey, label.Name) //add an X-ABLABEL custom label name
+			}
 		}
 
 		if addr.IsPrimary {
@@ -298,15 +300,16 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 			Params: make(vcard.Params),
 		}
 
-		if len(url.Type) > 0 {
-			for _, t := range url.Type {
-				field.Params.Add(vcard.ParamType, t)
-			}
-			itemKey := "item" + strconv.Itoa(extraItemIndex)
-			extraItemIndex++
+		if label, ok := labelMap[url.Type]; ok {
+			if label.IsSystem {
+				field.Params.Add(vcard.ParamType, label.Name)
+			} else {
+				itemKey := "item" + strconv.Itoa(extraItemIndex)
+				extraItemIndex++
 
-			field.Group = itemKey
-			addCustomLabel(card, itemKey, url.Type[0]) //add an X-ABLABEL custom label name
+				field.Group = itemKey
+				addCustomLabel(card, itemKey, label.Name) //add an X-ABLABEL custom label name
+			}
 		}
 
 		if url.IsPrimary {
@@ -388,7 +391,7 @@ func ContactToVCard(contact *models.Contact, isAppleClient bool) vcard.Card {
 }
 
 // VCardToContact converts a vCard to a Contact model
-func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelationshipTypes []models.RelationshipType) (*models.Contact, error) {
+func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelationshipTypes []models.RelationshipType, revMap map[string]int) (*models.Contact, error) {
 	uid := ""
 	if field := card.Get(vcard.FieldUID); field != nil && field.Value != "" {
 		uid = field.Value
@@ -490,23 +493,42 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
-		// add custom labels at type[0]
+		var labelToUse string
+
+		// check first for a custom group
 		if label := extractCustomLabel(card, field.Group); label != "" {
-			email.Type = append(email.Type, label)
+			labelToUse = label
 		}
 
-		for _, t := range field.Params.Types() {
-			if t == "pref" { //apple or v3 includes primary as a type?
-				email.IsPrimary = true
-			} else {
-				if !slices.Contains(email.Type, t) {
-					email.Type = append(email.Type, t)
+		// if none, look at the standard types
+		if labelToUse == "" {
+			for _, t := range field.Params.Types() {
+				t = strings.ToLower(t)
+				if t == "pref" {
+					email.IsPrimary = true
+					continue
+				}
+				// Take the first non-pref type we find (e.g., "work", "home")
+				if labelToUse == "" {
+					labelToUse = t
 				}
 			}
 		}
-		if len(email.Type) < 1 {
-			email.Type = append(email.Type, "home")
+
+		// fallback to cell
+		if labelToUse == "" {
+			labelToUse = "home"
 		}
+
+		key := getLabelKey("email", labelToUse)
+		if id, ok := revMap[key]; ok {
+			email.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			email.Type = revMap[getLabelKey("email", "home")]
+		}
+
 		contact.Emails = append(contact.Emails, email)
 	}
 
@@ -517,23 +539,42 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			IsPrimary: field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
-		// add custom labels at type[0]
+		var labelToUse string
+
+		// check first for a custom group
 		if label := extractCustomLabel(card, field.Group); label != "" {
-			phone.Type = append(phone.Type, label)
+			labelToUse = label
 		}
 
-		for _, t := range field.Params.Types() {
-			if t == "pref" { //apple or v3 includes primary as a type?
-				phone.IsPrimary = true
-			} else {
-				if !slices.Contains(phone.Type, t) {
-					phone.Type = append(phone.Type, t)
+		// if none, look at the standard types
+		if labelToUse == "" {
+			for _, t := range field.Params.Types() {
+				t = strings.ToLower(t)
+				if t == "pref" {
+					phone.IsPrimary = true
+					continue
+				}
+				// Take the first non-pref type we find (e.g., "work", "home")
+				if labelToUse == "" {
+					labelToUse = t
 				}
 			}
 		}
-		if len(phone.Type) < 1 {
-			phone.Type = append(phone.Type, "cell")
+
+		// fallback to cell
+		if labelToUse == "" {
+			labelToUse = "cell"
 		}
+
+		key := getLabelKey("phone", labelToUse)
+		if id, ok := revMap[key]; ok {
+			phone.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			phone.Type = revMap[getLabelKey("phone", "cell")]
+		}
+
 		contact.Phones = append(contact.Phones, phone)
 	}
 
@@ -549,23 +590,40 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 			IsPrimary:      addr.Field.Params.Get(vcard.ParamPreferred) == "1",
 		}
 
-		// add custom labels at type[0]
+		var labelToUse string
+
+		// check first for a custom group
 		if label := extractCustomLabel(card, addr.Field.Group); label != "" {
-			address.Type = append(address.Type, label)
+			labelToUse = label
 		}
 
-		for _, t := range addr.Params.Types() {
-			if t == "pref" { //apple or v3 includes primary as a type?
-				address.IsPrimary = true
-			} else {
-				if !slices.Contains(address.Type, t) {
-					address.Type = append(address.Type, t)
+		// if none, look at the standard types
+		if labelToUse == "" {
+			for _, t := range addr.Field.Params.Types() {
+				t = strings.ToLower(t)
+				if t == "pref" {
+					address.IsPrimary = true
+					continue
+				}
+				// Take the first non-pref type we find (e.g., "work", "home")
+				if labelToUse == "" {
+					labelToUse = t
 				}
 			}
 		}
 
-		if len(address.Type) < 1 {
-			address.Type = append(address.Type, "home")
+		// fallback to cell
+		if labelToUse == "" {
+			labelToUse = "home"
+		}
+
+		key := getLabelKey("address", labelToUse)
+		if id, ok := revMap[key]; ok {
+			address.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			address.Type = revMap[getLabelKey("address", "home")]
 		}
 		contact.Addresses = append(contact.Addresses, address)
 	}
@@ -594,24 +652,42 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	for _, field := range card[vcard.FieldURL] {
 		url := models.URL{URL: field.Value}
 
-		// add custom labels at type[0]
+		var labelToUse string
+
+		// check first for a custom group
 		if label := extractCustomLabel(card, field.Group); label != "" {
-			url.Type = append(url.Type, label)
+			labelToUse = label
 		}
 
-		for _, t := range field.Params.Types() {
-			if t == "pref" { //apple or v3 includes primary as a type?
-				url.IsPrimary = true
-			} else {
-				if !slices.Contains(url.Type, t) {
-					url.Type = append(url.Type, t)
+		// if none, look at the standard types
+		if labelToUse == "" {
+			for _, t := range field.Params.Types() {
+				t = strings.ToLower(t)
+				if t == "pref" {
+					url.IsPrimary = true
+					continue
+				}
+				// Take the first non-pref type we find (e.g., "work", "home")
+				if labelToUse == "" {
+					labelToUse = t
 				}
 			}
 		}
 
-		if len(url.Type) < 1 {
-			url.Type = append(url.Type, "other")
+		// fallback to cell
+		if labelToUse == "" {
+			labelToUse = "home"
 		}
+
+		key := getLabelKey("url", labelToUse)
+		if id, ok := revMap[key]; ok {
+			url.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			url.Type = revMap[getLabelKey("url", "home")]
+		}
+
 		contact.URLs = append(contact.URLs, url)
 	}
 
@@ -635,19 +711,40 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	for _, field := range card[XSocialProfileField] {
 		url := models.URL{URL: field.Value}
 
-		// add custom labels at type[0]
+		var labelToUse string
+
+		// check first for a custom group
 		if label := extractCustomLabel(card, field.Group); label != "" {
-			url.Type = append(url.Type, label)
+			labelToUse = label
 		}
 
-		for _, t := range field.Params.Types() {
-			if !slices.Contains(url.Type, t) {
-				url.Type = append(url.Type, t)
+		// if none, look at the standard types
+		if labelToUse == "" {
+			for _, t := range field.Params.Types() {
+				t = strings.ToLower(t)
+				if t == "pref" {
+					url.IsPrimary = true
+					continue
+				}
+				// Take the first non-pref type we find (e.g., "work", "home")
+				if labelToUse == "" {
+					labelToUse = t
+				}
 			}
 		}
 
-		if len(url.Type) < 1 {
-			url.Type = append(url.Type, "other")
+		// fallback to cell
+		if labelToUse == "" {
+			labelToUse = "profile"
+		}
+
+		key := getLabelKey("phone", labelToUse)
+		if id, ok := revMap[key]; ok {
+			url.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			url.Type = revMap[getLabelKey("url", "profile")]
 		}
 
 		contact.URLs = append(contact.URLs, url)

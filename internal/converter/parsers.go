@@ -11,6 +11,7 @@ package converter
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/emersion/go-vcard"
@@ -147,4 +148,62 @@ func addCustomLabel(card vcard.Card, group string, label string) {
 		Value: label,
 	}
 	card.Add(XLabelField, labelField)
+}
+
+func getLabelKey(category string, name string) string {
+	return strings.ToLower(category + ":" + name)
+}
+
+func FindNewLabels(card vcard.Card, revMap map[string]int) map[string][]string {
+	newLabels := make(map[string][]string)
+
+	// Define the fields we want to scan and their categories
+	mappings := []struct {
+		Field    string
+		Category string
+	}{
+		{vcard.FieldTelephone, "phone"},
+		{vcard.FieldEmail, "email"},
+		{vcard.FieldAddress, "address"},
+		{vcard.FieldURL, "url"},
+	}
+
+	for _, m := range mappings {
+		for _, field := range card[m.Field] {
+			// 1. Try Custom Label (Grouped X-ABLABEL)
+			label := strings.ToLower(extractCustomLabel(card, field.Group))
+
+			// 2. Fallback to Standard vCard TYPEs if no custom label
+			if label == "" {
+				for _, t := range field.Params.Types() {
+					t = strings.ToLower(t)
+					if t == "pref" || t == "internet" { // Skip non-label types
+						continue
+					}
+					label = t
+					break // Take the first valid type found
+				}
+			}
+
+			// 3. Last Resort Fallback (Matches your UI logic)
+			if label == "" {
+				if m.Category == "phone" {
+					label = "cell"
+				} else {
+					label = "home"
+				}
+			}
+
+			// 4. Check if we need to create it
+			key := m.Category + ":" + label
+			if _, exists := revMap[key]; !exists {
+				// Check if already added to our "new" list to avoid duplicates
+				if !slices.Contains(newLabels[m.Category], label) {
+					newLabels[m.Category] = append(newLabels[m.Category], label)
+				}
+			}
+		}
+	}
+
+	return newLabels
 }

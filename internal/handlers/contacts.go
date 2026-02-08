@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/middleware"
 	"github.com/steveredden/KindredCard/internal/models"
 	"github.com/steveredden/KindredCard/internal/utils"
@@ -40,6 +39,7 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	totalCount, _ := h.db.GetContactCount(user.ID)
 	upcomingEventCount, _ := h.db.GetUpcomingEventsCount(user.ID, 7)
 	recentlyEditedCount, _ := h.db.GetRecentlyEditedCountByDays(user.ID, 7)
+	labelTypes, _ := h.db.GetLabelUIMap()
 
 	h.renderTemplate(w, r, "index.html", map[string]interface{}{
 		"User":               user,
@@ -47,6 +47,7 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 		"TotalContacts":      totalCount,
 		"UpcomingEventCount": upcomingEventCount,
 		"RecentCount":        recentlyEditedCount,
+		"LabelTypes":         labelTypes,
 		"Title":              "Contacts",
 		"ActivePage":         "contacts",
 	})
@@ -133,6 +134,9 @@ func (h *Handler) ShowContact(w http.ResponseWriter, r *http.Request) {
 	allContacts, _ := h.db.GetAllContactsAbbrv(user.ID, false)
 	relationshipTypes, _ := h.db.GetRelationshipTypes()
 
+	// custom labels
+	labelTypes, _ := h.db.GetLabelUIMap()
+
 	h.renderTemplate(w, r, "contact_detail.html", map[string]interface{}{
 		"AllContacts":       allContacts,
 		"RelationshipTypes": relationshipTypes,
@@ -140,6 +144,7 @@ func (h *Handler) ShowContact(w http.ResponseWriter, r *http.Request) {
 		"Birthday":          birthdayView,
 		"Anniversary":       anniversaryView,
 		"OtherDates":        otherDatesView,
+		"LabelTypes":        labelTypes,
 		"User":              user,
 		"Title":             contact.FullName,
 		"ActivePage":        "contacts",
@@ -315,55 +320,6 @@ func (h *Handler) PatchContactAPI(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updated)
 }
 
-// UpdatePhoneAPI godoc
-//
-//	@Summary		Update a phone number
-//	@Description	Update specific fields of a phone using HTTP PATCH. Only provided fields will be updated.
-//	@Tags			contacts
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		int						true	"Phone ID"
-//	@Param			contact	body		models.PhoneJSONPatch	true	"Phone fields to update"
-//	@Success		200		{object}	[]models.Phone			"Updated phone"
-//	@Failure		400		{object}	map[string]string		"Invalid request body or contact ID"
-//	@Failure		401		{object}	map[string]string		"Unauthorized"
-//	@Failure		404		{object}	map[string]string		"Contact not found"
-//	@Failure		500		{object}	map[string]string		"Internal server error"
-//	@Security		ApiTokenAuth
-//	@Router			/api/v1/phones/{id} [patch]
-func (h *Handler) UpdatePhoneAPI(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Get Phone ID from URL
-	phoneID, err := strconv.Atoi(mux.Vars(r)["pid"])
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	var input models.PhoneJSONPatch
-
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", 400)
-		return
-	}
-
-	input.ID = &phoneID
-
-	updated, err := h.db.UpdateContactPhone(user.ID, input)
-	if err != nil {
-		http.Error(w, "Update failed", http.StatusInternalServerError)
-		return
-	}
-
-	// Return updated record
-	json.NewEncoder(w).Encode(updated)
-}
-
 // UpdateAnniversaryAPI godoc
 //
 //	@Summary		Update an anniversary
@@ -464,122 +420,23 @@ func (h *Handler) UpdateBirthdayAPI(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 }
 
-// UpdateOtherDateAPI godoc
+// UpdateNotesAPI godoc
 //
-//	@Summary		Update an other_date for a contact
-//	@Description	Update specific fields of a phone using HTTP PATCH. Only provided fields will be updated.
-//	@Tags			contacts
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		int							true	"Phone ID"
-//	@Param			contact	body		models.ContactDateJSONPatch	true	"Phone fields to update"
-//	@Success		200		{object}	[]models.Phone				"Updated phone"
-//	@Failure		400		{object}	map[string]string			"Invalid request body or contact ID"
-//	@Failure		401		{object}	map[string]string			"Unauthorized"
-//	@Failure		404		{object}	map[string]string			"Contact not found"
-//	@Failure		500		{object}	map[string]string			"Internal server error"
-//	@Security		ApiTokenAuth
-//	@Router			/api/v1/other-dates/{id} [patch]
-func (h *Handler) UpdateOtherDateAPI(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Get Contact ID from URL
-	otherDateID, err := strconv.Atoi(mux.Vars(r)["oid"])
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	input := models.ContactDateJSONPatch{
-		EventID:  &otherDateID,
-		DateType: "other",
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
-		return
-	}
-
-	err = h.db.UpdateContactDate(user.ID, input)
-	if err != nil {
-		http.Error(w, "Update failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
-}
-
-// NewURLAPI godoc
-//
-//	@Summary		Creates a website / URL associated with a contact
-//	@Description	Associates a URL with a contact using HTTP POST
-//	@Tags			contacts
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"Contact ID"
-//	@Param			url	body		models.URL			true	"URL fields"
-//	@Success		200	{object}	map[string]string	"created: newID"
-//	@Failure		400	{object}	map[string]string	"Invalid request body or contact ID"
-//	@Failure		401	{object}	map[string]string	"Unauthorized"
-//	@Failure		404	{object}	map[string]string	"Contact not found"
-//	@Failure		500	{object}	map[string]string	"Internal server error"
-//	@Security		ApiTokenAuth
-//	@Router			/api/v1/contacts/{id}/url [post]
-func (h *Handler) NewURLAPI(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Get Contact ID from URL
-	contactID, err := strconv.Atoi(mux.Vars(r)["id"])
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	var input models.URL
-
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
-		return
-	}
-
-	input.ContactID = contactID
-
-	newID, err := h.db.CreateContactURL(user.ID, input)
-	if err != nil {
-		http.Error(w, "Update failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": fmt.Sprintf("created: %d", newID)})
-}
-
-// DeleteURLAPI godoc
-//
-//	@Summary		Creates a website / URL associated with a contact
-//	@Description	Associates a URL with a contact using HTTP POST
+//	@Summary		Update a contact's notes
+//	@Description	Update a contact's notes using HTTP PUT. The full field is replaced
 //	@Tags			contacts
 //	@Accept			json
 //	@Produce		json
 //	@Param			cid		path		int					true	"Contact ID"
-//	@Param			urlid	path		int					true	"URL ID"
-//	@Success		200		{object}	map[string]string	"deleted"
+//	@Param			notes	body		models.NotesJSONPut	true	"Notes"
+//	@Success		200		{object}	string				"Updated notes"
 //	@Failure		400		{object}	map[string]string	"Invalid request body or contact ID"
 //	@Failure		401		{object}	map[string]string	"Unauthorized"
 //	@Failure		404		{object}	map[string]string	"Contact not found"
 //	@Failure		500		{object}	map[string]string	"Internal server error"
 //	@Security		ApiTokenAuth
-//	@Router			/api/v1/contacts/{cid}/url/{urlid} [delete]
-func (h *Handler) DeleteURLAPI(w http.ResponseWriter, r *http.Request) {
+//	@Router			/api/v1/contacts/{cid}/notes [put]
+func (h *Handler) UpdateNotesAPI(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -589,73 +446,24 @@ func (h *Handler) DeleteURLAPI(w http.ResponseWriter, r *http.Request) {
 	// Get Contact ID from URL
 	contactID, err := strconv.Atoi(mux.Vars(r)["cid"])
 	if err != nil {
-		http.Error(w, "Invalid Contact ID", http.StatusBadRequest)
-		return
-	}
-
-	// Get URL ID from URL
-	urlID, err := strconv.Atoi(mux.Vars(r)["urlid"])
-	if err != nil {
-		http.Error(w, "Invalid URL ID", http.StatusBadRequest)
-		return
-	}
-
-	err = h.db.DeleteContactURL(user.ID, contactID, urlID)
-	if err != nil {
-		http.Error(w, "Deletion failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
-}
-
-// NewAddressAPI godoc
-//
-//	@Summary		Creates a website / URL associated with a contact
-//	@Description	Associates a URL with a contact using HTTP POST
-//	@Tags			contacts
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		int					true	"Contact ID"
-//	@Param			url	body		models.Address		true	"Address fields"
-//	@Success		200	{object}	map[string]string	"created: newID"
-//	@Failure		400	{object}	map[string]string	"Invalid request body or contact ID"
-//	@Failure		401	{object}	map[string]string	"Unauthorized"
-//	@Failure		404	{object}	map[string]string	"Contact not found"
-//	@Failure		500	{object}	map[string]string	"Internal server error"
-//	@Security		ApiTokenAuth
-//	@Router			/api/v1/contacts/{id}/address [post]
-func (h *Handler) NewAddressAPI(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Get Contact ID from URL
-	contactID, err := strconv.Atoi(mux.Vars(r)["id"])
-	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
 
-	var input models.Address
+	var input models.NotesJSONPut
+	input.ContactID = contactID
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.Error("[HANDLER] Could not parse input: %v", err)
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		http.Error(w, "Invalid input", 400)
 		return
 	}
 
-	input.ContactID = contactID
-
-	newID, err := h.db.CreateContactAddress(user.ID, input)
+	err = h.db.UpdateContactNotes(user.ID, input)
 	if err != nil {
 		http.Error(w, "Update failed", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": fmt.Sprintf("created: %d", newID)})
+	// Return updated string
+	json.NewEncoder(w).Encode("Updated notes")
 }
