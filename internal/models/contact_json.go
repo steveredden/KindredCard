@@ -24,6 +24,7 @@ type ContactJSON struct {
 	Prefix             string              `json:"prefix"`
 	Suffix             string              `json:"suffix"`
 	Nickname           string              `json:"nickname"`
+	MaidenName         string              `json:"maiden_name"`
 	Gender             string              `json:"gender,omitempty"`
 	Birthday           string              `json:"birthday,omitempty"` // String for flexible parsing
 	BirthdayMonth      *int                `json:"birthday_month,omitempty"`
@@ -57,6 +58,11 @@ type OtherDateJSON struct {
 	EventDateDay   *int   `json:"event_date_day,omitempty"`
 }
 
+type NotesJSONPut struct {
+	ContactID int    `json:"contact_id,omitempty"`
+	Notes     string `json:"notes"`
+}
+
 // ContactJSON is used for JSON marshaling/unmarshaling with proper date handling
 type ContactJSONPatch struct {
 	GivenName       *string `json:"given_name" example:"John"`
@@ -65,6 +71,7 @@ type ContactJSONPatch struct {
 	Prefix          *string `json:"prefix" example:"Dr."`
 	Suffix          *string `json:"suffix" example:"Jr."`
 	Nickname        *string `json:"nickname" example:"Johnny"`
+	MaidenName      *string `json:"maiden_name" example:"Parks"`
 	Gender          *string `json:"gender,omitempty" example:"M" enums:"M,F,O"`
 	Notes           *string `json:"notes" example:"VIP"`
 	AvatarBase64    *string `json:"avatar_base64,omitempty"`
@@ -79,11 +86,6 @@ type ContactDateJSONPatch struct {
 	Date      *time.Time `json:"date" example:"2026-04-30"`
 	DateMonth *int       `json:"date_month" example:"4"`
 	DateDay   *int       `json:"date_day" example:"30"`
-}
-
-type PhoneJSONPatch struct {
-	ID    *int    `json:"id" example:"1"`
-	Phone *string `json:"phone" example:"(555)122-4121"`
 }
 
 // OtherDateJSON is used for JSON marshaling/unmarshaling of other dates
@@ -106,6 +108,7 @@ func (cj *ContactJSON) ToContact() (*Contact, error) {
 		Prefix:             cj.Prefix,
 		Suffix:             cj.Suffix,
 		Nickname:           cj.Nickname,
+		MaidenName:         cj.MaidenName,
 		Gender:             cj.Gender,
 		BirthdayMonth:      cj.BirthdayMonth,
 		BirthdayDay:        cj.BirthdayDay,
@@ -181,6 +184,7 @@ func FromContact(contact *Contact) *ContactJSON {
 		Prefix:             contact.Prefix,
 		Suffix:             contact.Suffix,
 		Nickname:           contact.Nickname,
+		MaidenName:         contact.MaidenName,
 		Gender:             contact.Gender,
 		BirthdayMonth:      contact.BirthdayMonth,
 		BirthdayDay:        contact.BirthdayDay,
@@ -243,6 +247,7 @@ func (p *ContactJSONPatch) HasUpdates() bool {
 		p.Prefix != nil ||
 		p.Suffix != nil ||
 		p.Nickname != nil ||
+		p.MaidenName != nil ||
 		p.Gender != nil ||
 		p.Notes != nil ||
 		p.AvatarBase64 != nil ||

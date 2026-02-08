@@ -47,17 +47,43 @@ definitions:
         type: integer
       is_primary:
         type: boolean
+      label_type_id:
+        type: integer
       postal_code:
         type: string
       state:
         type: string
       street:
         type: string
-      type:
-        description: home, work, other
-        items:
-          type: string
-        type: array
+      type_label:
+        type: string
+    type: object
+  models.AddressJSONPatch:
+    properties:
+      city:
+        type: string
+      contact_id:
+        example: 4
+        type: integer
+      country:
+        type: string
+      extended_street:
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_primary:
+        example: false
+        type: boolean
+      label_type_id:
+        example: 42
+        type: integer
+      postal_code:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
     type: object
   models.Contact:
     properties:
@@ -122,6 +148,9 @@ definitions:
         type: integer
       last_modified_token:
         type: integer
+      maiden_name:
+        example: Parks
+        type: string
       metadata:
         type: string
       middle_name:
@@ -239,6 +268,8 @@ definitions:
         type: string
       id:
         type: integer
+      maiden_name:
+        type: string
       middle_name:
         type: string
       nickname:
@@ -300,6 +331,9 @@ definitions:
       given_name:
         example: John
         type: string
+      maiden_name:
+        example: Parks
+        type: string
       middle_name:
         example: J
         type: string
@@ -337,11 +371,28 @@ definitions:
         type: integer
       is_primary:
         type: boolean
-      type:
-        description: home, work, other
-        items:
-          type: string
-        type: array
+      label_type_id:
+        type: integer
+      type_label:
+        type: string
+    type: object
+  models.EmailJSONPatch:
+    properties:
+      contact_id:
+        example: 4
+        type: integer
+      id:
+        example: 1
+        type: integer
+      is_primary:
+        example: false
+        type: boolean
+      label_type_id:
+        example: 42
+        type: integer
+      phone:
+        example: support@kindredcard.com
+        type: string
     type: object
   models.ErrorResponse:
     properties:
@@ -355,6 +406,13 @@ definitions:
         example: Full name is required
         type: string
     type: object
+  models.NotesJSONPut:
+    properties:
+      contact_id:
+        type: integer
+      notes:
+        type: string
+    type: object
   models.Organization:
     properties:
       contact_id:
@@ -364,7 +422,23 @@ definitions:
       id:
         type: integer
       is_primary:
+        description: not yet used
         type: boolean
+      name:
+        type: string
+      title:
+        type: string
+    type: object
+  models.OrganizationJSONPatch:
+    properties:
+      contact_id:
+        example: 4
+        type: integer
+      department:
+        type: string
+      id:
+        example: 1
+        type: integer
       name:
         type: string
       title:
@@ -424,20 +498,28 @@ definitions:
         type: integer
       is_primary:
         type: boolean
+      label_type_id:
+        type: integer
       last_formatted_at:
         type: string
       phone:
         type: string
-      type:
-        description: home, work, cell, fax, other
-        items:
-          type: string
-        type: array
+      type_label:
+        type: string
     type: object
   models.PhoneJSONPatch:
     properties:
+      contact_id:
+        example: 4
+        type: integer
       id:
         example: 1
+        type: integer
+      is_primary:
+        example: false
+        type: boolean
+      label_type_id:
+        example: 42
         type: integer
       phone:
         example: (555)122-4121
@@ -495,12 +577,29 @@ definitions:
         type: integer
       is_primary:
         type: boolean
-      type:
-        description: website, social, other
-        items:
-          type: string
-        type: array
+      label_type_id:
+        type: integer
+      type_label:
+        type: string
       url:
+        type: string
+    type: object
+  models.URLJSONPatch:
+    properties:
+      contact_id:
+        example: 4
+        type: integer
+      id:
+        example: 1
+        type: integer
+      is_primary:
+        example: false
+        type: boolean
+      label_type_id:
+        example: 42
+        type: integer
+      phone:
+        example: https://facebook.com/kindredcard
         type: string
     type: object
   models.UpcomingEvent:
@@ -541,6 +640,62 @@ info:
   title: KindredCard API
   version: "1.0"
 paths:
+  /api/v1/addresses/{aid}:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a address using HTTP PATCH. Only provided
+        fields will be updated.
+      parameters:
+      - description: Address ID
+        in: path
+        name: aid
+        required: true
+        type: integer
+      - description: Address fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddressJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated address
+          schema:
+            items:
+              $ref: '#/definitions/models.Address'
+            type: array
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a address number
+      tags:
+      - contacts
   /api/v1/contacts:
     post:
       consumes:
@@ -589,7 +744,62 @@ paths:
       summary: Create a new contact
       tags:
       - contacts
-  /api/v1/contacts/{cid}/url/{urlid}:
+  /api/v1/contacts/{cid}/addresses:
+    post:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Address fields
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.Address'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/addresses/{a}:
     delete:
       consumes:
       - application/json
@@ -602,7 +812,605 @@ paths:
         type: integer
       - description: URL ID
         in: path
-        name: urlid
+        name: aid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/emails:
+    post:
+      consumes:
+      - application/json
+      description: Associates an email with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Email fields
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.Email'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates an email associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/emails/{eid}:
+    delete:
+      consumes:
+      - application/json
+      description: Associates an email with a contact using HTTP DELETE
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Email ID
+        in: path
+        name: eid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Removes an email associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/notes:
+    put:
+      consumes:
+      - application/json
+      description: Update a contact's notes using HTTP PUT. The full field is replaced
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Notes
+        in: body
+        name: notes
+        required: true
+        schema:
+          $ref: '#/definitions/models.NotesJSONPut'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated notes
+          schema:
+            type: string
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a contact's notes
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/organizations:
+    post:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Organization fields
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.Organization'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/organizations/{organizationid}:
+    delete:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: URL ID
+        in: path
+        name: organizationid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/other-dates:
+    post:
+      consumes:
+      - application/json
+      description: Associates an Other Date with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Other Date fields
+        in: body
+        name: otherDate
+        required: true
+        schema:
+          $ref: '#/definitions/models.OtherDate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates an Other Date associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/other-dates/{oid}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an Other Date with a contact using HTTP DELETE
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Other Date ID
+        in: path
+        name: oid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Removes an Other Date associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/phone:
+    post:
+      consumes:
+      - application/json
+      description: Associates a Phone with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Phone fields
+        in: body
+        name: phone
+        required: true
+        schema:
+          $ref: '#/definitions/models.Phone'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / Phone associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/phone/{pid}:
+    delete:
+      consumes:
+      - application/json
+      description: Associates a Phone with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: Phone ID
+        in: path
+        name: pid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / Phone associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/url:
+    post:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: URL fields
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.URL'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / URL associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/url/{uid}:
+    delete:
+      consumes:
+      - application/json
+      description: Associates a URL with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: URL ID
+        in: path
+        name: uid
         required: true
         type: integer
       produces:
@@ -849,61 +1657,6 @@ paths:
       summary: Update a contact (full replacement)
       tags:
       - contacts
-  /api/v1/contacts/{id}/address:
-    post:
-      consumes:
-      - application/json
-      description: Associates a URL with a contact using HTTP POST
-      parameters:
-      - description: Contact ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Address fields
-        in: body
-        name: url
-        required: true
-        schema:
-          $ref: '#/definitions/models.Address'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 'created: newID'
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Invalid request body or contact ID
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Contact not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - ApiTokenAuth: []
-      summary: Creates a website / URL associated with a contact
-      tags:
-      - contacts
   /api/v1/contacts/{id}/anniversary:
     patch:
       consumes:
@@ -1077,32 +1830,33 @@ paths:
       summary: Add relationship to contact
       tags:
       - relationships
-  /api/v1/contacts/{id}/url:
-    post:
+  /api/v1/emails/{eid}:
+    patch:
       consumes:
       - application/json
-      description: Associates a URL with a contact using HTTP POST
+      description: Update specific fields of a email using HTTP PATCH. Only provided
+        fields will be updated.
       parameters:
-      - description: Contact ID
+      - description: Email ID
         in: path
-        name: id
+        name: eid
         required: true
         type: integer
-      - description: URL fields
+      - description: Email fields to update
         in: body
-        name: url
+        name: contact
         required: true
         schema:
-          $ref: '#/definitions/models.URL'
+          $ref: '#/definitions/models.EmailJSONPatch'
       produces:
       - application/json
       responses:
         "200":
-          description: 'created: newID'
+          description: Updated email
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            items:
+              $ref: '#/definitions/models.Email'
+            type: array
         "400":
           description: Invalid request body or contact ID
           schema:
@@ -1129,7 +1883,7 @@ paths:
             type: object
       security:
       - ApiTokenAuth: []
-      summary: Creates a website / URL associated with a contact
+      summary: Update a email number
       tags:
       - contacts
   /api/v1/events/upcoming:
@@ -1207,19 +1961,75 @@ paths:
       summary: Export all contacts as vCard
       tags:
       - export
-  /api/v1/other-dates/{id}:
+  /api/v1/organizations/{oid}:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a organization using HTTP PATCH. Only
+        provided fields will be updated.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: oid
+        required: true
+        type: integer
+      - description: Organization fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.OrganizationJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated organization
+          schema:
+            items:
+              $ref: '#/definitions/models.Organization'
+            type: array
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a organization number
+      tags:
+      - contacts
+  /api/v1/other-dates/{oid}:
     patch:
       consumes:
       - application/json
       description: Update specific fields of a phone using HTTP PATCH. Only provided
         fields will be updated.
       parameters:
-      - description: Phone ID
+      - description: Other Date ID
         in: path
-        name: id
+        name: oid
         required: true
         type: integer
-      - description: Phone fields to update
+      - description: Other Date fields to update
         in: body
         name: contact
         required: true
@@ -1229,10 +2039,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated phone
+          description: Updated other date
           schema:
             items:
-              $ref: '#/definitions/models.Phone'
+              $ref: '#/definitions/models.OtherDate'
             type: array
         "400":
           description: Invalid request body or contact ID
@@ -1263,7 +2073,7 @@ paths:
       summary: Update an other_date for a contact
       tags:
       - contacts
-  /api/v1/phones/{id}:
+  /api/v1/phones/{pid}:
     patch:
       consumes:
       - application/json
@@ -1272,7 +2082,7 @@ paths:
       parameters:
       - description: Phone ID
         in: path
-        name: id
+        name: pid
         required: true
         type: integer
       - description: Phone fields to update
@@ -1465,6 +2275,62 @@ paths:
       summary: Validate API Token
       tags:
       - tokens
+  /api/v1/urls/{uid}:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a url using HTTP PATCH. Only provided
+        fields will be updated.
+      parameters:
+      - description: URL ID
+        in: path
+        name: uid
+        required: true
+        type: integer
+      - description: URL fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.URLJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated url
+          schema:
+            items:
+              $ref: '#/definitions/models.URL'
+            type: array
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a url number
+      tags:
+      - contacts
   /contacts:
     get:
       consumes:

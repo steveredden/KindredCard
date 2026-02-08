@@ -8,7 +8,16 @@
         </ul>
     </div>
 
-    <form id="contactForm" action="/contacts/{{.Contact.ID}}" method="POST" class="space-y-6">
+    <form id="contactForm" class="space-y-6 pb-6"
+        data-original-prefix="{{.Contact.Prefix}}"
+        data-original-given_name="{{.Contact.GivenName}}"
+        data-original-middle_name="{{.Contact.MiddleName}}"
+        data-original-family_name="{{.Contact.FamilyName}}"
+        data-original-suffix="{{.Contact.Suffix}}"
+        data-original-gender="{{.Contact.Gender}}"
+        data-original-nickname="{{.Contact.Nickname}}"
+        data-original-maiden_name="{{.Contact.MaidenName}}"
+    >
         <!-- Header Section -->
         <div class="card bg-gradient-to-br from-primary to-secondary text-primary-content shadow-2xl">
             <div class="card-body">
@@ -99,32 +108,51 @@
                     </div>
 
                     <!-- Name Section -->
-                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="form-control">
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4" oninput="evaluateHeaderChange()">
+    
+                        <div class="form-control md:col-span-1">
                             <label class="label"><span class="label-text text-primary-content">Prefix</span></label>
-                            <input type="text" name="prefix" value="{{.Contact.Prefix}}" placeholder="Dr., Mr., Ms." class="input input-bordered bg-base-100 text-base-content">
+                            <input type="text" name="prefix" value="{{.Contact.Prefix}}" placeholder="Dr." class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
-                        <div class="form-control">
+                        <div class="form-control md:col-span-2">
                             <label class="label"><span class="label-text text-primary-content">First Name *</span></label>
-                            <input type="text" name="given_name" value="{{.Contact.GivenName}}" class="input input-bordered bg-base-100 text-base-content" required>
+                            <input type="text" name="given_name" value="{{.Contact.GivenName}}" class="input input-bordered bg-base-100 text-base-content w-full" required>
                         </div>
-                        <div class="form-control">
-                            <label class="label"><span class="label-text text-primary-content">Middle Name</span></label>
-                            <input type="text" name="middle_name" value="{{.Contact.MiddleName}}" class="input input-bordered bg-base-100 text-base-content">
+                        <div class="form-control md:col-span-1">
+                            <label class="label"><span class="label-text text-primary-content">Middle</span></label>
+                            <input type="text" name="middle_name" value="{{.Contact.MiddleName}}" class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
-                        <div class="form-control">
+
+                        <div class="form-control md:col-span-2">
                             <label class="label"><span class="label-text text-primary-content">Last Name</span></label>
-                            <input type="text" name="family_name" value="{{.Contact.FamilyName}}" class="input input-bordered bg-base-100 text-base-content">
+                            <input type="text" name="family_name" value="{{.Contact.FamilyName}}" class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
-                        <div class="form-control">
+                        <div class="form-control md:col-span-1">
                             <label class="label"><span class="label-text text-primary-content">Suffix</span></label>
-                            <input type="text" name="suffix" value="{{.Contact.Suffix}}" placeholder="Jr., III, PhD" class="input input-bordered bg-base-100 text-base-content">
+                            <input type="text" name="suffix" value="{{.Contact.Suffix}}" placeholder="Jr." class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
-                        <div class="form-control">
+                        <div class="form-control md:col-span-1">
+                            <label class="label"><span class="label-text text-primary-content">Gender</span></label>
+                            <select name="gender" id="genderSelect" onchange="toggleMaidenField()" class="select select-bordered bg-base-100 text-base-content w-full">
+                                <option value="">Not specified</option>
+                                <option value="M" {{if eq .Contact.Gender "M"}}selected{{end}}>Male</option>
+                                <option value="F" {{if eq .Contact.Gender "F"}}selected{{end}}>Female</option>
+                                <option value="O" {{if eq .Contact.Gender "O"}}selected{{end}}>Other</option>
+                                <option value="N" {{if eq .Contact.Gender "N"}}selected{{end}}>Prefer not to say</option>
+                            </select>
+                        </div>
+
+                        <div class="form-control md:col-span-2">
                             <label class="label"><span class="label-text text-primary-content">Nickname</span></label>
-                            <input type="text" name="nickname" value="{{.Contact.Nickname}}" class="input input-bordered bg-base-100 text-base-content">
+                            <input type="text" name="nickname" value="{{.Contact.Nickname}}" class="input input-bordered bg-base-100 text-base-content w-full">
+                        </div>
+
+                        <div class="form-control md:col-span-2 {{if eq .Contact.Gender "M"}}hidden{{end}}" id="maidenFieldContainer">
+                            <label class="label"><span class="label-text text-primary-content">Maiden Name</span></label>
+                            <input type="text" name="maiden_name" id="maiden_name" value="{{.Contact.MaidenName}}" class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Action Buttons -->
@@ -158,140 +186,421 @@
                 </div>
             </div>
         </div>
+    </form>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <!-- Left Column - Contact Details -->
-            <div class="lg:col-span-2 space-y-6">
+        <!-- Left Column - Contact Details -->
+        <div class="lg:col-span-2 space-y-6">
 
-                <!-- Phone Numbers -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Phone Numbers</h2>
-                        <div id="phonesList" class="space-y-3">
-                            {{range $index, $phone := .Contact.Phones}}
-                            <div class="flex gap-2 items-start">
-                                <input type="tel" name="phones[{{$index}}][phone]" value="{{$phone.Phone}}" placeholder="(555) 123-4567" class="input input-bordered flex-1" required>
-                                <select name="phones[{{$index}}][type]" class="select select-bordered">
+            <!-- Phone Numbers -->
+            <div class="card bg-base-100 shadow-xl" id="phonesCard">
+                <div class="card-body">
+                    <h2 class="card-title">Phone Numbers</h2>
 
-                                    {{$types := $phone.Type}}
-                                    {{$custom := isCustom $types}}
-                                    {{if $custom}}
-                                        <option value="{{$custom}}" selected>{{$custom}}</option>
-                                    {{end}}
+                    <template id="phoneTypeOptionsTmpl">
+                        {{range (index $.LabelTypes "phone")}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </template>
+                    
+                    <div id="phonesList" class="space-y-3" oninput="markPhonesChanged()" onchange="markPhonesChanged()">
+                        {{range $index, $phone := .Contact.Phones}}
+                        <div class="flex gap-2 items-start phone-row" data-id="{{$phone.ID}}"
+                            data-original-phone="{{$phone.Phone}}"
+                            data-original-type="{{$phone.Type}}"
+                            data-original-primary="{{$phone.IsPrimary}}"
+                        >
+                            <input type="tel" name="phone" value="{{$phone.Phone}}" placeholder="(555) 123-4567" class="input input-bordered flex-1" required>
+                            
+                            <select name="label_type_id" class="select select-bordered">
+                                {{range index $.LabelTypes "phone"}}
+                                <option value="{{.ID}}" {{if eq $phone.Type .ID}}selected{{end}}>{{.Name}}</option>
+                                {{end}}
+                            </select>
+                            
+                            <label class="label cursor-pointer gap-2">
+                                <input type="checkbox" name="is_primary" class="checkbox checkbox-primary" {{if $phone.IsPrimary}}checked{{end}}>
+                                <span class="label-text">Primary</span>
+                            </label>
 
-                                    <option value="cell" {{if hasType $phone.Type "cell"}}selected{{end}}>Cell</option>
-                                    <option value="home" {{if hasType $phone.Type "home"}}selected{{end}}>Home</option>
-                                    <option value="work" {{if hasType $phone.Type "work"}}selected{{end}}>Work</option>
-                                    <option value="other" {{if hasType $phone.Type "other"}}selected{{end}}>Other</option>
-                                </select>
-                                <label class="label cursor-pointer gap-2">
-                                    <input type="checkbox" name="phones[{{$index}}][is_primary]" class="checkbox checkbox-primary" {{if $phone.IsPrimary}}checked{{end}}>
-                                    <span class="label-text">Primary</span>
-                                </label>
-                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {{end}}
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removePhoneRow(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addPhone()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {{end}}
+                    </div>
+
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[74%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addPhone()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             Add Phone
                         </button>
+                        
+                        <button type="button" 
+                                id="savePhonesBtn" 
+                                class="btn btn-primary btn-sm w-[24%]" 
+                                onclick="savePhonesOnly()" 
+                                disabled>
+                            Save
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Addresses -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Addresses</h2>
-                        <div id="addressesList" class="space-y-4">
-                            {{range $index, $addr := .Contact.Addresses}}
-                            <div class="card bg-base-200 shadow-md p-4">
-                                <div class="flex justify-between items-start mb-3">
-                                    <select name="addresses[{{$index}}][type]" class="select select-bordered select-sm">
+            <!-- Addresses -->
+            <div class="card bg-base-100 shadow-xl" id="addressesCard">
+                <div class="card-body">
+                    <h2 class="card-title">Addresses</h2>
 
-                                    {{$types := $addr.Type}}
-                                    {{$custom := isCustom $types}}
-                                    {{if $custom}}
-                                        <option value="{{$custom}}" selected>{{$custom}}</option>
+                    <template id="addressTypeOptionsTmpl">
+                        {{range (index $.LabelTypes "address")}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </template>
+
+                    <div id="addressesList" class="space-y-4" oninput="markAddressesChanged()" onchange="markAddressesChanged()">
+                        {{range $index, $addr := .Contact.Addresses}}
+                        <div class="card bg-base-200 shadow-md p-4 address-row" data-id="{{$addr.ID}}"
+                            data-original-street="{{$addr.Street}}"
+                            data-original-extstreet="{{$addr.ExtendedStreet}}"
+                            data-original-city="{{$addr.City}}"
+                            data-original-state="{{$addr.State}}"
+                            data-original-postal="{{$addr.PostalCode}}"
+                            data-original-country="{{$addr.Country}}"
+                            data-original-type="{{$addr.Type}}"
+                            data-original-primary="{{$addr.IsPrimary}}"
+                        >
+                            <div class="flex justify-between items-start mb-3">
+
+                                <select name="label_type_id" class="select select-bordered select-sm">
+                                    {{range index $.LabelTypes "address"}}
+                                    <option value="{{.ID}}" {{if eq $addr.Type .ID}}selected{{end}}>{{.Name}}</option>
                                     {{end}}
+                                </select>
 
-                                        <option value="home" {{if hasType $addr.Type "home"}}selected{{end}}>Home</option>
-                                        <option value="work" {{if hasType $addr.Type "work"}}selected{{end}}>Work</option>
-                                        <option value="other" {{if hasType $addr.Type "other"}}selected{{end}}>Other</option>
-                                    </select>
-                                    <div class="flex gap-2">
-                                        <label class="label cursor-pointer gap-2">
-                                            <input type="checkbox" name="addresses[{{$index}}][is_primary]" class="checkbox checkbox-primary checkbox-sm" {{if $addr.IsPrimary}}checked{{end}}>
-                                            <span class="label-text">Primary</span>
-                                        </label>
-                                        <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.closest('.card').remove()">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="grid grid-cols-5 gap-2">
-                                        <input type="text" name="addresses[{{$index}}][street]" value="{{$addr.Street}}" placeholder="Street Address" class="input input-bordered input-sm col-span-3">
-                                        <input type="text" name="addresses[{{$index}}][extended_street]" value="{{$addr.ExtendedStreet}}" placeholder="Apt/Ste" class="input input-bordered input-sm col-span-2">
-                                    </div>
-
-                                    <div class="grid grid-cols-5 gap-2">
-                                        <input type="text" name="addresses[{{$index}}][city]" value="{{$addr.City}}" placeholder="City" class="input input-bordered input-sm col-span-3">
-                                        <input type="text" name="addresses[{{$index}}][state]" value="{{$addr.State}}" placeholder="State" class="input input-bordered input-sm col-span-2">
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <input type="text" name="addresses[{{$index}}][postal_code]" value="{{$addr.PostalCode}}" placeholder="ZIP" class="input input-bordered input-sm">
-                                        <input type="text" name="addresses[{{$index}}][country]" value="{{$addr.Country}}" placeholder="Country" class="input input-bordered input-sm">
-                                    </div>
+                                <div class="flex gap-2">
+                                    <label class="label cursor-pointer gap-2">
+                                        <input type="checkbox" name="is_primary" class="checkbox checkbox-primary checkbox-sm" {{if $addr.IsPrimary}}checked{{end}}>
+                                        <span class="label-text">Primary</span>
+                                    </label>
+                                    <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeAddressRow(this)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            {{end}}
+                            <div class="space-y-2">
+                                <div class="grid grid-cols-5 gap-2">
+                                    <input type="text" name="street" value="{{$addr.Street}}" placeholder="Street Address" class="input input-bordered input-sm col-span-3">
+                                    <input type="text" name="extended_street" value="{{$addr.ExtendedStreet}}" placeholder="Apt/Ste" class="input input-bordered input-sm col-span-2">
+                                </div>
+
+                                <div class="grid grid-cols-5 gap-2">
+                                    <input type="text" name="city" value="{{$addr.City}}" placeholder="City" class="input input-bordered input-sm col-span-3">
+                                    <input type="text" name="state" value="{{$addr.State}}" placeholder="State" class="input input-bordered input-sm col-span-2">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" name="postal_code" value="{{$addr.PostalCode}}" placeholder="ZIP" class="input input-bordered input-sm">
+                                    <input type="text" name="country" value="{{$addr.Country}}" placeholder="Country" class="input input-bordered input-sm">
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addAddress()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {{end}}
+                    </div>
+                    
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[74%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addAddress()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             Add Address
                         </button>
+                        
+                        <button type="button" 
+                                id="saveAddressesBtn" 
+                                class="btn btn-primary btn-sm w-[24%]" 
+                                onclick="saveAddressesOnly()" 
+                                disabled>
+                            Save
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Email Addresses -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Email Addresses</h2>
-                        <div id="emailsList" class="space-y-3">
-                            {{range $index, $email := .Contact.Emails}}
-                            <div class="flex gap-2 items-start">
-                                <input type="email" name="emails[{{$index}}][email]" value="{{$email.Email}}" placeholder="email@example.com" class="input input-bordered flex-1" required>
-                                <select name="emails[{{$index}}][type]" class="select select-bordered">
+            <!-- Email Addresses -->
+            <div class="card bg-base-100 shadow-xl" id="emailsCard">
+                <div class="card-body">
+                    <h2 class="card-title">Email Addresses</h2>
 
-                                {{$types := $email.Type}}
-                                {{$custom := isCustom $types}}
-                                {{if $custom}}
-                                    <option value="{{$custom}}" selected>{{$custom}}</option>
+                    <template id="emailTypeOptionsTmpl">
+                        {{range (index $.LabelTypes "email")}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </template>
+
+                    <div id="emailsList" class="space-y-3"  oninput="markEmailsChanged()" onchange="markEmailsChanged()">
+                        {{range $index, $email := .Contact.Emails}}
+                        <div class="flex gap-2 items-start email-row" data-id="{{$email.ID}}"
+                            data-original-email="{{$email.Email}}"
+                            data-original-type="{{$email.Type}}"
+                            data-original-primary="{{$email.IsPrimary}}"
+                        >
+                            <input type="email" name="email" value="{{$email.Email}}" placeholder="email@example.com" class="input input-bordered flex-1" required>
+
+                            <select name="label_type_id" class="select select-bordered">
+                                {{range index $.LabelTypes "email"}}
+                                <option value="{{.ID}}" {{if eq $email.Type .ID}}selected{{end}}>{{.Name}}</option>
                                 {{end}}
+                            </select>
 
-                                    <option value="home" {{if hasType $email.Type "home"}}selected{{end}}>Home</option>
-                                    <option value="work" {{if hasType $email.Type "work"}}selected{{end}}>Work</option>
-                                    <option value="other" {{if hasType $email.Type "other"}}selected{{end}}>Other</option>
-                                </select>
-                                <label class="label cursor-pointer gap-2">
-                                    <input type="checkbox" name="emails[{{$index}}][is_primary]" class="checkbox checkbox-primary" {{if $email.IsPrimary}}checked{{end}}>
-                                    <span class="label-text">Primary</span>
-                                </label>
-                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
+                            <label class="label cursor-pointer gap-2">
+                                <input type="checkbox" name="is_primary" class="checkbox checkbox-primary" {{if $email.IsPrimary}}checked{{end}}>
+                                <span class="label-text">Primary</span>
+                            </label>
+
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeEmailRow(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
+                        </div>
+                        {{end}}
+                    </div>
+
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[74%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addEmail()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Email
+                        </button>
+                        
+                        <button type="button" 
+                                id="saveEmailsBtn" 
+                                class="btn btn-primary btn-sm w-[24%]" 
+                                onclick="saveEmailsOnly()" 
+                                disabled>
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organizations -->
+            <div class="card bg-base-100 shadow-xl" id="organizationsCard">
+                <div class="card-body">
+                    <h2 class="card-title">Organizations</h2>
+
+                    <div id="orgsList" class="space-y-4" oninput="markOrganizationsChanged()" onchange="markOrganizationsChanged()">
+                        {{range $index, $org := .Contact.Organizations}}
+                        <div class="card bg-base-200 shadow-sm p-4 organization-row" 
+                            data-id="{{$org.ID}}"
+                            data-original-companyname="{{$org.Name}}"
+                            data-original-jobtitle="{{$org.Title}}"
+                            data-original-department="{{$org.Department}}">
+                            
+                            <div class="flex gap-2 items-center mb-3">
+
+                                <input type="text" name="company_name" value="{{$org.Name}}" placeholder="Company Name" class="input input-bordered input-sm w-[47%]">
+                                    
+                                <input type="text" name="job_title" value="{{$org.Title}}" placeholder="Job Title" class="input input-bordered input-sm w-[47%]">
+                                    
+                                <button type="button" class="btn btn-ghost btn-sm btn-square ml-auto" onclick="removeOrganizationRow(this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="w-full">
+                                <input type="text" name="department" value="{{$org.Department}}" placeholder="Department" class="input input-bordered input-sm w-full">
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[74%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addOrganization()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Organization
+                        </button>
+                        
+                        <button type="button" 
+                                id="saveOrganizationsBtn" 
+                                class="btn btn-primary btn-sm w-[24%]" 
+                                onclick="saveOrganizationsOnly()" 
+                                disabled>
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Notes</h2>
+                    <textarea id="notesField" name="notes" data-original="{{.Contact.Notes}}" rows="6" class="textarea textarea-bordered" oninput="markNotesChanged()" placeholder="Add notes about this contact...">{{.Contact.Notes}}</textarea>
+
+                    <div class="card-actions flex flex-row gap-2 mt-2">
+                        <div class="flex-grow"></div>
+                        
+                        <button type="button" 
+                                id="saveNotesBtn" 
+                                class="btn btn-primary btn-sm w-[24%]" 
+                                onclick="saveNotesOnly()" 
+                                disabled>
+                            Save
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column - Dates & Relationships -->
+        <div class="space-y-6">
+
+            <!-- Important Dates -->
+            <div class="card bg-base-100 shadow-xl" id="datesCard"
+                data-original-birthday-month="{{if .Birthday.Has}}{{.Birthday.Month}}{{end}}"
+                data-original-birthday-day="{{if .Birthday.Has}}{{.Birthday.Day}}{{end}}"
+                data-original-birthday-year="{{if .Contact.Birthday}}{{getYear .Contact.Birthday}}{{end}}"
+                data-original-anniversary-month="{{if .Anniversary.Has}}{{.Anniversary.Month}}{{end}}"
+                data-original-anniversary-day="{{if .Anniversary.Has}}{{.Anniversary.Day}}{{end}}"
+                data-original-anniversary-year="{{if .Contact.Anniversary}}{{getYear .Contact.Anniversary}}{{end}}"
+            >
+                <div class="card-body">
+                    <h2 class="card-title">Important Dates</h2>
+                    
+                    <!-- Birthday -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Birthday</span>
+                            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="clearDate('birthday')" title="Clear birthday">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </label>
+                        <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
+                            <select name="birthday_month" id="birthday_month" class="select select-bordered select-sm" data-date-group="birthday" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                <option value="">Month *</option>
+                                {{range $m := iterate 12}}
+                                    <option value="{{$m}}" {{if and $.Birthday.Has (eq $.Birthday.Month $m)}}selected{{end}}>
+                                        {{monthName $m}}
+                                    </option>
+                                {{end}}
+                            </select>
+                            <select name="birthday_day" id="birthday_day" class="select select-bordered select-sm" data-date-group="birthday" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                <option value="">Day *</option>
+                                {{range $d := iterate 31}}
+                                    <option value="{{$d}}" {{if and $.Birthday.Has (eq $.Birthday.Day $d)}}selected{{end}}>
+                                        {{$d}}
+                                    </option>
+                                {{end}}
+                            </select>
+                            <input type="number" name="birthday_year" id="birthday_year" placeholder="Year" min="1900" max="2100" oninput="markDatesChanged()" onchange="markDatesChanged()"
+                                    value="{{if .Contact.Birthday}}{{getYear .Contact.Birthday}}{{end}}" 
+                                    class="input input-bordered input-sm">
+                        </div>
+                        <label class="label">
+                            <span class="label-text-alt">Month and day are required. Year is optional.</span>
+                        </label>
+                    </div>
+
+                    <!-- Anniversary -->
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text font-semibold">Anniversary</span>
+                            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="clearDate('anniversary')" title="Clear anniversary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </label>
+                        <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
+                            <select name="anniversary_month" id="anniversary_month" class="select select-bordered select-sm" data-date-group="anniversary" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                <option value="">Month *</option>
+                                {{range $m := iterate 12}}
+                                    <option value="{{$m}}" {{if and $.Anniversary.Has (eq $.Anniversary.Month $m)}}selected{{end}}>
+                                        {{monthName $m}}
+                                    </option>
+                                {{end}}
+                            </select>
+                            <select name="anniversary_day" id="anniversary_day" class="select select-bordered select-sm" data-date-group="anniversary" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                <option value="">Day *</option>
+                                {{range $d := iterate 31}}
+                                    <option value="{{$d}}" {{if and $.Anniversary.Has (eq $.Anniversary.Day $d)}}selected{{end}}>
+                                        {{$d}}
+                                    </option>
+                                {{end}}
+                            </select>
+                            <input type="number" name="anniversary_year" id="anniversary_year" placeholder="Year" min="1900" max="2100" oninput="markDatesChanged()" onchange="markDatesChanged()"
+                                    value="{{if .Contact.Anniversary}}{{getYear .Contact.Anniversary}}{{end}}" 
+                                    class="input input-bordered input-sm">
+                        </div>
+                        <label class="label">
+                            <span class="label-text-alt">Month and day are required. Year is optional.</span>
+                        </label>
+                    </div>
+
+                    <!-- Other Dates -->
+                    <div class="mt-6">
+                        <h3 class="font-semibold mb-3">Other Dates</h3>
+                        <div id="otherDatesList" class="space-y-3">
+                            {{range $index, $dateView := .OtherDates}}
+                            <div class="flex gap-2 items-start border-l-4 border-primary pl-3 other-date-row"
+                                data-id="{{$dateView.ID}}"
+                                data-original-name="{{$dateView.EventName}}"
+                                data-original-month="{{$dateView.Date.Month}}"
+                                data-original-day="{{$dateView.Date.Day}}"
+                                data-original-year="{{$dateView.Year}}"
+                            >
+                                <div class="flex-1 space-y-2">
+                                    <input type="text" name="event_name" value="{{$dateView.EventName}}" placeholder="Event name" class="input input-bordered input-sm w-full" oninput="markDatesChanged()" onchange="markDatesChanged()" required>
+                                    <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
+                                        <select name="event_date_month" class="select select-bordered select-sm" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                            <option value="">Month *</option>
+                                            {{range $m := iterate 12}}
+                                                <option value="{{$m}}" {{if and $dateView.Date.Has (eq $dateView.Date.Month $m)}}selected{{end}}>
+                                                    {{monthNameShort $m}}
+                                                </option>
+                                            {{end}}
+                                        </select>
+                                        <select name="event_date_day" class="select select-bordered select-sm" oninput="markDatesChanged()" onchange="markDatesChanged()">
+                                            <option value="">Day *</option>
+                                            {{range $d := iterate 31}}
+                                            <option value="{{$d}}" {{if and $dateView.Date.Has (eq $dateView.Date.Day $d)}}selected{{end}}>{{$d}}</option>
+                                            {{end}}
+                                        </select>
+                                        <input type="number" name="event_date_year" placeholder="Year" min="1900" max="2100" oninput="markDatesChanged()" onchange="markDatesChanged()"
+                                                value="{{if gt $dateView.Year 0}}{{$dateView.Year}}{{end}}" 
+                                                class="input input-bordered input-sm">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeOtherDateRow(this)" title="Delete event">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
@@ -299,303 +608,150 @@
                             </div>
                             {{end}}
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addEmail()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Email
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Organizations -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Organizations</h2>
-                        <div id="orgsList" class="space-y-4">
-                            {{range $index, $org := .Contact.Organizations}}
-                            <div class="card bg-base-200 shadow-md p-4">
-                                <div class="flex justify-end mb-2">
-                                    <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.closest('.card').remove()">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <input type="text" name="organizations[{{$index}}][name]" value="{{$org.Name}}" placeholder="Company Name" class="input input-bordered input-sm">
-                                    <input type="text" name="organizations[{{$index}}][title]" value="{{$org.Title}}" placeholder="Job Title" class="input input-bordered input-sm">
-                                    <input type="text" name="organizations[{{$index}}][department]" value="{{$org.Department}}" placeholder="Department" class="input input-bordered input-sm col-span-2">
-                                </div>
-                            </div>
-                            {{end}}
-                        </div>
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addOrganization()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Organization
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Notes</h2>
-                        <textarea name="notes" rows="6" class="textarea textarea-bordered" placeholder="Add notes about this contact...">{{.Contact.Notes}}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column - Dates & Relationships -->
-            <div class="space-y-6">
-
-                <!-- Gender -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Gender</h2>
-                        <div class="form-control p-2">
-                            <select name="gender" class="select select-bordered">
-                                <option value="">Not specified</option>
-                                <option value="M" {{if eq .Contact.Gender "M"}}selected{{end}}>Male</option>
-                                <option value="F" {{if eq .Contact.Gender "F"}}selected{{end}}>Female</option>
-                                <option value="O" {{if eq .Contact.Gender "O"}}selected{{end}}>Other</option>
-                                <option value="N" {{if eq .Contact.Gender "N"}}selected{{end}}>Prefer not to say</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Important Dates -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Important Dates</h2>
-                        
-                        <!-- Birthday -->
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-semibold">Birthday</span>
-                                <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="clearDate('birthday')" title="Clear birthday">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </label>
-                            <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
-                                <select name="birthday_month" id="birthday_month" class="select select-bordered select-sm" data-date-group="birthday">
-                                    <option value="">Month *</option>
-                                    {{range $m := iterate 12}}
-                                        <option value="{{$m}}" {{if and $.Birthday.Has (eq $.Birthday.Month $m)}}selected{{end}}>
-                                            {{monthName $m}}
-                                        </option>
-                                    {{end}}
-                                </select>
-                                <select name="birthday_day" id="birthday_day" class="select select-bordered select-sm" data-date-group="birthday">
-                                    <option value="">Day *</option>
-                                    {{range $d := iterate 31}}
-                                        <option value="{{$d}}" {{if and $.Birthday.Has (eq $.Birthday.Day $d)}}selected{{end}}>
-                                            {{$d}}
-                                        </option>
-                                    {{end}}
-                                </select>
-                                <input type="number" name="birthday_year" id="birthday_year" placeholder="Year" min="1900" max="2100" 
-                                       value="{{if .Contact.Birthday}}{{getYear .Contact.Birthday}}{{end}}" 
-                                       class="input input-bordered input-sm">
-                            </div>
-                            <label class="label">
-                                <span class="label-text-alt">Month and day are required. Year is optional.</span>
-                            </label>
-                        </div>
-
-                        <!-- Anniversary -->
-                        <div class="form-control mt-4">
-                            <label class="label">
-                                <span class="label-text font-semibold">Anniversary</span>
-                                <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="clearDate('anniversary')" title="Clear anniversary">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </label>
-                            <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
-                                <select name="anniversary_month" id="anniversary_month" class="select select-bordered select-sm" data-date-group="anniversary">
-                                    <option value="">Month *</option>
-                                    {{range $m := iterate 12}}
-                                        <option value="{{$m}}" {{if and $.Anniversary.Has (eq $.Anniversary.Month $m)}}selected{{end}}>
-                                            {{monthName $m}}
-                                        </option>
-                                    {{end}}
-                                </select>
-                                <select name="anniversary_day" id="anniversary_day" class="select select-bordered select-sm" data-date-group="anniversary">
-                                    <option value="">Day *</option>
-                                    {{range $d := iterate 31}}
-                                        <option value="{{$d}}" {{if and $.Anniversary.Has (eq $.Anniversary.Day $d)}}selected{{end}}>
-                                            {{$d}}
-                                        </option>
-                                    {{end}}
-                                </select>
-                                <input type="number" name="anniversary_year" id="anniversary_year" placeholder="Year" min="1900" max="2100" 
-                                       value="{{if .Contact.Anniversary}}{{getYear .Contact.Anniversary}}{{end}}" 
-                                       class="input input-bordered input-sm">
-                            </div>
-                            <label class="label">
-                                <span class="label-text-alt">Month and day are required. Year is optional.</span>
-                            </label>
-                        </div>
-
-                        <!-- Other Dates -->
-                        <div class="mt-6">
-                            <h3 class="font-semibold mb-3">Other Dates</h3>
-                            <div id="otherDatesList" class="space-y-3">
-                                {{range $index, $dateView := .OtherDates}}
-                                <div class="flex gap-2 items-start border-l-4 border-primary pl-3">
-                                    <div class="flex-1 space-y-2">
-                                        <input type="text" name="other_dates[{{$index}}][event_name]" value="{{$dateView.EventName}}" placeholder="Event name" class="input input-bordered input-sm w-full" required>
-                                        <div class="grid gap-2" style="grid-template-columns: 1fr 0.8fr 0.8fr;">
-                                            <select name="other_dates[{{$index}}][event_date_month]" class="select select-bordered select-sm" data-date-group="other_dates_{{$index}}">
-                                                <option value="">Month *</option>
-                                                {{range $m := iterate 12}}
-                                                    <option value="{{$m}}" {{if and $dateView.Date.Has (eq $dateView.Date.Month $m)}}selected{{end}}>
-                                                        {{monthNameShort $m}}
-                                                    </option>
-                                                {{end}}
-                                            </select>
-                                            <select name="other_dates[{{$index}}][event_date_day]" class="select select-bordered select-sm" data-date-group="other_dates_{{$index}}">
-                                                <option value="">Day *</option>
-                                                {{range $d := iterate 31}}
-                                                <option value="{{$d}}" {{if and $dateView.Date.Has (eq $dateView.Date.Day $d)}}selected{{end}}>{{$d}}</option>
-                                                {{end}}
-                                            </select>
-                                            <input type="number" name="other_dates[{{$index}}][event_date_year]" placeholder="Year" min="1900" max="2100" 
-                                                   value="{{if gt $dateView.Year 0}}{{$dateView.Year}}{{end}}" 
-                                                   class="input input-bordered input-sm">
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();" title="Delete event">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {{end}}
-                            </div>
-                            <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addOtherDate()">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="card-actions flex flex-row gap-2 mt-6">
+                            <button type="button" 
+                                    class="btn btn-sm btn-ghost w-[60%] justify-center items-center border-dashed border-2 border-base-300" 
+                                    onclick="addOtherDate()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
                                 Add Other Date
                             </button>
+                            
+                            <button type="button" 
+                                    id="saveDatesBtn" 
+                                    class="btn btn-primary btn-sm w-[30%]" 
+                                    onclick="saveDatesOnly()" 
+                                    disabled>
+                                Save All Dates
+                            </button>
                         </div>
-                        
+
                     </div>
+                    
                 </div>
+            </div>
 
-                <!-- Relationships -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Relationships</h2>
-                        
-                        <div id="relationshipsList" class="space-y-3">
-                            {{range .Contact.Relationships}}
-                            <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                <div>
-                                    <div class="badge badge-primary">{{.RelationshipType.Name}}</div>
-                                    <a href="/contacts/{{.RelatedContactID}}" class="link link-hover ml-2">
-                                        {{if .RelatedContact.FullName}}{{.RelatedContact.FullName}}{{else}}{{.Contact.FullName}}{{end}}
-                                    </a>
-                                </div>
-                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeRelationship({{.ID}})">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+            <!-- Relationships -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Relationships</h2>
+                    
+                    <div id="relationshipsList" class="space-y-3">
+                        {{range .Contact.Relationships}}
+                        <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                            <div>
+                                <div class="badge badge-primary">{{.RelationshipType.Name}}</div>
+                                <a href="/contacts/{{.RelatedContactID}}" class="link link-hover ml-2">
+                                    {{if .RelatedContact.FullName}}{{.RelatedContact.FullName}}{{else}}{{.Contact.FullName}}{{end}}
+                                </a>
                             </div>
-                            {{end}}
-                            {{range .Contact.OtherRelationships}}
-                            <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                <div>
-                                    <div class="badge badge-secondary">{{.RelationshipName}}*</div>
-                                    <a href="#" class="link link-hover ml-2">
-                                        {{.RelatedContactName}}
-                                    </a>
-                                </div>
-                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeOtherRelationship({{.ID}})">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {{end}}
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeRelationship({{.ID}})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="openAddRelationshipModal()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Relationship
-                        </button>
+                        {{end}}
+                        {{range .Contact.OtherRelationships}}
+                        <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                            <div>
+                                <div class="badge badge-secondary">{{.RelationshipName}}*</div>
+                                <a href="#" class="link link-hover ml-2">
+                                    {{.RelatedContactName}}
+                                </a>
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeOtherRelationship({{.ID}})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        {{end}}
                     </div>
+
+                    <button type="button" class="btn btn-sm btn-ghost mt-2 border-dashed border-2 border-base-300" onclick="openAddRelationshipModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Relationship
+                    </button>
                 </div>
+            </div>
 
-                <!-- URLs -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Websites</h2>
-                        <div id="urlsList" class="space-y-3">
-                            {{range $index, $url := .Contact.URLs}}
-                            <div class="flex gap-2 items-center">
-                                <input type="url" name="urls[{{$index}}][url]" value="{{$url.URL}}" placeholder="https://example.com" class="input input-bordered input-sm flex-1">
-                                <select name="urls[{{$index}}][type]" class="select select-bordered select-sm">
+            <!-- URLs -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Websites</h2>
 
-                                {{$types := $url.Type}}
-                                {{$custom := isCustom $types}}
-                                {{if $custom}}
-                                    <option value="{{$custom}}" selected>{{$custom}}</option>
-                                {{end}}
+                    <template id="urlTypeOptionsTmpl">
+                        {{range (index $.LabelTypes "url")}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </template>
 
-                                    <option value="website" {{if hasType $url.Type "website"}}selected{{end}}>Website</option>
-                                    <option value="social" {{if hasType $url.Type "social"}}selected{{end}}>Social</option>
-                                    <option value="other" {{if hasType $url.Type "other"}}selected{{end}}>Other</option>
-                                </select>
-                                <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.parentElement.remove(); markFormChanged();">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {{end}}
+
+                    <div id="urlsList" class="space-y-3" oninput="markURLsChanged()" onchange="markURLsChanged()">
+                        {{range $index, $url := .Contact.URLs}}
+                        <div class="flex gap-2 items-center url-row" data-id="{{$url.ID}}"
+                            data-original-url="{{$url.URL}}"
+                            data-original-type="{{$url.Type}}"
+                            data-original-primary="{{$url.IsPrimary}}"
+                        >
+                            <input type="url" name="url" value="{{$url.URL}}" placeholder="https://example.com" class="input input-bordered input-sm flex-1">
+
+                            <select name="label_type_id" class="select select-bordered select-sm">
+                                {{range index $.LabelTypes "url"}}
+                                <option value="{{.ID}}" {{if eq $url.Type .ID}}selected{{end}}>{{.Name}}</option>
+                                {{end}}                                
+                            </select>
+
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeURLRow(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost mt-2" onclick="addURL()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {{end}}
+                    </div>
+                    
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[70%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addURL()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             Add Website
                         </button>
+                        
+                        <button type="button" 
+                                id="saveURLsBtn" 
+                                class="btn btn-primary btn-sm w-[20%]" 
+                                onclick="saveURLsOnly()" 
+                                disabled>
+                            Save
+                        </button>
                     </div>
                 </div>
-
-                <!-- Metadata -->
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title">Miscellaneous</h2>
-                        <div class="form-control p-2">
-                            <label class="label cursor-pointer gap-1">
-                                <span class="label-text m-0 p-0">Exclude from CardDAV Server?</span>
-                                <input type="checkbox" name="exclude_from_sync" class="checkbox checkbox-primary" {{if .Contact.ExcludeFromSync}}checked{{end}}>
-                            </label>
-                        </div>
-                        <div class="text-sm space-y-1">
-                            <div><strong>Created:</strong> {{.Contact.CreatedAt.Format "January 2, 2006"}}</div>
-                            <div><strong>Updated:</strong> {{.Contact.UpdatedAt.Format "January 2, 2006"}}</div>
-                            <div class="text-xs opacity-70">ID: {{.Contact.ID}} | UID: {{.Contact.UID}}</div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            <!-- Metadata -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Miscellaneous</h2>
+                    <div class="text-sm space-y-1">
+                        <div><strong>Created:</strong> {{.Contact.CreatedAt.Format "January 2, 2006"}}</div>
+                        <div><strong>Updated:</strong> {{.Contact.UpdatedAt.Format "January 2, 2006"}}</div>
+                        <div class="text-xs opacity-70">ID: {{.Contact.ID}} | UID: {{.Contact.UID}}</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </form>
+    </div>
 </div>
 
 

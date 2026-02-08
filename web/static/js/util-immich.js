@@ -49,7 +49,7 @@
 
         try {
             // We delete the URL record that has the 'immich' type
-            const res = await fetch(`/api/v1/contacts/${contactId}/url/${urlId}`, {
+            const res = await fetch(`/api/v1/contacts/${contactId}/urls/${urlId}`, {
                 method: 'DELETE'
             });
             if (res.ok) window.location.reload();
