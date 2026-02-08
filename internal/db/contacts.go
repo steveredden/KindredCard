@@ -267,6 +267,44 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 }
 
 // GetContact retrieves a contact by ID
+func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contact, error) {
+	logger.Debug("[DATABASE] Begin GetContactNameByID(userID:%d, contactID:%d)", userID, contactID)
+
+	contact := &models.Contact{}
+
+	var family_name sql.NullString
+	var middle_name sql.NullString
+	var nickname sql.NullString
+	var prefix sql.NullString
+	var suffix sql.NullString
+
+	query := `
+		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname
+		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
+
+	err := d.db.QueryRow(query, contactID, userID).Scan(
+		&contact.ID, &contact.UID, &contact.GivenName, &family_name,
+		&middle_name, &prefix, &suffix, &nickname,
+	)
+
+	if err != nil {
+		logger.Error("[DATABASE] Error selecting contacts: %v", err)
+		return nil, err
+	}
+
+	// Load string conversions
+	contact.FamilyName = utils.ScanNullString(family_name)
+	contact.MiddleName = utils.ScanNullString(middle_name)
+	contact.Nickname = utils.ScanNullString(nickname)
+	contact.Prefix = utils.ScanNullString(prefix)
+	contact.Suffix = utils.ScanNullString(suffix)
+
+	contact.UserID = userID
+
+	return contact, nil
+}
+
+// GetContact retrieves a contact by ID
 func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Contact, error) {
 	logger.Debug("[DATABASE] Begin GetContactByIDAbbrv(userID:%d, contactID:%d)", userID, contactID)
 
@@ -278,6 +316,8 @@ func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Conta
 	var birthday sql.NullTime
 	var birthday_day sql.NullInt64
 	var birthday_month sql.NullInt64
+	var avatar_base64 sql.NullString
+	var avatar_mime_type sql.NullString
 
 	query := `
 		SELECT id, uid, full_name, given_name, family_name, nickname, gender, birthday,
@@ -287,7 +327,7 @@ func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Conta
 	err := d.db.QueryRow(query, contactID, userID).Scan(
 		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &family_name,
 		&nickname, &gender, &birthday, &birthday_month, &birthday_day,
-		&contact.AvatarBase64, &contact.AvatarMimeType,
+		&avatar_base64, &avatar_mime_type,
 	)
 
 	if err != nil {
@@ -296,6 +336,8 @@ func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Conta
 	}
 
 	// Load string conversions
+	contact.AvatarBase64 = utils.ScanNullString(avatar_base64)
+	contact.AvatarMimeType = utils.ScanNullString(avatar_mime_type)
 	contact.Gender = utils.ScanNullString(gender)
 	contact.FamilyName = utils.ScanNullString(family_name)
 	contact.Nickname = utils.ScanNullString(nickname)
@@ -878,7 +920,7 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 	}
 
 	// ensure we can calculate a proper full_name based on this
-	current, err := d.GetContactByID(userID, contactID)
+	current, err := d.GetContactNameByID(userID, contactID)
 	if err != nil {
 		return nil, err
 	}
