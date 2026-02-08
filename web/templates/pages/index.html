@@ -85,8 +85,8 @@
         data-contact-id="{{.ID}}"
         data-contact-name="{{.FullName}}"
         data-contact-lastname="{{if .FamilyName}}{{.FamilyName}}{{else}}{{.FullName}}{{end}}"
-        data-contact-nickname="{{.Nickname}}"
-        data-contact-maiden="{{.MaidenName}}"
+        data-contact-nickname="{{if .Nickname}}{{.Nickname}}{{end}}"
+        data-contact-maiden="{{if .MaidenName}}{{.MaidenName}}{{end}}"
         data-contact-email="{{if .Emails}}{{with index .Emails 0}}{{.Email}}{{end}}{{end}}"
         data-contact-phone="{{if .Phones}}{{with index .Phones 0}}{{.Phone}}{{end}}{{end}}"
         onclick="openContactCard({{.ID}})">
@@ -315,7 +315,7 @@
                                 {{range .Emails}}
                                 <div>
                                     <a href="mailto:{{.Email}}" class="link link-hover text-lg">{{.Email}}</a>
-                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
@@ -399,7 +399,7 @@
                                         {{if .City}}{{.City}}{{end}}{{if and .City .State}}, {{end}}{{if .State}}{{.State}}{{end}} {{if .PostalCode}}{{.PostalCode}}{{end}}
                                     </div>
                                     {{if .Country}}<div>{{.Country}}</div>{{end}}
-                                    <span class="badge badge-sm mt-1">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm mt-1">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
@@ -522,7 +522,7 @@
                             {{range .URLs}}
                             <div>
                                 <a href="{{.URL}}" target="_blank" class="link link-primary text-lg">{{.URL}}</a>
-                                <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                             </div>
                             {{end}}
                         </div>
