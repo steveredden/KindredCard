@@ -46,6 +46,10 @@
         const formData = new FormData(this);
         const payload = Object.fromEntries(formData.entries());
         delete payload.avatar;  //this is handled on its own, though happens to live within the form
+        // also handle maiden_name removal if Male
+        if (payload.gender === 'M') {
+            payload.maiden_name = "";
+        }
 
         try {
             const res = await fetch(`/api/v1/contacts/${contactId}`, {
