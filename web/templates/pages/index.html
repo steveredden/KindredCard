@@ -86,6 +86,7 @@
         data-contact-name="{{.FullName}}"
         data-contact-lastname="{{if .FamilyName}}{{.FamilyName}}{{else}}{{.FullName}}{{end}}"
         data-contact-nickname="{{.Nickname}}"
+        data-contact-maiden="{{.MaidenName}}"
         data-contact-email="{{if .Emails}}{{with index .Emails 0}}{{.Email}}{{end}}{{end}}"
         data-contact-phone="{{if .Phones}}{{with index .Phones 0}}{{.Phone}}{{end}}{{end}}"
         onclick="openContactCard({{.ID}})">
@@ -334,7 +335,7 @@
                                 {{range .Phones}}
                                 <div>
                                     <a href="tel:{{.Phone}}" class="link link-hover text-lg">{{.Phone}}</a>
-                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
