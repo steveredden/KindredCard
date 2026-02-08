@@ -22,11 +22,13 @@
         cards.forEach(card => {
             const name = (card.dataset.contactName || '').toLowerCase();
             const nickname = (card.dataset.contactNickname || '').toLowerCase();
+            const maiden = (card.dataset.contactMaiden || '').toLowerCase();
             const email = (card.dataset.contactEmail || '').toLowerCase();
             const phone = (card.dataset.contactPhone || '').toLowerCase();
             
             const matches = name.includes(lowerQuery) ||
                             nickname.includes(lowerQuery) ||
+                            maiden.includes(lowerQuery) ||
                             email.includes(lowerQuery) ||
                             phone.includes(lowerQuery);
         
@@ -179,7 +181,6 @@
             const formData = new FormData(this);
             const contact = {
                 given_name: formData.get('given_name'),
-                middle_name: formData.get('middle_name'),
                 family_name: formData.get('family_name'),
                 gender: formData.get('gender')
             };

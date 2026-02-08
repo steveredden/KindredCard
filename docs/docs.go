@@ -22,6 +22,91 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/addresses/{aid}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of a address using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a address number",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Address ID",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Address fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddressJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated address",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Address"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/contacts": {
             "post": {
                 "security": [
@@ -97,7 +182,92 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/contacts/{cid}/url/{urlid}": {
+        "/api/v1/contacts/{cid}/addresses": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a URL with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / URL associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Address fields",
+                        "name": "url",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Address"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/addresses/{a}": {
             "delete": {
                 "security": [
                     {
@@ -126,7 +296,929 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "URL ID",
-                        "name": "urlid",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/emails": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates an email with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates an email associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Email fields",
+                        "name": "url",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Email"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/emails/{eid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates an email with a contact using HTTP DELETE",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Removes an email associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Email ID",
+                        "name": "eid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/notes": {
+            "put": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update a contact's notes using HTTP PUT. The full field is replaced",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a contact's notes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notes",
+                        "name": "notes",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NotesJSONPut"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated notes",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/organizations": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a URL with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / URL associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Organization fields",
+                        "name": "url",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Organization"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/organizations/{oid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a URL with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / URL associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "URL ID",
+                        "name": "organizationid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/other-dates": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates an Other Date with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates an Other Date associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Other Date fields",
+                        "name": "otherDate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.OtherDate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/other-dates/{oid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Removes an Other Date with a contact using HTTP DELETE",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Removes an Other Date associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Other Date ID",
+                        "name": "oid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/phone": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a Phone with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / Phone associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Phone fields",
+                        "name": "phone",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Phone"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/phone/{pid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a Phone with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / Phone associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Phone ID",
+                        "name": "pid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/url": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a URL with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / URL associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "URL fields",
+                        "name": "url",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.URL"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/url/{uid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a URL with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / URL associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "URL ID",
+                        "name": "uid",
                         "in": "path",
                         "required": true
                     }
@@ -491,91 +1583,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/contacts/{id}/address": {
-            "post": {
-                "security": [
-                    {
-                        "ApiTokenAuth": []
-                    }
-                ],
-                "description": "Associates a URL with a contact using HTTP POST",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "contacts"
-                ],
-                "summary": "Creates a website / URL associated with a contact",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Contact ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Address fields",
-                        "name": "url",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Address"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "created: newID",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or contact ID",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Contact not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/contacts/{id}/anniversary": {
             "patch": {
                 "security": [
@@ -838,14 +1845,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/contacts/{id}/url": {
-            "post": {
+        "/api/v1/emails/{eid}": {
+            "patch": {
                 "security": [
                     {
                         "ApiTokenAuth": []
                     }
                 ],
-                "description": "Associates a URL with a contact using HTTP POST",
+                "description": "Update specific fields of a email using HTTP PATCH. Only provided fields will be updated.",
                 "consumes": [
                     "application/json"
                 ],
@@ -855,32 +1862,32 @@ const docTemplate = `{
                 "tags": [
                     "contacts"
                 ],
-                "summary": "Creates a website / URL associated with a contact",
+                "summary": "Update a email number",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Contact ID",
-                        "name": "id",
+                        "description": "Email ID",
+                        "name": "eid",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "URL fields",
-                        "name": "url",
+                        "description": "Email fields to update",
+                        "name": "contact",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.URL"
+                            "$ref": "#/definitions/models.EmailJSONPatch"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "created: newID",
+                        "description": "Updated email",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Email"
                             }
                         }
                     },
@@ -1037,7 +2044,92 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/other-dates/{id}": {
+        "/api/v1/organizations/{oid}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of a organization using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a organization number",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "oid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Organization fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.OrganizationJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated organization",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Organization"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/other-dates/{oid}": {
             "patch": {
                 "security": [
                     {
@@ -1058,8 +2150,93 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Other Date ID",
+                        "name": "oid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Other Date fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ContactDateJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated other date",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.OtherDate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/phones/{pid}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of a phone using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a phone number",
+                "parameters": [
+                    {
+                        "type": "integer",
                         "description": "Phone ID",
-                        "name": "id",
+                        "name": "pid",
                         "in": "path",
                         "required": true
                     },
@@ -1069,7 +2246,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ContactDateJSONPatch"
+                            "$ref": "#/definitions/models.PhoneJSONPatch"
                         }
                     }
                 ],
@@ -1122,14 +2299,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/phones/{id}": {
-            "patch": {
+        "/api/v1/settings/labels": {
+            "post": {
                 "security": [
                     {
                         "ApiTokenAuth": []
                     }
                 ],
-                "description": "Update specific fields of a phone using HTTP PATCH. Only provided fields will be updated.",
+                "description": "Get birthdays, anniversaries, and other important dates coming up for all contacts",
                 "consumes": [
                     "application/json"
                 ],
@@ -1137,39 +2314,93 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "contacts"
+                    "labels"
                 ],
-                "summary": "Update a phone number",
+                "summary": "Get upcoming events",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Phone ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Phone fields to update",
-                        "name": "contact",
+                        "description": "label fields",
+                        "name": "label",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.PhoneJSONPatch"
+                            "$ref": "#/definitions/models.ContactLabelJSONPost"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated phone",
+                        "description": "id of label",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Phone"
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/settings/labels/{lid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Removes a custom contact label using HTTP DELETE",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Removes a custom contact label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "lid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
                     "400": {
-                        "description": "Invalid request body or contact ID",
+                        "description": "Invalid request body or Label ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1187,7 +2418,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Contact not found",
+                        "description": "Label not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1434,6 +2665,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/urls/{uid}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of a url using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a url number",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "URL ID",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "URL fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.URLJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated url",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.URL"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/contacts": {
             "get": {
                 "security": [
@@ -1576,6 +2892,9 @@ const docTemplate = `{
                 "is_primary": {
                     "type": "boolean"
                 },
+                "label_type_id": {
+                    "type": "integer"
+                },
                 "postal_code": {
                     "type": "string"
                 },
@@ -1585,12 +2904,47 @@ const docTemplate = `{
                 "street": {
                     "type": "string"
                 },
-                "type": {
-                    "description": "home, work, other",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "type_label": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.AddressJSONPatch": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "country": {
+                    "type": "string"
+                },
+                "extended_street": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
                 }
             }
         },
@@ -1680,6 +3034,10 @@ const docTemplate = `{
                 "last_modified_token": {
                     "type": "integer"
                 },
+                "maiden_name": {
+                    "type": "string",
+                    "example": "Parks"
+                },
                 "metadata": {
                     "type": "string"
                 },
@@ -1719,9 +3077,29 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Phone"
                     }
                 },
+                "phonetic_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_middle_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
                 "prefix": {
                     "type": "string",
                     "example": "Dr."
+                },
+                "pronunciation_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "pronunciation_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
                 },
                 "relationships": {
                     "type": "array",
@@ -1849,6 +3227,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "maiden_name": {
+                    "type": "string"
+                },
                 "middle_name": {
                     "type": "string"
                 },
@@ -1882,7 +3263,22 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Phone"
                     }
                 },
+                "phonetic_first_name": {
+                    "type": "string"
+                },
+                "phonetic_last_name": {
+                    "type": "string"
+                },
+                "phonetic_middle_name": {
+                    "type": "string"
+                },
                 "prefix": {
+                    "type": "string"
+                },
+                "pronunciation_first_name": {
+                    "type": "string"
+                },
+                "pronunciation_last_name": {
                     "type": "string"
                 },
                 "relationships": {
@@ -1938,6 +3334,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "John"
                 },
+                "maiden_name": {
+                    "type": "string",
+                    "example": "Parks"
+                },
                 "middle_name": {
                     "type": "string",
                     "example": "J"
@@ -1950,13 +3350,44 @@ const docTemplate = `{
                     "type": "string",
                     "example": "VIP"
                 },
+                "phonetic_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_middle_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
                 "prefix": {
                     "type": "string",
                     "example": "Dr."
                 },
+                "pronunciation_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "pronunciation_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
                 "suffix": {
                     "type": "string",
                     "example": "Jr."
+                }
+            }
+        },
+        "models.ContactLabelJSONPost": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -1991,12 +3422,36 @@ const docTemplate = `{
                 "is_primary": {
                     "type": "boolean"
                 },
-                "type": {
-                    "description": "home, work, other",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "label_type_id": {
+                    "type": "integer"
+                },
+                "type_label": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.EmailJSONPatch": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "support@kindredcard.com"
                 }
             }
         },
@@ -2017,6 +3472,17 @@ const docTemplate = `{
                 }
             }
         },
+        "models.NotesJSONPut": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Organization": {
             "type": "object",
             "properties": {
@@ -2030,9 +3496,38 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "is_primary": {
+                    "description": "not yet used",
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "phonetic_name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrganizationJSONPatch": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "department": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phonetic_name": {
                     "type": "string"
                 },
                 "title": {
@@ -2121,27 +3616,38 @@ const docTemplate = `{
                 "is_primary": {
                     "type": "boolean"
                 },
+                "label_type_id": {
+                    "type": "integer"
+                },
                 "last_formatted_at": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
                 },
-                "type": {
-                    "description": "home, work, cell, fax, other",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "type_label": {
+                    "type": "string"
                 }
             }
         },
         "models.PhoneJSONPatch": {
             "type": "object",
             "properties": {
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
                 "id": {
                     "type": "integer",
                     "example": 1
+                },
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "example": 42
                 },
                 "phone": {
                     "type": "string",
@@ -2227,15 +3733,39 @@ const docTemplate = `{
                 "is_primary": {
                     "type": "boolean"
                 },
-                "type": {
-                    "description": "website, social, other",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "label_type_id": {
+                    "type": "integer"
+                },
+                "type_label": {
+                    "type": "string"
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "models.URLJSONPatch": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "https://facebook.com/kindredcard"
                 }
             }
         },

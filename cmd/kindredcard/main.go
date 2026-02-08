@@ -139,6 +139,9 @@ func main() {
 	web.HandleFunc("/settings/password", handler.RotatePassword).Methods("POST")
 	web.HandleFunc("/settings/delete-account", handler.DeleteAccount).Methods("DELETE")
 
+	// labels
+	web.HandleFunc("/settings/labels", handler.LabelsPage).Methods("GET")
+
 	// Utilities
 	web.HandleFunc("/utilities/gender-assignment", handler.GenderAssignmentPage).Methods("GET")
 	web.HandleFunc("/utilities/phone-formatter", handler.PhoneFormatterPage).Methods("GET")
@@ -162,18 +165,50 @@ func main() {
 	api.HandleFunc("/contacts/{id:[0-9]+}/avatar", handler.DeleteAvatarAPI).Methods("DELETE")
 	api.HandleFunc("/contacts/search", handler.SearchContactsAPI).Methods("GET")
 
-	// Contact (and related) PATCH / POST / DELETE
+	// Contact PATCH
 	api.HandleFunc("/contacts/{id:[0-9]+}", handler.PatchContactAPI).Methods("PATCH")
+
+	// dates - birthday/anniversary/other dates
 	api.HandleFunc("/contacts/{id:[0-9]+}/anniversary", handler.UpdateAnniversaryAPI).Methods("PATCH")
 	api.HandleFunc("/contacts/{id:[0-9]+}/birthday", handler.UpdateBirthdayAPI).Methods("PATCH")
-	api.HandleFunc("/phones/{pid:[0-9]+}", handler.UpdatePhoneAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/other-dates", handler.NewOtherDateAPI).Methods("POST")
 	api.HandleFunc("/other-dates/{oid:[0-9]+}", handler.UpdateOtherDateAPI).Methods("PATCH")
-	api.HandleFunc("/contacts/{id:[0-9]+}/url", handler.NewURLAPI).Methods("POST")
-	api.HandleFunc("/contacts/{cid:[0-9]+}/url/{urlid:[0-9]+}", handler.DeleteURLAPI).Methods("DELETE")
-	api.HandleFunc("/contacts/{id:[0-9]+}/address", handler.NewAddressAPI).Methods("POST")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/other-dates/{oid:[0-9]+}", handler.DeleteOtherDateAPI).Methods("DELETE")
+
+	// phones
+	api.HandleFunc("/contacts/{cid:[0-9]+}/phones", handler.NewPhoneAPI).Methods("POST")
+	api.HandleFunc("/phones/{pid:[0-9]+}", handler.UpdatePhoneAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/phones/{pid:[0-9]+}", handler.DeletePhoneAPI).Methods("DELETE")
+
+	// addresses
+	api.HandleFunc("/contacts/{cid:[0-9]+}/addresses", handler.NewAddressAPI).Methods("POST")
+	api.HandleFunc("/addresses/{aid:[0-9]+}", handler.UpdateAddressAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/addresses/{aid:[0-9]+}", handler.DeleteAddressAPI).Methods("DELETE")
+
+	// emails
+	api.HandleFunc("/contacts/{cid:[0-9]+}/emails", handler.NewEmailAPI).Methods("POST")
+	api.HandleFunc("/emails/{eid:[0-9]+}", handler.UpdateEmailAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/emails/{eid:[0-9]+}", handler.DeleteEmailAPI).Methods("DELETE")
+
+	// urls
+	api.HandleFunc("/contacts/{cid:[0-9]+}/urls", handler.NewURLAPI).Methods("POST")
+	api.HandleFunc("/urls/{uid:[0-9]+}", handler.UpdateURLAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/urls/{uid:[0-9]+}", handler.DeleteURLAPI).Methods("DELETE")
+
+	// organizations
+	api.HandleFunc("/contacts/{cid:[0-9]+}/organizations", handler.NewOrganizationAPI).Methods("POST")
+	api.HandleFunc("/organizations/{oid:[0-9]+}", handler.UpdateOrganizationAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/organizations/{oid:[0-9]+}", handler.DeleteOrganizationAPI).Methods("DELETE")
+
+	// notes
+	api.HandleFunc("/contacts/{cid:[0-9]+}/notes", handler.UpdateNotesAPI).Methods("PUT")
 
 	// Preferences / Theme
 	api.HandleFunc("/user/preferences", handler.UpdatePreferencesAPI).Methods("PUT")
+
+	// custom labels
+	api.HandleFunc("/settings/labels", handler.NewCustomLabelAPI).Methods("POST")
+	api.HandleFunc("/settings/labels/{lid:[0-9]+}", handler.DeleteCustomLabelAPI).Methods("DELETE")
 
 	// Settings: Contact Management
 	api.HandleFunc("/contacts", handler.DeleteAllContactsAPI).Methods("DELETE")

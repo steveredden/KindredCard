@@ -15,37 +15,43 @@ import (
 
 // ContactJSON is used for JSON marshaling/unmarshaling with proper date handling
 type ContactJSON struct {
-	ID                 int                 `json:"id"`
-	UID                string              `json:"uid"`
-	FullName           string              `json:"full_name"`
-	GivenName          string              `json:"given_name"`
-	FamilyName         string              `json:"family_name"`
-	MiddleName         string              `json:"middle_name"`
-	Prefix             string              `json:"prefix"`
-	Suffix             string              `json:"suffix"`
-	Nickname           string              `json:"nickname"`
-	Gender             string              `json:"gender,omitempty"`
-	Birthday           string              `json:"birthday,omitempty"` // String for flexible parsing
-	BirthdayMonth      *int                `json:"birthday_month,omitempty"`
-	BirthdayDay        *int                `json:"birthday_day,omitempty"`
-	Anniversary        string              `json:"anniversary,omitempty"` // String for flexible parsing
-	AnniversaryMonth   *int                `json:"anniversary_month,omitempty"`
-	AnniversaryDay     *int                `json:"anniversary_day,omitempty"`
-	Notes              string              `json:"notes"`
-	AvatarBase64       string              `json:"avatar_base64,omitempty"`
-	AvatarMimeType     string              `json:"avatar_mime_type,omitempty"`
-	ExcludeFromSync    bool                `json:"exclude_from_sync"`
-	CreatedAt          time.Time           `json:"created_at"`
-	UpdatedAt          time.Time           `json:"updated_at"`
-	ETag               string              `json:"etag"`
-	Emails             []Email             `json:"emails,omitempty"`
-	Phones             []Phone             `json:"phones,omitempty"`
-	Addresses          []Address           `json:"addresses,omitempty"`
-	Organizations      []Organization      `json:"organizations,omitempty"`
-	URLs               []URL               `json:"urls,omitempty"`
-	Relationships      []Relationship      `json:"relationships,omitempty"`
-	OtherRelationships []OtherRelationship `json:"other_relationships,omitempty"`
-	OtherDates         []OtherDateJSON     `json:"other_dates,omitempty"`
+	ID                     int                 `json:"id"`
+	UID                    string              `json:"uid"`
+	FullName               string              `json:"full_name"`
+	GivenName              string              `json:"given_name"`
+	FamilyName             string              `json:"family_name"`
+	MiddleName             string              `json:"middle_name"`
+	Prefix                 string              `json:"prefix"`
+	Suffix                 string              `json:"suffix"`
+	Nickname               string              `json:"nickname"`
+	MaidenName             string              `json:"maiden_name"`
+	PhoneticFirstName      string              `json:"phonetic_first_name"`
+	PronunciationFirstName string              `json:"pronunciation_first_name"`
+	PhoneticLastName       string              `json:"phonetic_last_name"`
+	PronunciationLastName  string              `json:"pronunciation_last_name"`
+	PhoneticMiddleName     string              `json:"phonetic_middle_name"`
+	Gender                 string              `json:"gender,omitempty"`
+	Birthday               string              `json:"birthday,omitempty"` // String for flexible parsing
+	BirthdayMonth          *int                `json:"birthday_month,omitempty"`
+	BirthdayDay            *int                `json:"birthday_day,omitempty"`
+	Anniversary            string              `json:"anniversary,omitempty"` // String for flexible parsing
+	AnniversaryMonth       *int                `json:"anniversary_month,omitempty"`
+	AnniversaryDay         *int                `json:"anniversary_day,omitempty"`
+	Notes                  string              `json:"notes"`
+	AvatarBase64           string              `json:"avatar_base64,omitempty"`
+	AvatarMimeType         string              `json:"avatar_mime_type,omitempty"`
+	ExcludeFromSync        bool                `json:"exclude_from_sync"`
+	CreatedAt              time.Time           `json:"created_at"`
+	UpdatedAt              time.Time           `json:"updated_at"`
+	ETag                   string              `json:"etag"`
+	Emails                 []Email             `json:"emails,omitempty"`
+	Phones                 []Phone             `json:"phones,omitempty"`
+	Addresses              []Address           `json:"addresses,omitempty"`
+	Organizations          []Organization      `json:"organizations,omitempty"`
+	URLs                   []URL               `json:"urls,omitempty"`
+	Relationships          []Relationship      `json:"relationships,omitempty"`
+	OtherRelationships     []OtherRelationship `json:"other_relationships,omitempty"`
+	OtherDates             []OtherDateJSON     `json:"other_dates,omitempty"`
 }
 
 // OtherDateJSON is used for JSON marshaling/unmarshaling of other dates
@@ -57,19 +63,30 @@ type OtherDateJSON struct {
 	EventDateDay   *int   `json:"event_date_day,omitempty"`
 }
 
+type NotesJSONPut struct {
+	ContactID int    `json:"contact_id,omitempty"`
+	Notes     string `json:"notes"`
+}
+
 // ContactJSON is used for JSON marshaling/unmarshaling with proper date handling
 type ContactJSONPatch struct {
-	GivenName       *string `json:"given_name" example:"John"`
-	FamilyName      *string `json:"family_name" example:"Doe"`
-	MiddleName      *string `json:"middle_name" example:"J"`
-	Prefix          *string `json:"prefix" example:"Dr."`
-	Suffix          *string `json:"suffix" example:"Jr."`
-	Nickname        *string `json:"nickname" example:"Johnny"`
-	Gender          *string `json:"gender,omitempty" example:"M" enums:"M,F,O"`
-	Notes           *string `json:"notes" example:"VIP"`
-	AvatarBase64    *string `json:"avatar_base64,omitempty"`
-	AvatarMimeType  *string `json:"avatar_mime_type,omitempty"`
-	ExcludeFromSync *bool   `json:"exclude_from_sync" example:"false"`
+	GivenName              *string `json:"given_name" example:"John"`
+	FamilyName             *string `json:"family_name" example:"Doe"`
+	MiddleName             *string `json:"middle_name" example:"J"`
+	Prefix                 *string `json:"prefix" example:"Dr."`
+	Suffix                 *string `json:"suffix" example:"Jr."`
+	Nickname               *string `json:"nickname" example:"Johnny"`
+	MaidenName             *string `json:"maiden_name" example:"Parks"`
+	PhoneticFirstName      *string `json:"phonetic_first_name" example:"Par-cor"`
+	PronunciationFirstName *string `json:"pronunciation_first_name" example:"Par-cor"`
+	PhoneticLastName       *string `json:"phonetic_last_name" example:"Par-cor"`
+	PronunciationLastName  *string `json:"pronunciation_last_name" example:"Par-cor"`
+	PhoneticMiddleName     *string `json:"phonetic_middle_name" example:"Par-cor"`
+	Gender                 *string `json:"gender,omitempty" example:"M" enums:"M,F,O"`
+	Notes                  *string `json:"notes" example:"VIP"`
+	AvatarBase64           *string `json:"avatar_base64,omitempty"`
+	AvatarMimeType         *string `json:"avatar_mime_type,omitempty"`
+	ExcludeFromSync        *bool   `json:"exclude_from_sync" example:"false"`
 }
 
 type ContactDateJSONPatch struct {
@@ -79,11 +96,6 @@ type ContactDateJSONPatch struct {
 	Date      *time.Time `json:"date" example:"2026-04-30"`
 	DateMonth *int       `json:"date_month" example:"4"`
 	DateDay   *int       `json:"date_day" example:"30"`
-}
-
-type PhoneJSONPatch struct {
-	ID    *int    `json:"id" example:"1"`
-	Phone *string `json:"phone" example:"(555)122-4121"`
 }
 
 // OtherDateJSON is used for JSON marshaling/unmarshaling of other dates
@@ -97,34 +109,40 @@ type OtherDateJSONPatch struct {
 // ToContact converts ContactJSON to Contact
 func (cj *ContactJSON) ToContact() (*Contact, error) {
 	contact := &Contact{
-		ID:                 cj.ID,
-		UID:                cj.UID,
-		FullName:           cj.FullName,
-		GivenName:          cj.GivenName,
-		FamilyName:         cj.FamilyName,
-		MiddleName:         cj.MiddleName,
-		Prefix:             cj.Prefix,
-		Suffix:             cj.Suffix,
-		Nickname:           cj.Nickname,
-		Gender:             cj.Gender,
-		BirthdayMonth:      cj.BirthdayMonth,
-		BirthdayDay:        cj.BirthdayDay,
-		AnniversaryMonth:   cj.AnniversaryMonth,
-		AnniversaryDay:     cj.AnniversaryDay,
-		Notes:              cj.Notes,
-		AvatarBase64:       cj.AvatarBase64,
-		AvatarMimeType:     cj.AvatarMimeType,
-		ExcludeFromSync:    cj.ExcludeFromSync,
-		CreatedAt:          cj.CreatedAt,
-		UpdatedAt:          cj.UpdatedAt,
-		ETag:               cj.ETag,
-		Emails:             cj.Emails,
-		Phones:             cj.Phones,
-		Addresses:          cj.Addresses,
-		Organizations:      cj.Organizations,
-		URLs:               cj.URLs,
-		Relationships:      cj.Relationships,
-		OtherRelationships: cj.OtherRelationships,
+		ID:                     cj.ID,
+		UID:                    cj.UID,
+		FullName:               cj.FullName,
+		GivenName:              cj.GivenName,
+		FamilyName:             cj.FamilyName,
+		MiddleName:             cj.MiddleName,
+		Prefix:                 cj.Prefix,
+		Suffix:                 cj.Suffix,
+		Nickname:               cj.Nickname,
+		MaidenName:             cj.MaidenName,
+		PhoneticFirstName:      cj.PhoneticFirstName,
+		PronunciationFirstName: cj.PronunciationFirstName,
+		PhoneticLastName:       cj.PhoneticLastName,
+		PronunciationLastName:  cj.PronunciationLastName,
+		PhoneticMiddleName:     cj.PhoneticMiddleName,
+		Gender:                 cj.Gender,
+		BirthdayMonth:          cj.BirthdayMonth,
+		BirthdayDay:            cj.BirthdayDay,
+		AnniversaryMonth:       cj.AnniversaryMonth,
+		AnniversaryDay:         cj.AnniversaryDay,
+		Notes:                  cj.Notes,
+		AvatarBase64:           cj.AvatarBase64,
+		AvatarMimeType:         cj.AvatarMimeType,
+		ExcludeFromSync:        cj.ExcludeFromSync,
+		CreatedAt:              cj.CreatedAt,
+		UpdatedAt:              cj.UpdatedAt,
+		ETag:                   cj.ETag,
+		Emails:                 cj.Emails,
+		Phones:                 cj.Phones,
+		Addresses:              cj.Addresses,
+		Organizations:          cj.Organizations,
+		URLs:                   cj.URLs,
+		Relationships:          cj.Relationships,
+		OtherRelationships:     cj.OtherRelationships,
 	}
 
 	// Parse birthday string if provided
@@ -172,34 +190,40 @@ func (cj *ContactJSON) ToContact() (*Contact, error) {
 // FromContact converts Contact to ContactJSON
 func FromContact(contact *Contact) *ContactJSON {
 	cj := &ContactJSON{
-		ID:                 contact.ID,
-		UID:                contact.UID,
-		FullName:           contact.FullName,
-		GivenName:          contact.GivenName,
-		FamilyName:         contact.FamilyName,
-		MiddleName:         contact.MiddleName,
-		Prefix:             contact.Prefix,
-		Suffix:             contact.Suffix,
-		Nickname:           contact.Nickname,
-		Gender:             contact.Gender,
-		BirthdayMonth:      contact.BirthdayMonth,
-		BirthdayDay:        contact.BirthdayDay,
-		AnniversaryMonth:   contact.AnniversaryMonth,
-		AnniversaryDay:     contact.AnniversaryDay,
-		Notes:              contact.Notes,
-		AvatarBase64:       contact.AvatarBase64,
-		AvatarMimeType:     contact.AvatarMimeType,
-		ExcludeFromSync:    contact.ExcludeFromSync,
-		CreatedAt:          contact.CreatedAt,
-		UpdatedAt:          contact.UpdatedAt,
-		ETag:               contact.ETag,
-		Emails:             contact.Emails,
-		Phones:             contact.Phones,
-		Addresses:          contact.Addresses,
-		Organizations:      contact.Organizations,
-		URLs:               contact.URLs,
-		Relationships:      contact.Relationships,
-		OtherRelationships: contact.OtherRelationships,
+		ID:                     contact.ID,
+		UID:                    contact.UID,
+		FullName:               contact.FullName,
+		GivenName:              contact.GivenName,
+		FamilyName:             contact.FamilyName,
+		MiddleName:             contact.MiddleName,
+		Prefix:                 contact.Prefix,
+		Suffix:                 contact.Suffix,
+		Nickname:               contact.Nickname,
+		MaidenName:             contact.MaidenName,
+		PhoneticFirstName:      contact.PhoneticFirstName,
+		PronunciationFirstName: contact.PronunciationFirstName,
+		PhoneticLastName:       contact.PhoneticLastName,
+		PronunciationLastName:  contact.PronunciationLastName,
+		PhoneticMiddleName:     contact.PhoneticMiddleName,
+		Gender:                 contact.Gender,
+		BirthdayMonth:          contact.BirthdayMonth,
+		BirthdayDay:            contact.BirthdayDay,
+		AnniversaryMonth:       contact.AnniversaryMonth,
+		AnniversaryDay:         contact.AnniversaryDay,
+		Notes:                  contact.Notes,
+		AvatarBase64:           contact.AvatarBase64,
+		AvatarMimeType:         contact.AvatarMimeType,
+		ExcludeFromSync:        contact.ExcludeFromSync,
+		CreatedAt:              contact.CreatedAt,
+		UpdatedAt:              contact.UpdatedAt,
+		ETag:                   contact.ETag,
+		Emails:                 contact.Emails,
+		Phones:                 contact.Phones,
+		Addresses:              contact.Addresses,
+		Organizations:          contact.Organizations,
+		URLs:                   contact.URLs,
+		Relationships:          contact.Relationships,
+		OtherRelationships:     contact.OtherRelationships,
 	}
 
 	// Format birthday as string if provided
@@ -243,6 +267,12 @@ func (p *ContactJSONPatch) HasUpdates() bool {
 		p.Prefix != nil ||
 		p.Suffix != nil ||
 		p.Nickname != nil ||
+		p.MaidenName != nil ||
+		p.PhoneticFirstName != nil ||
+		p.PronunciationFirstName != nil ||
+		p.PhoneticLastName != nil ||
+		p.PronunciationLastName != nil ||
+		p.PhoneticMiddleName != nil ||
 		p.Gender != nil ||
 		p.Notes != nil ||
 		p.AvatarBase64 != nil ||

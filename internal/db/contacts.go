@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
 	"github.com/steveredden/KindredCard/internal/utils"
@@ -55,14 +54,18 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 
 	query := `
 		INSERT INTO contacts (uid, full_name, given_name, family_name, middle_name, prefix, suffix, 
-			nickname, gender, birthday, birthday_month, birthday_day, anniversary, anniversary_month,
-			anniversary_day, notes, avatar_base64, avatar_mime_type, exclude_from_sync, etag, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day,
+			anniversary, anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
+			exclude_from_sync, etag, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
 		RETURNING id, created_at, updated_at`
 
 	err = tx.QueryRow(query,
 		contact.UID, contact.FullName, contact.GivenName, contact.FamilyName,
 		contact.MiddleName, contact.Prefix, contact.Suffix, contact.Nickname,
+		contact.MaidenName, contact.PhoneticFirstName, contact.PronunciationFirstName,
+		contact.PhoneticMiddleName, contact.PhoneticLastName, contact.PronunciationLastName,
 		contact.Gender, contact.Birthday, contact.BirthdayMonth, contact.BirthdayDay,
 		contact.Anniversary, contact.AnniversaryMonth, contact.AnniversaryDay,
 		contact.Notes, contact.AvatarBase64, contact.AvatarMimeType,
@@ -197,6 +200,12 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 	var gender sql.NullString
 	var middle_name sql.NullString
 	var nickname sql.NullString
+	var maiden_name sql.NullString
+	var phonetic_first_name sql.NullString
+	var pronunciation_first_name sql.NullString
+	var phonetic_middle_name sql.NullString
+	var phonetic_last_name sql.NullString
+	var pronunciation_last_name sql.NullString
 	var notes sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
@@ -211,16 +220,18 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 
 	query := `
 		SELECT id, uid, full_name, given_name, family_name, middle_name, prefix, suffix,
-			nickname, gender, birthday, birthday_month, birthday_day, anniversary, 
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day, anniversary, 
 			anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
 			exclude_from_sync, last_modified_token, created_at, updated_at, etag
 		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
 		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &family_name,
-		&middle_name, &prefix, &suffix, &nickname, &gender, &birthday, &birthday_month,
-		&birthday_day, &anniversary, &anniversary_month, &anniversary_day, &notes,
-		&avatarBase64, &avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
+		&middle_name, &prefix, &suffix, &nickname, &maiden_name, &phonetic_first_name,
+		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name, &pronunciation_last_name,
+		&gender, &birthday, &birthday_month, &birthday_day, &anniversary, &anniversary_month,
+		&anniversary_day, &notes, &avatarBase64, &avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
 		&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,
 	)
 
@@ -236,9 +247,15 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 	contact.FamilyName = utils.ScanNullString(family_name)
 	contact.MiddleName = utils.ScanNullString(middle_name)
 	contact.Nickname = utils.ScanNullString(nickname)
+	contact.MaidenName = utils.ScanNullString(maiden_name)
 	contact.Notes = utils.ScanNullString(notes)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
+	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
+	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
+	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
+	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
+	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	// Load int conversions
 	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
@@ -266,14 +283,58 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 }
 
 // GetContact retrieves a contact by ID
+func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contact, error) {
+	logger.Debug("[DATABASE] Begin GetContactNameByID(userID:%d, contactID:%d)", userID, contactID)
+
+	contact := &models.Contact{}
+
+	var family_name sql.NullString
+	var middle_name sql.NullString
+	var nickname sql.NullString
+	var prefix sql.NullString
+	var suffix sql.NullString
+
+	query := `
+		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname,
+		  phonetic_first_name, pronunciation_first_name, phonetic_middle_name, phonetic_last_name, pronunciation_last_name
+		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
+
+	err := d.db.QueryRow(query, contactID, userID).Scan(
+		&contact.ID, &contact.UID, &contact.GivenName, &family_name,
+		&middle_name, &prefix, &suffix, &nickname,
+	)
+
+	if err != nil {
+		logger.Error("[DATABASE] Error selecting contacts: %v", err)
+		return nil, err
+	}
+
+	// Load string conversions
+	contact.FamilyName = utils.ScanNullString(family_name)
+	contact.MiddleName = utils.ScanNullString(middle_name)
+	contact.Nickname = utils.ScanNullString(nickname)
+	contact.Prefix = utils.ScanNullString(prefix)
+	contact.Suffix = utils.ScanNullString(suffix)
+
+	contact.UserID = userID
+
+	return contact, nil
+}
+
+// GetContact retrieves a contact by ID
 func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Contact, error) {
 	logger.Debug("[DATABASE] Begin GetContactByIDAbbrv(userID:%d, contactID:%d)", userID, contactID)
 
 	contact := &models.Contact{}
 
+	var family_name sql.NullString
+	var gender sql.NullString
+	var nickname sql.NullString
 	var birthday sql.NullTime
 	var birthday_day sql.NullInt64
 	var birthday_month sql.NullInt64
+	var avatar_base64 sql.NullString
+	var avatar_mime_type sql.NullString
 
 	query := `
 		SELECT id, uid, full_name, given_name, family_name, nickname, gender, birthday,
@@ -281,15 +342,22 @@ func (d *Database) GetContactByIDAbbrv(userID int, contactID int) (*models.Conta
 		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
-		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &contact.FamilyName,
-		&contact.Nickname, &contact.Gender, &birthday, &birthday_month, &birthday_day,
-		&contact.AvatarBase64, &contact.AvatarMimeType,
+		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &family_name,
+		&nickname, &gender, &birthday, &birthday_month, &birthday_day,
+		&avatar_base64, &avatar_mime_type,
 	)
 
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting contacts: %v", err)
 		return nil, err
 	}
+
+	// Load string conversions
+	contact.AvatarBase64 = utils.ScanNullString(avatar_base64)
+	contact.AvatarMimeType = utils.ScanNullString(avatar_mime_type)
+	contact.Gender = utils.ScanNullString(gender)
+	contact.FamilyName = utils.ScanNullString(family_name)
+	contact.Nickname = utils.ScanNullString(nickname)
 
 	// Load int conversions
 	contact.BirthdayDay = utils.ScanNullInt(birthday_day)
@@ -333,9 +401,15 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 	var gender sql.NullString
 	var middle_name sql.NullString
 	var nickname sql.NullString
+	var maiden_name sql.NullString
 	var notes sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
+	var phonetic_first_name sql.NullString
+	var pronunciation_first_name sql.NullString
+	var phonetic_middle_name sql.NullString
+	var phonetic_last_name sql.NullString
+	var pronunciation_last_name sql.NullString
 
 	var anniversary_day sql.NullInt64
 	var anniversary_month sql.NullInt64
@@ -347,8 +421,9 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 
 	queryBuilder.WriteString(`
 		SELECT id, uid, full_name, given_name, family_name, middle_name, prefix, suffix,
-			nickname, gender, birthday, birthday_month, birthday_day, anniversary,
-			anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day,
+			anniversary, anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
 			exclude_from_sync, last_modified_token, created_at, updated_at, etag
 		FROM contacts WHERE uid = $1 AND deleted_at IS NULL AND user_id = $2
 	`)
@@ -365,8 +440,9 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 
 	err := d.db.QueryRow(query, params...).Scan(
 		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName,
-		&family_name, &middle_name, &prefix, &suffix, &nickname, &gender,
-		&birthday, &birthday_month, &birthday_day, &anniversary,
+		&family_name, &middle_name, &prefix, &suffix, &nickname, &maiden_name, &phonetic_first_name,
+		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name, &pronunciation_last_name,
+		&gender, &birthday, &birthday_month, &birthday_day, &anniversary,
 		&anniversary_month, &anniversary_day, &notes, &avatarBase64,
 		&avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
 		&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,
@@ -386,9 +462,15 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 	contact.FamilyName = utils.ScanNullString(family_name)
 	contact.MiddleName = utils.ScanNullString(middle_name)
 	contact.Nickname = utils.ScanNullString(nickname)
+	contact.MaidenName = utils.ScanNullString(maiden_name)
 	contact.Notes = utils.ScanNullString(notes)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
+	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
+	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
+	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
+	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
+	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	// Load int conversions
 	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
@@ -440,16 +522,21 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 
 	query := `
 		UPDATE contacts SET
-			full_name = $1, given_name = $2, family_name = $3, middle_name = $4,
-			prefix = $5, suffix = $6, nickname = $7, gender = $8, birthday = $9, birthday_month = $10,
-			birthday_day = $11, anniversary = $12, anniversary_month = $13, anniversary_day = $14, 
-			notes = $15, exclude_from_sync = $16, etag = $17
-		WHERE id = $18`
+			full_name = $1, given_name = $2, family_name = $3, middle_name = $4, prefix = $5,
+			suffix = $6, nickname = $7, maiden_name = $8, phonetic_first_name = $9,
+			pronunciation_first_name = $10, phonetic_middle_name = $11, phonetic_last_name = $12,
+			pronunciation_last_name = $13, gender = $14, birthday = $15, birthday_month = $16,
+			birthday_day = $17, anniversary = $18, anniversary_month = $19, anniversary_day = $20, 
+			notes = $21, exclude_from_sync = $22, etag = $23
+		WHERE id = $24
+	`
 
 	_, err = tx.Exec(query,
-		contact.FullName, contact.GivenName, contact.FamilyName, contact.MiddleName,
-		contact.Prefix, contact.Suffix, contact.Nickname, contact.Gender, contact.Birthday,
-		contact.BirthdayMonth, contact.BirthdayDay, contact.Anniversary, contact.AnniversaryMonth,
+		contact.FullName, contact.GivenName, contact.FamilyName, contact.MiddleName, contact.Prefix,
+		contact.Suffix, contact.Nickname, contact.MaidenName, contact.PhoneticFirstName,
+		contact.PronunciationFirstName, contact.PhoneticMiddleName, contact.PhoneticLastName,
+		contact.PronunciationLastName, contact.Gender, contact.Birthday, contact.BirthdayMonth,
+		contact.BirthdayDay, contact.Anniversary, contact.AnniversaryMonth,
 		contact.AnniversaryDay, contact.Notes, contact.ExcludeFromSync, contact.ETag,
 		contact.ID,
 	)
@@ -604,13 +691,14 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 	var family_name sql.NullString
 	var middle_name sql.NullString
 	var nickname sql.NullString
+	var maiden_name sql.NullString
 	var notes sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
 
 	searchQuery := `
 		SELECT DISTINCT c.id, c.uid, c.full_name, c.given_name, c.family_name, c.middle_name,
-			c.prefix, c.suffix, c.nickname, c.birthday, c.anniversary, c.notes, c.avatar_base64,
+			c.prefix, c.suffix, c.nickname, c.maiden_name, c.birthday, c.anniversary, c.notes, c.avatar_base64,
 			c.avatar_mime_type, c.exclude_from_sync, c.created_at, c.updated_at, c.etag
 		FROM contacts c
 		LEFT JOIN emails e ON c.id = e.contact_id
@@ -619,6 +707,7 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 				OR c.given_name ILIKE $1 
 				OR c.family_name ILIKE $1 
 				OR c.nickname ILIKE $1
+				OR c.maiden_name ILIKE $1
 				OR e.email ILIKE $1
 			)
 		ORDER BY c.full_name`
@@ -636,7 +725,7 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 		contact := &models.Contact{}
 		err := rows.Scan(
 			&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &family_name,
-			&middle_name, &prefix, &suffix, &nickname, &contact.Birthday, &contact.Anniversary,
+			&middle_name, &prefix, &suffix, &nickname, &maiden_name, &contact.Birthday, &contact.Anniversary,
 			&notes, &avatarBase64, &avatarMimeType, &contact.ExcludeFromSync,
 			&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,
 		)
@@ -650,6 +739,7 @@ func (d *Database) SearchContacts(userID int, query string) ([]*models.Contact, 
 		contact.FamilyName = utils.ScanNullString(family_name)
 		contact.MiddleName = utils.ScanNullString(middle_name)
 		contact.Nickname = utils.ScanNullString(nickname)
+		contact.MaidenName = utils.ScanNullString(maiden_name)
 		contact.Notes = utils.ScanNullString(notes)
 		contact.Prefix = utils.ScanNullString(prefix)
 		contact.Suffix = utils.ScanNullString(suffix)
@@ -854,6 +944,12 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 		{patch.Prefix, "prefix"},
 		{patch.Suffix, "suffix"},
 		{patch.Nickname, "nickname"},
+		{patch.MaidenName, "maiden_name"},
+		{patch.PhoneticFirstName, "phonetic_first_name"},
+		{patch.PronunciationFirstName, "pronunciation_first_name"},
+		{patch.PhoneticMiddleName, "phonetic_middle_name"},
+		{patch.PhoneticLastName, "phonetic_last_name"},
+		{patch.PronunciationLastName, "pronunciation_last_name"},
 		{patch.Gender, "gender"},
 		{patch.Notes, "notes"},
 		{patch.AvatarBase64, "avatar_base64"},
@@ -861,9 +957,38 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 		{patch.ExcludeFromSync, "exclude_from_sync"},
 	}
 
+	// ensure we can calculate a proper full_name based on this
+	current, err := d.GetContactNameByID(userID, contactID)
+	if err != nil {
+		return nil, err
+	}
+
+	if patch.Prefix != nil {
+		current.Prefix = *patch.Prefix
+	}
+	if patch.GivenName != nil {
+		current.GivenName = *patch.GivenName
+	}
+	if patch.MiddleName != nil {
+		current.MiddleName = *patch.MiddleName
+	}
+	if patch.FamilyName != nil {
+		current.FamilyName = *patch.FamilyName
+	}
+	if patch.Suffix != nil {
+		current.Suffix = *patch.Suffix
+	}
+
+	newName := current.GenerateFullName()
+
 	updates := []string{}
 	args := []interface{}{}
 	argIndex := 1
+
+	// add the computed full_name
+	updates = append(updates, fmt.Sprintf("full_name = $%d", argIndex))
+	args = append(args, newName)
+	argIndex++
 
 	// Build updates dynamically
 	for _, field := range fieldUpdates {
@@ -911,184 +1036,13 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 	return d.GetContactByID(userID, contactID)
 }
 
-// UpdateContactDate specifically updates formal dates (birthday / anniversary) on a contact
-func (d *Database) UpdateContactDate(userID int, body models.ContactDateJSONPatch) error {
-	logger.Debug("[DATABASE] Begin UpdateContactDate(userID:%d, body:--)", userID)
-
-	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of ContactDateJSONPatch:")
-		utils.Dump(body)
-	}
-
-	tableName := ""
-	updates := []string{}
-	args := []interface{}{}
-	argIndex := 1
-
-	switch body.DateType {
-	case "anniversary":
-		tableName = "contacts"
-		if body.Date != nil {
-			updates = append(updates, fmt.Sprintf("anniversary = $%d", argIndex))
-			args = append(args, body.Date)
-			argIndex++
-		} else if body.DateMonth != nil && body.DateDay != nil {
-			updates = append(updates, fmt.Sprintf("anniversary_month = $%d", argIndex))
-			args = append(args, body.DateMonth)
-			argIndex++
-			updates = append(updates, fmt.Sprintf("anniversary_day = $%d", argIndex))
-			args = append(args, body.DateDay)
-			argIndex++
-		}
-	case "birthday":
-		tableName = "contacts"
-		if body.Date != nil {
-			updates = append(updates, fmt.Sprintf("birthday = $%d", argIndex))
-			args = append(args, body.Date)
-			argIndex++
-		} else if body.DateMonth != nil && body.DateDay != nil {
-			updates = append(updates, fmt.Sprintf("birthday_month = $%d", argIndex))
-			args = append(args, body.DateMonth)
-			argIndex++
-
-			updates = append(updates, fmt.Sprintf("birthday_day = $%d", argIndex))
-			args = append(args, body.DateDay)
-			argIndex++
-		}
-	}
-
-	// Add WHERE clause parameters
-	//    WHERE id = $%d AND user_id = $%d
-	args = append(args, body.ContactID, userID)
-
-	// Build and execute query
-	query := fmt.Sprintf(`
-		UPDATE %s
-		SET %s
-		WHERE id = $%d AND user_id = $%d
-	`, tableName, strings.Join(updates, ", "), argIndex, argIndex+1)
-
-	_, err := d.db.Exec(query, args...)
-	if err != nil {
-		return err
-	}
-
-	// Increment sync token so CardDAV clients pull the change
-	newToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err == nil {
-		_ = d.bumpContactSyncToken(body.ContactID, newToken)
-	}
-
-	return nil
-}
-
-// UpdateContactDate specifically updates other_dates on a contact
-func (d *Database) UpdateContactOtherDate(userID int, body models.ContactDateJSONPatch) error {
-	logger.Debug("[DATABASE] Begin UpdateContactOtherDate(userID:%d, body:--)", userID)
-
-	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of ContactDateJSONPatch:")
-		utils.Dump(body)
-	}
-
-	updates := []string{}
-	args := []interface{}{}
-	argIndex := 1
-
-	if body.DateType != "" {
-		updates = append(updates, fmt.Sprintf("event_name = $%d", argIndex))
-		args = append(args, body.DateType)
-		argIndex++
-	}
-
-	if body.Date != nil {
-		updates = append(updates, fmt.Sprintf("event_date = $%d", argIndex))
-		args = append(args, body.Date)
-		argIndex++
-	} else if body.DateMonth != nil && body.DateDay != nil {
-		updates = append(updates, fmt.Sprintf("event_date_month = $%d", argIndex))
-		args = append(args, body.DateMonth)
-		argIndex++
-
-		updates = append(updates, fmt.Sprintf("event_date_day = $%d", argIndex))
-		args = append(args, body.DateDay)
-		argIndex++
-	}
-
-	// Add WHERE clause parameters
-	//    WHERE id = $%d
-	args = append(args, body.ContactID)
-
-	// Build and execute query
-	query := fmt.Sprintf(`
-		UPDATE other_dates
-		SET %s
-		WHERE id = $%d
-	`, strings.Join(updates, ", "), argIndex+1)
-
-	_, err := d.db.Exec(query, args...)
-	if err != nil {
-		return err
-	}
-
-	// Increment sync token so CardDAV clients pull the change
-	newToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err == nil {
-		_ = d.bumpContactSyncToken(body.ContactID, newToken)
-	}
-
-	return nil
-}
-
-func (d *Database) UpdateContactPhone(userID int, body models.PhoneJSONPatch) ([]models.Phone, error) {
-	logger.Debug("[DATABASE] Begin UpdateContactPhone(userID:%d, body:--)", userID)
-
-	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of PhoneJSONPatch:")
-		utils.Dump(body)
-	}
-
-	var contactID int
-
-	query := `
-        UPDATE phones 
-        SET
-			phone = $1,
-			last_formatted_at = NOW()
-        WHERE id = $2 
-        AND contact_id IN (SELECT id FROM contacts WHERE user_id = $3)
-        RETURNING contact_id`
-
-	err := d.db.QueryRow(query, body.Phone, body.ID, userID).Scan(&contactID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Error("No rows patched: %v", err)
-			return nil, fmt.Errorf("phone record not found or unauthorized")
-		}
-		logger.Error("Error patching phone: %v", err)
-		return nil, fmt.Errorf("failed to patch phone: %w", err)
-	}
-
-	// Sync token update
-	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to increment sync token: %w", err)
-	}
-
-	if err := d.bumpContactSyncToken(contactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
-
-	return d.getPhones(contactID)
-}
-
 // Helper functions for related data
 
 func (d *Database) insertEmails(tx *sql.Tx, contactID int, emails []models.Email) error {
 	for _, email := range emails {
 		_, err := tx.Exec(
-			"INSERT INTO emails (contact_id, email, type, is_primary) VALUES ($1, $2, $3, $4)",
-			contactID, email.Email, pq.Array(email.Type), email.IsPrimary,
+			"INSERT INTO emails (contact_id, email, label_type_id, is_primary) VALUES ($1, $2, $3, $4)",
+			contactID, email.Email, email.Type, email.IsPrimary,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error inserting Emails: %v", err)
@@ -1101,8 +1055,8 @@ func (d *Database) insertEmails(tx *sql.Tx, contactID int, emails []models.Email
 func (d *Database) insertPhones(tx *sql.Tx, contactID int, phones []models.Phone) error {
 	for _, phone := range phones {
 		_, err := tx.Exec(
-			"INSERT INTO phones (contact_id, phone, type, is_primary) VALUES ($1, $2, $3, $4)",
-			contactID, phone.Phone, pq.Array(phone.Type), phone.IsPrimary,
+			"INSERT INTO phones (contact_id, phone, label_type_id, is_primary) VALUES ($1, $2, $3, $4)",
+			contactID, phone.Phone, phone.Type, phone.IsPrimary,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error inserting Phones: %v", err)
@@ -1115,8 +1069,8 @@ func (d *Database) insertPhones(tx *sql.Tx, contactID int, phones []models.Phone
 func (d *Database) insertAddresses(tx *sql.Tx, contactID int, addresses []models.Address) error {
 	for _, addr := range addresses {
 		_, err := tx.Exec(
-			"INSERT INTO addresses (contact_id, street, extended_street, city, state, postal_code, country, type, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-			contactID, addr.Street, addr.ExtendedStreet, addr.City, addr.State, addr.PostalCode, addr.Country, pq.Array(addr.Type), addr.IsPrimary,
+			"INSERT INTO addresses (contact_id, street, extended_street, city, state, postal_code, country, label_type_id, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+			contactID, addr.Street, addr.ExtendedStreet, addr.City, addr.State, addr.PostalCode, addr.Country, addr.Type, addr.IsPrimary,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error inserting Addresses: %v", err)
@@ -1143,8 +1097,8 @@ func (d *Database) insertOrganizations(tx *sql.Tx, contactID int, orgs []models.
 func (d *Database) insertURLs(tx *sql.Tx, contactID int, urls []models.URL) error {
 	for _, url := range urls {
 		_, err := tx.Exec(
-			"INSERT INTO urls (contact_id, url, type) VALUES ($1, $2, $3)",
-			contactID, url.URL, pq.Array(url.Type),
+			"INSERT INTO urls (contact_id, url, label_type_id) VALUES ($1, $2, $3)",
+			contactID, url.URL, url.Type,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error inserting URLs: %v", err)
@@ -1228,7 +1182,14 @@ func (d *Database) insertOtherRelationships(tx *sql.Tx, contactID int, otherRela
 }
 
 func (d *Database) getEmails(contactID int) ([]models.Email, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, email, type, is_primary FROM emails WHERE contact_id = $1", contactID)
+	query := `
+	SELECT e.id, e.contact_id, e.email, e.label_type_id, l.name as type_label, e.is_primary
+	FROM emails e
+	JOIN contact_label_types l on e.label_type_id = l.id
+	WHERE e.contact_id = $1
+	`
+
+	rows, err := d.db.Query(query, contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Emails: %v", err)
 		return nil, err
@@ -1238,7 +1199,7 @@ func (d *Database) getEmails(contactID int) ([]models.Email, error) {
 	var emails []models.Email
 	for rows.Next() {
 		var email models.Email
-		if err := rows.Scan(&email.ID, &email.ContactID, &email.Email, pq.Array(&email.Type), &email.IsPrimary); err != nil {
+		if err := rows.Scan(&email.ID, &email.ContactID, &email.Email, &email.Type, &email.TypeLabel, &email.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Emails: %v", err)
 			return nil, err
 		}
@@ -1248,7 +1209,15 @@ func (d *Database) getEmails(contactID int) ([]models.Email, error) {
 }
 
 func (d *Database) getPhones(contactID int) ([]models.Phone, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, phone, type, is_primary FROM phones WHERE contact_id = $1", contactID)
+
+	query := `
+	SELECT p.id, p.contact_id, p.phone, p.label_type_id, l.name as type_label, p.is_primary
+    FROM phones p
+	JOIN contact_label_types l on p.label_type_id = l.id
+	WHERE p.contact_id = $1
+	`
+
+	rows, err := d.db.Query(query, contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Phones: %v", err)
 		return nil, err
@@ -1258,7 +1227,7 @@ func (d *Database) getPhones(contactID int) ([]models.Phone, error) {
 	var phones []models.Phone
 	for rows.Next() {
 		var phone models.Phone
-		if err := rows.Scan(&phone.ID, &phone.ContactID, &phone.Phone, pq.Array(&phone.Type), &phone.IsPrimary); err != nil {
+		if err := rows.Scan(&phone.ID, &phone.ContactID, &phone.Phone, &phone.Type, &phone.TypeLabel, &phone.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Phones: %v", err)
 			return nil, err
 		}
@@ -1268,7 +1237,14 @@ func (d *Database) getPhones(contactID int) ([]models.Phone, error) {
 }
 
 func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, street, extended_street, city, state, postal_code, country, type, is_primary FROM addresses WHERE contact_id = $1", contactID)
+	query := `
+	SELECT a.id, a.contact_id, a.street, a.extended_street, a.city, a.state, a.postal_code, a.country, a.label_type_id, l.name as type_label, a.is_primary
+	FROM addresses a
+	JOIN contact_label_types l on a.label_type_id = l.id
+	WHERE a.contact_id = $1
+	`
+
+	rows, err := d.db.Query(query, contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Addresses: %v", err)
 		return nil, err
@@ -1279,7 +1255,7 @@ func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
 	for rows.Next() {
 		var addr models.Address
 		var extendedStreet sql.NullString
-		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &extendedStreet, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, pq.Array(&addr.Type), &addr.IsPrimary); err != nil {
+		if err := rows.Scan(&addr.ID, &addr.ContactID, &addr.Street, &extendedStreet, &addr.City, &addr.State, &addr.PostalCode, &addr.Country, &addr.Type, &addr.TypeLabel, &addr.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Addresses: %v", err)
 			return nil, err
 		}
@@ -1290,7 +1266,7 @@ func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
 }
 
 func (d *Database) getOrganizations(contactID int) ([]models.Organization, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, name, title, department, is_primary FROM organizations WHERE contact_id = $1", contactID)
+	rows, err := d.db.Query("SELECT id, contact_id, name, phonetic_name, title, department, is_primary FROM organizations WHERE contact_id = $1", contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Organizations: %v", err)
 		return nil, err
@@ -1300,7 +1276,7 @@ func (d *Database) getOrganizations(contactID int) ([]models.Organization, error
 	var orgs []models.Organization
 	for rows.Next() {
 		var org models.Organization
-		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &org.Title, &org.Department, &org.IsPrimary); err != nil {
+		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &org.PhoneticName, &org.Title, &org.Department, &org.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Organizations: %v", err)
 			return nil, err
 		}
@@ -1310,7 +1286,14 @@ func (d *Database) getOrganizations(contactID int) ([]models.Organization, error
 }
 
 func (d *Database) getURLs(contactID int) ([]models.URL, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, url, type FROM urls WHERE contact_id = $1", contactID)
+	query := `
+	SELECT u.id, u.contact_id, u.url, u.label_type_id, l.name as type_label
+	FROM urls u
+	JOIN contact_label_types l on u.label_type_id = l.id
+	WHERE contact_id = $1
+	`
+
+	rows, err := d.db.Query(query, contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting URLs: %v", err)
 		return nil, err
@@ -1320,7 +1303,7 @@ func (d *Database) getURLs(contactID int) ([]models.URL, error) {
 	var urls []models.URL
 	for rows.Next() {
 		var url models.URL
-		if err := rows.Scan(&url.ID, &url.ContactID, &url.URL, pq.Array(&url.Type)); err != nil {
+		if err := rows.Scan(&url.ID, &url.ContactID, &url.URL, &url.Type, &url.TypeLabel); err != nil {
 			logger.Error("[DATABASE] Error scanning URLs: %v", err)
 			return nil, err
 		}
@@ -1509,43 +1492,9 @@ func (d *Database) bumpContactSyncToken(contactID int, token int) error {
 	return nil
 }
 
-func (d *Database) CreateContactURL(userID int, body models.URL) (int, error) {
-	logger.Debug("[DATABASE] Begin CreateContactURL(userID:%d, body:--)", userID)
-
-	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of URL:")
-		utils.Dump(body)
-	}
-
-	err := d.db.QueryRow(
-		"INSERT INTO urls (contact_id, url, type) VALUES ($1, $2, $3) RETURNING id",
-		body.ContactID, body.URL, pq.Array(body.Type),
-	).Scan(&body.ID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Error("No urls inserted: %v", err)
-			return 0, fmt.Errorf("unauthorized")
-		}
-		logger.Error("Error creating url: %v", err)
-		return 0, fmt.Errorf("failed to create url: %w", err)
-	}
-
-	// Sync token update
-	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err != nil {
-		return body.ID, fmt.Errorf("failed to increment sync token: %w", err)
-	}
-
-	if err := d.bumpContactSyncToken(body.ContactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
-
-	return body.ID, nil
-}
-
 // GetContactsByURL retrieves contacts that have a matching URL
-func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) ([]*models.Contact, error) {
-	logger.Debug("[DATABASE] Begin GetContactsByURL(userID:%d, baseURL: %s, urlType:%s)", userID, baseURL, urlType)
+func (d *Database) GetContactsByURL(userID int, baseURL string, urlLabelID int) ([]*models.Contact, error) {
+	logger.Debug("[DATABASE] Begin GetContactsByURL(userID:%d, baseURL: %s, urlLabelID:%d)", userID, baseURL, urlLabelID)
 
 	var birthday sql.NullTime
 	var birthday_day sql.NullInt64
@@ -1559,7 +1508,7 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) 
 		SELECT 
 			c.id, c.uid, c.full_name, c.given_name, c.family_name, c.nickname, c.avatar_base64,
 			c.avatar_mime_type, c.birthday, c.birthday_month, c.birthday_day,
-			u.id, u.url, u.type
+			u.id, u.url, u.label_type_id
 		FROM urls u
 		JOIN contacts c on u.contact_id = c.id
 		WHERE c.user_id = $1
@@ -1573,9 +1522,9 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) 
 		argIndex++
 	}
 
-	if urlType != "" {
-		query += fmt.Sprintf(" and $%d = ANY(u.type)", argIndex)
-		args = append(args, urlType)
+	if urlLabelID > 0 {
+		query += fmt.Sprintf(" and u.label_type_id = $%d", argIndex)
+		args = append(args, urlLabelID)
 	}
 
 	// Execute the query using the collected arguments
@@ -1594,7 +1543,7 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) 
 		err := rows.Scan(
 			&c.ID, &c.UID, &c.FullName, &c.GivenName, &c.FamilyName, &c.Nickname, &avatarBase64,
 			&avatarMimeType, &birthday, &birthday_month, &birthday_day,
-			&url.ID, &url.URL, pq.Array(&url.Type),
+			&url.ID, &url.URL, &url.Type,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contacts: %v", err)
@@ -1626,16 +1575,18 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlType string) 
 func (d *Database) GetUnlinkedImmichContacts(userID int) ([]*models.Contact, error) {
 	logger.Debug("[DATABASE] Begin GetAllContactsAbbrv(userID:%d)", userID)
 
+	immichTypeID, _ := d.GetLabelID("immich", "url")
+
 	query := `
 		SELECT 
 			c.uid, c.id, c.full_name, c.given_name, c.family_name, c.nickname, c.avatar_base64, c.avatar_mime_type
 		FROM contacts c
 		WHERE c.user_id = $1 AND c.deleted_at IS NULL
-			AND c.id NOT IN (SELECT contact_id FROM urls WHERE 'immich' = ANY(type))
+			AND c.id NOT IN (SELECT contact_id FROM urls WHERE label_type_id = $2)
 	`
 
 	// Execute the query using the collected arguments
-	rows, err := d.db.Query(query, userID)
+	rows, err := d.db.Query(query, userID, immichTypeID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting contacts: %v", err)
 		return nil, fmt.Errorf("error executing query for GetAllContactsAbbrv: %w", err)
@@ -1687,15 +1638,17 @@ func (d *Database) GetUnlinkedImmichContacts(userID int) ([]*models.Contact, err
 func (d *Database) GetLinkedImmichIDs(userID int) (map[string]bool, error) {
 	logger.Debug("[DATABASE] Begin GetAlreadyLinkedImmichIDs(userID:%d)", userID)
 
+	immichTypeID, _ := d.GetLabelID("immich", "url")
+
 	query := `
 		SELECT u.url 
 		FROM urls u
 		JOIN contacts c ON u.contact_id = c.id
 		WHERE c.user_id = $1 
-		AND 'immich' = ANY(u.type);
+		AND label_type_id = $2;
 	`
 
-	rows, err := d.db.Query(query, userID)
+	rows, err := d.db.Query(query, userID, immichTypeID)
 	if err != nil {
 		logger.Error("Error querying URLs: %v", err)
 		return nil, err
@@ -1714,28 +1667,6 @@ func (d *Database) GetLinkedImmichIDs(userID int) (map[string]bool, error) {
 		linkedMap[id] = true
 	}
 	return linkedMap, nil
-}
-
-func (d *Database) DeleteContactURL(userID int, contactID int, urlID int) error {
-	logger.Debug("[DATABASE] Begin DeleteContactURL(userID:%d, contactID:%d, urlID:%d)", userID, contactID, urlID)
-
-	_, err := d.db.Exec("DELETE FROM urls WHERE id = $1 AND contact_id = $2", urlID, contactID)
-	if err != nil {
-		logger.Error("[DATABASE] Error deleting URL: %v", err)
-		return err
-	}
-
-	// Sync token update
-	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err != nil {
-		return fmt.Errorf("failed to increment sync token: %w", err)
-	}
-
-	if err := d.bumpContactSyncToken(contactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
-
-	return nil
 }
 
 // DeleteOldContacts removes expired contacts from the database
@@ -1830,36 +1761,32 @@ func (d *Database) GetContactAddressesByID(userID int, contactID int) (*models.C
 	return contact, nil
 }
 
-func (d *Database) CreateContactAddress(userID int, body models.Address) (int, error) {
-	logger.Debug("[DATABASE] Begin CreateContactURL(userID:%d, body:--)", userID)
+// UpdateContactDate specifically updates formal dates (birthday / anniversary) on a contact
+func (d *Database) UpdateContactNotes(userID int, body models.NotesJSONPut) error {
+	logger.Debug("[DATABASE] Begin UpdateContactNotes(userID:%d, body:--)", userID)
 
 	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of Address:")
+		logger.Trace("[DATABSE] Dump of NotesJSONPut:")
 		utils.Dump(body)
 	}
 
-	err := d.db.QueryRow(
-		"INSERT INTO addresses (contact_id, street, extended_street, city, state, postal_code, country, type, is_primary) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
-		body.ContactID, body.Street, body.ExtendedStreet, body.City, body.State, body.PostalCode, body.Country, pq.Array(body.Type), body.IsPrimary,
-	).Scan(&body.ID)
+	// Build and execute query
+	query := `
+		UPDATE contacts
+		SET notes = $1
+		WHERE id = $2 AND user_id = $3
+	`
+
+	_, err := d.db.Exec(query, body.Notes, body.ContactID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Error("No addresses inserted: %v", err)
-			return 0, fmt.Errorf("unauthorized")
-		}
-		logger.Error("Error creating address: %v", err)
-		return 0, fmt.Errorf("failed to create address: %w", err)
+		return err
 	}
 
-	// Sync token update
-	newSyncToken, err := d.IncrementAndGetNewSyncToken(userID)
-	if err != nil {
-		return body.ID, fmt.Errorf("failed to increment sync token: %w", err)
+	// Increment sync token so CardDAV clients pull the change
+	newToken, err := d.IncrementAndGetNewSyncToken(userID)
+	if err == nil {
+		_ = d.bumpContactSyncToken(body.ContactID, newToken)
 	}
 
-	if err := d.bumpContactSyncToken(body.ContactID, newSyncToken); err != nil {
-		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
-	}
-
-	return body.ID, nil
+	return nil
 }

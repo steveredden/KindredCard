@@ -161,7 +161,9 @@ func (s *SyncService) GetPotentialMatches() ([]Match, error) {
 func (s *SyncService) GetAllLinkedContacts() ([]Match, error) {
 	logger.Debug("[IMMICH] Getting linked contacts")
 
-	contacts, err := s.db.GetContactsByURL(s.userID, s.client.BaseURL, "immich")
+	immichTypeID, _ := s.db.GetLabelID("immich", "url")
+
+	contacts, err := s.db.GetContactsByURL(s.userID, s.client.BaseURL, immichTypeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contacts: %w", err)
 	}

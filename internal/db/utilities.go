@@ -10,6 +10,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/steveredden/KindredCard/internal/logger"
@@ -35,13 +36,20 @@ func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error
 	contacts := []models.Contact{}
 	for rows.Next() {
 		var c models.Contact
+		var avatar_base64 sql.NullString
+		var avatar_mime_type sql.NullString
+		var family_name sql.NullString
 		err := rows.Scan(
-			&c.ID, &c.FullName, &c.GivenName, &c.FamilyName, &c.AvatarBase64, &c.AvatarMimeType,
+			&c.ID, &c.FullName, &c.GivenName, &family_name, &avatar_base64, &avatar_mime_type,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contacts: %v", err)
 			return nil, fmt.Errorf("failed to scan contacts: %w", err)
 		}
+
+		c.FamilyName = utils.ScanNullString(family_name)
+		c.AvatarBase64 = utils.ScanNullString(avatar_base64)
+		c.AvatarMimeType = utils.ScanNullString(avatar_mime_type)
 
 		contacts = append(contacts, c)
 	}
@@ -74,17 +82,24 @@ func (d *Database) GetContactsWithPhones(userID int) ([]models.Contact, error) {
 	for rows.Next() {
 		var c models.Contact
 		var p models.Phone // Temporary struct for the phone row
+		var avatarBase64 sql.NullString
+		var avatarMimeType sql.NullString
+		var family_name sql.NullString
 
 		// Scan both Contact and the specific Phone row
 		err := rows.Scan(
-			&c.ID, &c.FullName, &c.GivenName, &c.FamilyName,
+			&c.ID, &c.FullName, &c.GivenName, &family_name,
 			&p.ID, &p.Phone,
-			&c.AvatarBase64, &c.AvatarMimeType,
+			&avatarBase64, &avatarMimeType,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contact/phone: %v", err)
 			continue
 		}
+
+		c.AvatarBase64 = utils.ScanNullString(avatarBase64)
+		c.AvatarMimeType = utils.ScanNullString(avatarMimeType)
+		c.FamilyName = utils.ScanNullString(family_name)
 
 		// Attach the single phone from this row to the contact
 		c.Phones = []models.Phone{p}
@@ -340,6 +355,8 @@ func (d *Database) buildAnniversarySuggestion(from *models.Contact, to *models.C
 func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion, error) {
 	var suggestions []models.AddressSuggestion
 
+	homeLabelID, _ := d.GetLabelID("home", "address")
+
 	// 1. Fetch all spouse relationships for this user
 	rows, err := d.db.Query(`
 		SELECT r.contact_id, c1.full_name, r.related_contact_id, c2.full_name
@@ -369,7 +386,7 @@ func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion
 		sourceAddresses, _ := d.getAddresses(contactID)
 		if len(sourceAddresses) > 0 {
 			for _, addr := range sourceAddresses {
-				if utils.HasType(addr.Type, "home") {
+				if addr.Type == homeLabelID {
 					sourceContact.Addresses = append(sourceContact.Addresses, addr)
 					break
 				}
@@ -385,7 +402,7 @@ func (d *Database) GetAddressSuggestions(userID int) ([]models.AddressSuggestion
 		targetAddresses, _ := d.getAddresses(relatedID)
 		if len(targetAddresses) > 0 {
 			for _, addr := range targetAddresses {
-				if utils.HasType(addr.Type, "home") {
+				if addr.Type == homeLabelID {
 					targetContact.Addresses = append(targetContact.Addresses, addr)
 					break
 				}

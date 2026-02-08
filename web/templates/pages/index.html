@@ -85,7 +85,8 @@
         data-contact-id="{{.ID}}"
         data-contact-name="{{.FullName}}"
         data-contact-lastname="{{if .FamilyName}}{{.FamilyName}}{{else}}{{.FullName}}{{end}}"
-        data-contact-nickname="{{.Nickname}}"
+        data-contact-nickname="{{if .Nickname}}{{.Nickname}}{{end}}"
+        data-contact-maiden="{{if .MaidenName}}{{.MaidenName}}{{end}}"
         data-contact-email="{{if .Emails}}{{with index .Emails 0}}{{.Email}}{{end}}{{end}}"
         data-contact-phone="{{if .Phones}}{{with index .Phones 0}}{{.Phone}}{{end}}{{end}}"
         onclick="openContactCard({{.ID}})">
@@ -255,6 +256,9 @@
                         {{if .Nickname}}
                         <p class="text-4xl opacity-90 italic mb-2">"{{.Nickname}}"</p>
                         {{end}}
+                        {{if .MaidenName}}
+                        <p class="text-4xl opacity-90 italic mb-2">Maiden Name: {{.MaidenName}}</p>
+                        {{end}}
 
                         <div class="flex items-center text-2xl mb-2">
                             {{if eq .Gender "M"}}
@@ -314,7 +318,7 @@
                                 {{range .Emails}}
                                 <div>
                                     <a href="mailto:{{.Email}}" class="link link-hover text-lg">{{.Email}}</a>
-                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
@@ -334,7 +338,7 @@
                                 {{range .Phones}}
                                 <div>
                                     <a href="tel:{{.Phone}}" class="link link-hover text-lg">{{.Phone}}</a>
-                                    <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
@@ -398,7 +402,7 @@
                                         {{if .City}}{{.City}}{{end}}{{if and .City .State}}, {{end}}{{if .State}}{{.State}}{{end}} {{if .PostalCode}}{{.PostalCode}}{{end}}
                                     </div>
                                     {{if .Country}}<div>{{.Country}}</div>{{end}}
-                                    <span class="badge badge-sm mt-1">{{index .Type 0}}</span>
+                                    <span class="badge badge-sm mt-1">{{.TypeLabel}}</span>
                                     {{if .IsPrimary}}<span class="badge badge-sm badge-primary ml-1">Primary</span>{{end}}
                                 </div>
                                 {{end}}
@@ -521,7 +525,7 @@
                             {{range .URLs}}
                             <div>
                                 <a href="{{.URL}}" target="_blank" class="link link-primary text-lg">{{.URL}}</a>
-                                <span class="badge badge-sm ml-2">{{index .Type 0}}</span>
+                                <span class="badge badge-sm ml-2">{{.TypeLabel}}</span>
                             </div>
                             {{end}}
                         </div>

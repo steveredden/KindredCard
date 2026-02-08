@@ -266,7 +266,9 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	card := converter.ContactToVCard(contact, false)
+	labelMap, _ := s.db.GetLabelMap()
+
+	card := converter.ContactToVCard(contact, labelMap, false)
 
 	var buf bytes.Buffer
 	encoder := vcard.NewEncoder(&buf)
@@ -308,8 +310,21 @@ func (s *Server) handlePut(w http.ResponseWriter, r *http.Request) {
 
 	allContacts, _ := s.db.GetAllContactsAbbrv(s.userID, false)
 	allRelTypes, _ := s.db.GetRelationshipTypes()
+	revMap, _ := s.db.GetLabelReverseMap()
 
-	contact, _ := converter.VCardToContact(card, allContacts, allRelTypes)
+	missingLabels := converter.FindNewLabels(card, revMap)
+	for category, names := range missingLabels {
+		for _, name := range names {
+			newID, err := s.db.NewLabel(name, category)
+			if err != nil {
+				continue
+			}
+			// Update the map locally so the converter can find it immediately
+			revMap[category+":"+name] = newID
+		}
+	}
+
+	contact, _ := converter.VCardToContact(card, allContacts, allRelTypes, revMap)
 	uid := extractUIDFromPath(r.URL.Path)
 	contact.UID = uid
 
@@ -577,6 +592,8 @@ func (s *Server) respondAddressbookMultiget(w http.ResponseWriter, req AddressBo
 	collectionPath := fmt.Sprintf("/carddav/%s/contacts/", s.userPrincipal)
 	wantsAddressData := req.Prop.AddressData != nil
 
+	labelMap, _ := s.db.GetLabelMap()
+
 	responses := []Response{}
 
 	// Extract UIDs from parsed XML hrefs (not by string parsing!)
@@ -594,7 +611,7 @@ func (s *Server) respondAddressbookMultiget(w http.ResponseWriter, req AddressBo
 
 		// Include vCard data if requested (determined by XML property presence!)
 		if wantsAddressData {
-			card := converter.ContactToVCard(contact, isAppleClient)
+			card := converter.ContactToVCard(contact, labelMap, isAppleClient)
 			var buf bytes.Buffer
 			encoder := vcard.NewEncoder(&buf)
 			encoder.Encode(card)
@@ -630,6 +647,8 @@ func (s *Server) respondAddressbookQuery(w http.ResponseWriter, req AddressBookQ
 	// For now, return all contacts (filtering can be added based on req.Filter)
 	contacts, _ := s.db.GetAllContacts(s.userID, false)
 
+	labelMap, _ := s.db.GetLabelMap()
+
 	collectionPath := fmt.Sprintf("/carddav/%s/contacts/", s.userPrincipal)
 	wantsAddressData := req.Prop.AddressData != nil
 
@@ -641,7 +660,7 @@ func (s *Server) respondAddressbookQuery(w http.ResponseWriter, req AddressBookQ
 		}
 
 		if wantsAddressData {
-			card := converter.ContactToVCard(contact, false)
+			card := converter.ContactToVCard(contact, labelMap, false)
 			var buf bytes.Buffer
 			encoder := vcard.NewEncoder(&buf)
 			encoder.Encode(card)

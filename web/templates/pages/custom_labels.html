@@ -1,0 +1,112 @@
+{{define "content"}}
+
+<div class="max-w-6xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black tracking-tight text-primary">Label Management</h1>
+            <p class="opacity-50 text-sm">KindredCard Custom Labels</p>
+        </div>
+        <button onclick="openAddLabelModal()" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Add New Label
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <ul class="menu bg-base-200 w-full rounded-box p-2 h-fit">
+            <li class="menu-title">Categories</li>
+            <li><a href="?cat=all" class="{{if eq .CurrentFilter "all"}}active{{end}}">All Labels</a></li>
+            <li><a href="?cat=phone" class="{{if eq .CurrentFilter "phone"}}active{{end}}">Phone Numbers</a></li>
+            <li><a href="?cat=email" class="{{if eq .CurrentFilter "email"}}active{{end}}">Email Addresses</a></li>
+            <li><a href="?cat=address" class="{{if eq .CurrentFilter "address"}}active{{end}}">Physical Addresses</a></li>
+            <li><a href="?cat=url" class="{{if eq .CurrentFilter "url"}}active{{end}}">URLs / Links</a></li>
+        </ul>
+
+        <div class="md:col-span-3 card bg-base-100 shadow-xl overflow-hidden">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th class="text-center">Usage</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Labels}}
+                    <tr>
+                        <td><span class="font-medium text-md">{{.Name}}</span></td>
+                        <td><div class="badge badge-ghost">{{.Category}}</div></td>
+                        <td>
+                            {{if .IsSystem}}
+                            <div class="badge badge-info gap-2">System</div>
+                            {{else}}
+                            <div class="badge badge-outline">Custom</div>
+                            {{end}}
+                        </td>
+                        <td class="text-center">
+                            <span class="font-mono">{{.UsageCount}}</span>
+                        </td>
+                        <td class="text-right">
+                            {{if not .IsSystem}}
+                                {{if eq .UsageCount 0}}
+                                <button class="btn btn-error btn-sm btn-outline" onclick="deleteLabel({{.ID}})">
+                                    Delete
+                                </button>
+                                {{else}}
+                                <div class="tooltip tooltip-left" data-tip="Cannot deleted: used by {{.UsageCount}}">
+                                    <button class="btn btn-sm btn-disabled opacity-50">Delete</button>
+                                </div>
+                                {{end}}
+                            {{else}}
+                                <span class="text-xs italic opacity-50">Locked</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<dialog id="add_label_modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Create New Label</h3>
+        <form id="newLabelForm" onsubmit="saveLabel(event)">
+            <div class="form-control mb-4">
+                <label class="label">Label Name</label>
+                <input type="text" name="name" placeholder="e.g. Personal Mobile" class="input input-bordered" required>
+            </div>
+            <div class="form-control mb-6">
+                <label class="label">Category</label>
+                <select name="category" class="select select-bordered" required>
+                    <option value="phone">Phone Number</option>
+                    <option value="email">Email Address</option>
+                    <option value="address">Physical Address</option>
+                    <option value="url">URL / Social Link</option>
+                </select>
+            </div>
+            <div class="modal-action">
+                <button type="button" onclick="add_label_modal.close()" class="btn">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Label</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<div class="text-center pt-8">
+    <div class="flex justify-center gap-4">
+        <a href="/" class="btn btn-primary px-8">Return Home</a>
+        <a href="/settings" class="btn btn-ghost">Settings</a>
+    </div>
+</div>
+
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/custom-labels.js"></script>
+{{end}}
