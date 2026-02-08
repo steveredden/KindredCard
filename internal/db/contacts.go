@@ -54,14 +54,18 @@ func (d *Database) CreateContact(userID int, contact *models.Contact) error {
 
 	query := `
 		INSERT INTO contacts (uid, full_name, given_name, family_name, middle_name, prefix, suffix, 
-			nickname, gender, birthday, birthday_month, birthday_day, anniversary, anniversary_month,
-			anniversary_day, notes, avatar_base64, avatar_mime_type, exclude_from_sync, etag, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day,
+			anniversary, anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
+			exclude_from_sync, etag, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
 		RETURNING id, created_at, updated_at`
 
 	err = tx.QueryRow(query,
 		contact.UID, contact.FullName, contact.GivenName, contact.FamilyName,
 		contact.MiddleName, contact.Prefix, contact.Suffix, contact.Nickname,
+		contact.MaidenName, contact.PhoneticFirstName, contact.PronunciationFirstName,
+		contact.PhoneticMiddleName, contact.PhoneticLastName, contact.PronunciationLastName,
 		contact.Gender, contact.Birthday, contact.BirthdayMonth, contact.BirthdayDay,
 		contact.Anniversary, contact.AnniversaryMonth, contact.AnniversaryDay,
 		contact.Notes, contact.AvatarBase64, contact.AvatarMimeType,
@@ -197,6 +201,11 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 	var middle_name sql.NullString
 	var nickname sql.NullString
 	var maiden_name sql.NullString
+	var phonetic_first_name sql.NullString
+	var pronunciation_first_name sql.NullString
+	var phonetic_middle_name sql.NullString
+	var phonetic_last_name sql.NullString
+	var pronunciation_last_name sql.NullString
 	var notes sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
@@ -211,16 +220,18 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 
 	query := `
 		SELECT id, uid, full_name, given_name, family_name, middle_name, prefix, suffix,
-			nickname, maiden_name, gender, birthday, birthday_month, birthday_day, anniversary, 
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day, anniversary, 
 			anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
 			exclude_from_sync, last_modified_token, created_at, updated_at, etag
 		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
 		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName, &family_name,
-		&middle_name, &prefix, &suffix, &nickname, &maiden_name, &gender, &birthday, &birthday_month,
-		&birthday_day, &anniversary, &anniversary_month, &anniversary_day, &notes,
-		&avatarBase64, &avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
+		&middle_name, &prefix, &suffix, &nickname, &maiden_name, &phonetic_first_name,
+		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name, &pronunciation_last_name,
+		&gender, &birthday, &birthday_month, &birthday_day, &anniversary, &anniversary_month,
+		&anniversary_day, &notes, &avatarBase64, &avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
 		&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,
 	)
 
@@ -240,6 +251,11 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 	contact.Notes = utils.ScanNullString(notes)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
+	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
+	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
+	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
+	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
+	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	// Load int conversions
 	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
@@ -277,14 +293,22 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 	var nickname sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
+	var phonetic_first_name sql.NullString
+	var pronunciation_first_name sql.NullString
+	var phonetic_middle_name sql.NullString
+	var phonetic_last_name sql.NullString
+	var pronunciation_last_name sql.NullString
 
 	query := `
-		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname
+		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname,
+		  phonetic_first_name, pronunciation_first_name, phonetic_middle_name, phonetic_last_name, pronunciation_last_name
 		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
 		&contact.ID, &contact.UID, &contact.GivenName, &family_name,
-		&middle_name, &prefix, &suffix, &nickname,
+		&middle_name, &prefix, &suffix, &nickname, &phonetic_first_name,
+		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name,
+		&pronunciation_last_name,
 	)
 
 	if err != nil {
@@ -298,6 +322,11 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 	contact.Nickname = utils.ScanNullString(nickname)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
+	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
+	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
+	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
+	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
+	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	contact.UserID = userID
 
@@ -388,6 +417,11 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 	var notes sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
+	var phonetic_first_name sql.NullString
+	var pronunciation_first_name sql.NullString
+	var phonetic_middle_name sql.NullString
+	var phonetic_last_name sql.NullString
+	var pronunciation_last_name sql.NullString
 
 	var anniversary_day sql.NullInt64
 	var anniversary_month sql.NullInt64
@@ -399,8 +433,9 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 
 	queryBuilder.WriteString(`
 		SELECT id, uid, full_name, given_name, family_name, middle_name, prefix, suffix,
-			nickname, maiden_name, gender, birthday, birthday_month, birthday_day, anniversary,
-			anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
+			nickname, maiden_name, phonetic_first_name, pronunciation_first_name, phonetic_middle_name,
+			phonetic_last_name, pronunciation_last_name, gender, birthday, birthday_month, birthday_day,
+			anniversary, anniversary_month, anniversary_day, notes, avatar_base64, avatar_mime_type,
 			exclude_from_sync, last_modified_token, created_at, updated_at, etag
 		FROM contacts WHERE uid = $1 AND deleted_at IS NULL AND user_id = $2
 	`)
@@ -417,8 +452,9 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 
 	err := d.db.QueryRow(query, params...).Scan(
 		&contact.ID, &contact.UID, &contact.FullName, &contact.GivenName,
-		&family_name, &middle_name, &prefix, &suffix, &nickname, &maiden_name, &gender,
-		&birthday, &birthday_month, &birthday_day, &anniversary,
+		&family_name, &middle_name, &prefix, &suffix, &nickname, &maiden_name, &phonetic_first_name,
+		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name, &pronunciation_last_name,
+		&gender, &birthday, &birthday_month, &birthday_day, &anniversary,
 		&anniversary_month, &anniversary_day, &notes, &avatarBase64,
 		&avatarMimeType, &contact.ExcludeFromSync, &contact.LastModifiedToken,
 		&contact.CreatedAt, &contact.UpdatedAt, &contact.ETag,
@@ -442,6 +478,11 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 	contact.Notes = utils.ScanNullString(notes)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
+	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
+	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
+	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
+	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
+	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	// Load int conversions
 	contact.AnniversaryDay = utils.ScanNullInt(anniversary_day)
@@ -494,16 +535,20 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 	query := `
 		UPDATE contacts SET
 			full_name = $1, given_name = $2, family_name = $3, middle_name = $4, prefix = $5,
-			suffix = $6, nickname = $7, maiden_name = $8, gender = $9, birthday = $10, birthday_month = $11,
-			birthday_day = $12, anniversary = $13, anniversary_month = $14, anniversary_day = $15, 
-			notes = $16, exclude_from_sync = $17, etag = $18
-		WHERE id = $19
+			suffix = $6, nickname = $7, maiden_name = $8, phonetic_first_name = $9,
+			pronunciation_first_name = $10, phonetic_middle_name = $11, phonetic_last_name = $12,
+			pronunciation_last_name = $13, gender = $14, birthday = $15, birthday_month = $16,
+			birthday_day = $17, anniversary = $18, anniversary_month = $19, anniversary_day = $20, 
+			notes = $21, exclude_from_sync = $22, etag = $23
+		WHERE id = $24
 	`
 
 	_, err = tx.Exec(query,
 		contact.FullName, contact.GivenName, contact.FamilyName, contact.MiddleName, contact.Prefix,
-		contact.Suffix, contact.Nickname, contact.MaidenName, contact.Gender, contact.Birthday,
-		contact.BirthdayMonth, contact.BirthdayDay, contact.Anniversary, contact.AnniversaryMonth,
+		contact.Suffix, contact.Nickname, contact.MaidenName, contact.PhoneticFirstName,
+		contact.PronunciationFirstName, contact.PhoneticMiddleName, contact.PhoneticLastName,
+		contact.PronunciationLastName, contact.Gender, contact.Birthday, contact.BirthdayMonth,
+		contact.BirthdayDay, contact.Anniversary, contact.AnniversaryMonth,
 		contact.AnniversaryDay, contact.Notes, contact.ExcludeFromSync, contact.ETag,
 		contact.ID,
 	)
@@ -912,6 +957,11 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 		{patch.Suffix, "suffix"},
 		{patch.Nickname, "nickname"},
 		{patch.MaidenName, "maiden_name"},
+		{patch.PhoneticFirstName, "phonetic_first_name"},
+		{patch.PronunciationFirstName, "pronunciation_first_name"},
+		{patch.PhoneticMiddleName, "phonetic_middle_name"},
+		{patch.PhoneticLastName, "phonetic_last_name"},
+		{patch.PronunciationLastName, "pronunciation_last_name"},
 		{patch.Gender, "gender"},
 		{patch.Notes, "notes"},
 		{patch.AvatarBase64, "avatar_base64"},

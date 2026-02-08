@@ -2938,9 +2938,29 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Phone"
                     }
                 },
+                "phonetic_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_middle_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
                 "prefix": {
                     "type": "string",
                     "example": "Dr."
+                },
+                "pronunciation_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "pronunciation_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
                 },
                 "relationships": {
                     "type": "array",
@@ -3104,7 +3124,22 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Phone"
                     }
                 },
+                "phonetic_first_name": {
+                    "type": "string"
+                },
+                "phonetic_last_name": {
+                    "type": "string"
+                },
+                "phonetic_middle_name": {
+                    "type": "string"
+                },
                 "prefix": {
+                    "type": "string"
+                },
+                "pronunciation_first_name": {
+                    "type": "string"
+                },
+                "pronunciation_last_name": {
                     "type": "string"
                 },
                 "relationships": {
@@ -3176,9 +3211,29 @@ const docTemplate = `{
                     "type": "string",
                     "example": "VIP"
                 },
+                "phonetic_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "phonetic_middle_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
                 "prefix": {
                     "type": "string",
                     "example": "Dr."
+                },
+                "pronunciation_first_name": {
+                    "type": "string",
+                    "example": "Par-cor"
+                },
+                "pronunciation_last_name": {
+                    "type": "string",
+                    "example": "Par-cor"
                 },
                 "suffix": {
                     "type": "string",
@@ -3297,6 +3352,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "phonetic_name": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 }
@@ -3317,6 +3375,9 @@ const docTemplate = `{
                     "example": 1
                 },
                 "name": {
+                    "type": "string"
+                },
+                "phonetic_name": {
                     "type": "string"
                 },
                 "title": {

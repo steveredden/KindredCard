@@ -17,6 +17,11 @@
         data-original-gender="{{.Contact.Gender}}"
         data-original-nickname="{{.Contact.Nickname}}"
         data-original-maiden_name="{{.Contact.MaidenName}}"
+        data-original-phonetic_first_name="{{.Contact.PhoneticFirstName}}"
+        data-original-pronunciation_first_name="{{.Contact.PronunciationFirstName}}"
+        data-original-phonetic_middle_name="{{.Contact.PhoneticMiddleName}}"
+        data-original-phonetic_last_name="{{.Contact.PhoneticLastName}}"
+        data-original-pronunciation_last_name="{{.Contact.PronunciationLastName}}"
     >
         <!-- Header Section -->
         <div class="card bg-gradient-to-br from-primary to-secondary text-primary-content shadow-2xl">
@@ -151,6 +156,44 @@
                             <label class="label"><span class="label-text text-primary-content">Maiden Name</span></label>
                             <input type="text" name="maiden_name" id="maiden_name" value="{{.Contact.MaidenName}}" class="input input-bordered bg-base-100 text-base-content w-full">
                         </div>
+
+                        <!-- Phonetics -->
+                        <div class="md:col-span-4 mt-2 collapse collapse-arrow bg-white/10 mb-4 border border-white/20">
+                            <input type="checkbox" /> 
+                            <div class="collapse-title text-sm font-medium flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                </svg>
+                                Phonetics & Pronunciation
+                            </div>
+                            <div class="collapse-content overflow-visible"> 
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs text-primary-content/80">First (Phonetic)</span></label>
+                                        <input type="text" name="phonetic_first_name" value="{{.Contact.PhoneticFirstName}}" placeholder="e.g. Row-nan" class="input input-sm input-bordered bg-base-100 text-base-content">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs text-primary-content/80">First (Pronunciation)</span></label>
+                                        <input type="text" name="pronunciation_first_name" value="{{.Contact.PronunciationFirstName}}" placeholder="Audio hint" class="input input-sm input-bordered bg-base-100 text-base-content">
+                                    </div>
+                                    
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs text-primary-content/80">Middle (Phonetic)</span></label>
+                                        <input type="text" name="phonetic_middle_name" value="{{.Contact.PhoneticMiddleName}}" class="input input-sm input-bordered bg-base-100 text-base-content">
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs text-primary-content/80">Last (Phonetic)</span></label>
+                                        <input type="text" name="phonetic_last_name" value="{{.Contact.PhoneticLastName}}" class="input input-sm input-bordered bg-base-100 text-base-content">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs text-primary-content/80">Last (Pronunciation)</span></label>
+                                        <input type="text" name="pronunciation_last_name" value="{{.Contact.PronunciationLastName}}" class="input input-sm input-bordered bg-base-100 text-base-content">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -409,26 +452,31 @@
 
                     <div id="orgsList" class="space-y-4" oninput="markOrganizationsChanged()" onchange="markOrganizationsChanged()">
                         {{range $index, $org := .Contact.Organizations}}
-                        <div class="card bg-base-200 shadow-sm p-4 organization-row" 
+                        <div class="card bg-base-200 shadow-sm p-4 organization-row mb-4" 
                             data-id="{{$org.ID}}"
                             data-original-companyname="{{$org.Name}}"
+                            data-original-phoneticname="{{$org.PhoneticName}}"
                             data-original-jobtitle="{{$org.Title}}"
                             data-original-department="{{$org.Department}}">
                             
-                            <div class="flex gap-2 items-center mb-3">
-
-                                <input type="text" name="company_name" value="{{$org.Name}}" placeholder="Company Name" class="input input-bordered input-sm w-[47%]">
-                                    
-                                <input type="text" name="job_title" value="{{$org.Title}}" placeholder="Job Title" class="input input-bordered input-sm w-[47%]">
-                                    
-                                <button type="button" class="btn btn-ghost btn-sm btn-square ml-auto" onclick="removeOrganizationRow(this)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
+                                <div class="md:col-span-5">
+                                    <input type="text" name="company_name" value="{{$org.Name}}" placeholder="Company Name" class="input input-bordered input-sm w-full">
+                                </div>
+                                <div class="md:col-span-6">
+                                    <input type="text" name="phonetic_name" value="{{$org.PhoneticName}}" placeholder="Phonetic Company Name (e.g. 'Oh-puhl')" class="input input-bordered input-sm w-full">
+                                </div>
+                                <div class="md:col-span-1 flex justify-end">
+                                    <button type="button" class="btn btn-ghost btn-sm btn-square ml-1" onclick="removeOrganizationRow(this)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="w-full">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <input type="text" name="job_title" value="{{$org.Title}}" placeholder="Job Title" class="input input-bordered input-sm w-full">
                                 <input type="text" name="department" value="{{$org.Department}}" placeholder="Department" class="input input-bordered input-sm w-full">
                             </div>
                         </div>

@@ -18,15 +18,14 @@
     window.evaluateHeaderChange = function() {
         const form = document.getElementById('contactForm');
         const btn = document.getElementById('saveButton');
-        const fields = ['prefix', 'given_name', 'middle_name', 'family_name', 'suffix', 'gender', 'nickname', 'maiden_name'];
+
+        const inputs = form.querySelectorAll('input[name]:not([type="file"]), select[name]');
         
-        const isDirty = fields.some(field => {
-            const input = form.querySelector(`[name="${field}"]`);
-            if (!input) return false;
-            
-            const current = input.value.trim();
-            const original = (form.getAttribute(`data-original-${field}`) || "").trim();
-            return current !== original;
+        let isDirty = false;
+        inputs.forEach(input => {
+            const val = input.value.trim();
+            const original = (form.getAttribute(`data-original-${input.name}`) || "").trim();
+            if (val !== original) isDirty = true;
         });
 
         btn.disabled = !isDirty;
@@ -509,19 +508,24 @@
         div.className = 'card bg-base-200 shadow-md p-4 organization-row';
 
         div.innerHTML = `
-            <div class="flex gap-2 items-center mb-3">
-                <input type="text" name="company_name" placeholder="Company Name" class="input input-bordered input-sm w-[47%]">
-                    
-                <input type="text" name="job_title" placeholder="Job Title" class="input input-bordered input-sm w-[47%]">
-                    
-                <button type="button" class="btn btn-ghost btn-sm btn-square ml-auto" onclick="removeOrganizationRow(this)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
+                <div class="md:col-span-5">
+                    <input type="text" name="company_name" placeholder="Company Name" class="input input-bordered input-sm w-full">
+                </div>
+                <div class="md:col-span-6">
+                    <input type="text" name="phonetic_name" placeholder="Phonetic Company Name (e.g. 'Oh-puhl')" class="input input-bordered input-sm w-full">
+                </div>
+                <div class="md:col-span-1 flex justify-end">
+                    <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeOrganizationRow(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <div class="w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input type="text" name="job_title" placeholder="Job Title" class="input input-bordered input-sm w-full">
                 <input type="text" name="department" placeholder="Department" class="input input-bordered input-sm w-full">
             </div>
         `;
@@ -564,11 +568,13 @@
             const currentCompanyName = row.querySelector('[name="company_name"]').value;
             const currentJobTitle = row.querySelector('[name="job_title"]').value;
             const currentDepartment = row.querySelector('[name="department"]').value;
+            const currentPhoneticName = row.querySelector('[name="phonetic_name"]').value;
 
             const data = {
                 id: id ? parseInt(id) : null,
                 contact_id: parseInt(contactId),
                 name: currentCompanyName,
+                phonetic_name: currentPhoneticName,
                 title: currentJobTitle,
                 department: currentDepartment,
             };
@@ -578,7 +584,8 @@
                 const isDirty =
                     currentCompanyName !== row.getAttribute('data-original-companyname') ||
                     currentJobTitle !== row.getAttribute('data-original-jobtitle') ||
-                    currentDepartment !== row.getAttribute('data-original-department')
+                    currentDepartment !== row.getAttribute('data-original-department') ||
+                    currentPhoneticName !== row.getAttribute('data-original-phoneticname')
 
                 if (isDirty) {
                     requests.push(fetch(`/api/v1/organizations/${id}`, {

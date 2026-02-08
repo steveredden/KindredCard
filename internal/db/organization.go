@@ -19,8 +19,8 @@ func (d *Database) CreateContactOrganization(userID int, body models.Organizatio
 	}
 
 	err := d.db.QueryRow(
-		"INSERT INTO organizations (contact_id, name, title, department) VALUES ($1, $2, $3, $4) RETURNING id",
-		body.ContactID, body.Name, body.Title, body.Department,
+		"INSERT INTO organizations (contact_id, name, title, department, phonetic_name) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		body.ContactID, body.Name, body.Title, body.Department, body.PhoneticName,
 	).Scan(&body.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -72,6 +72,12 @@ func (d *Database) UpdateContactOrganization(userID int, body models.Organizatio
 	if body.Department != nil {
 		columns = append(columns, fmt.Sprintf("department = $%d", argIdx))
 		args = append(args, *body.Department)
+		argIdx++
+	}
+
+	if body.PhoneticName != nil {
+		columns = append(columns, fmt.Sprintf("phonetic_name = $%d", argIdx))
+		args = append(args, *body.PhoneticName)
 		argIdx++
 	}
 

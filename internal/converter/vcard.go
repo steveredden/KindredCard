@@ -28,10 +28,17 @@ const (
 	AppleOmitYearValueI = 1604
 	AppleOmitYearPrefix = "1604-"
 
-	XLabelField         = "X-ABLABEL"
-	XDateField          = "X-ABDATE"
-	XRelatedNamesField  = "X-ABRELATEDNAMES"
-	XSocialProfileField = "X-SOCIALPROFILE"
+	XLabelField              = "X-ABLABEL"
+	XDateField               = "X-ABDATE"
+	XRelatedNamesField       = "X-ABRELATEDNAMES"
+	XSocialProfileField      = "X-SOCIALPROFILE"
+	XMaidenNameField         = "X-MAIDENNAME"
+	XPhoneticFirstField      = "X-PHONETIC-FIRST-NAME"
+	XPronunciationFirstField = "X-PRONUNCIATION-FIRST-NAME"
+	XPhoneticLastField       = "X-PHONETIC-LAST-NAME"
+	XPronunciationLastField  = "X-PRONUNCIATION-LAST-NAME"
+	XPhoneticMiddleField     = "X-PHONETIC-MIDDLE-NAME"
+	XPhoneticOrgField        = "X-PHONETIC-ORG"
 )
 
 // ContactToVCard converts a Contact model to a vCard
@@ -66,6 +73,28 @@ func ContactToVCard(contact *models.Contact, labelMap map[int]models.ContactLabe
 	// Nickname
 	if contact.Nickname != "" {
 		card.SetValue(vcard.FieldNickname, contact.Nickname)
+	}
+
+	// Maiden Name
+	if contact.MaidenName != "" {
+		card.Add(XMaidenNameField, &vcard.Field{Value: contact.MaidenName})
+	}
+
+	// Phonetics & Pronunciation
+	if contact.PhoneticFirstName != "" {
+		card.Add(XPhoneticFirstField, &vcard.Field{Value: contact.PhoneticFirstName})
+	}
+	if contact.PronunciationFirstName != "" {
+		card.Add(XPronunciationFirstField, &vcard.Field{Value: contact.PronunciationFirstName})
+	}
+	if contact.PhoneticMiddleName != "" {
+		card.Add(XPhoneticMiddleField, &vcard.Field{Value: contact.PhoneticMiddleName})
+	}
+	if contact.PhoneticLastName != "" {
+		card.Add(XPhoneticLastField, &vcard.Field{Value: contact.PhoneticLastName})
+	}
+	if contact.PronunciationLastName != "" {
+		card.Add(XPronunciationLastField, &vcard.Field{Value: contact.PronunciationLastName})
 	}
 
 	// Gender
@@ -291,6 +320,10 @@ func ContactToVCard(contact *models.Contact, labelMap map[int]models.ContactLabe
 		if org.Title != "" {
 			card.SetValue(vcard.FieldTitle, org.Title)
 		}
+
+		if org.PhoneticName != "" {
+			card.Add(XPhoneticOrgField, &vcard.Field{Value: org.PhoneticName})
+		}
 	}
 
 	// URLs
@@ -424,6 +457,28 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	// Nickname
 	if nick := card.Get(vcard.FieldNickname); nick != nil {
 		contact.Nickname = nick.Value
+	}
+
+	// Maiden Name
+	if maiden := card.Get(XMaidenNameField); maiden != nil {
+		contact.MaidenName = maiden.Value
+	}
+
+	// Phonetics & Pronunciation
+	if phoneticFirst := card.Get(XPhoneticFirstField); phoneticFirst != nil {
+		contact.PhoneticFirstName = phoneticFirst.Value
+	}
+	if pronuncFirst := card.Get(XPhoneticFirstField); pronuncFirst != nil {
+		contact.PhoneticFirstName = pronuncFirst.Value
+	}
+	if phoneticMiddle := card.Get(XPhoneticFirstField); phoneticMiddle != nil {
+		contact.PhoneticFirstName = phoneticMiddle.Value
+	}
+	if phoneticLast := card.Get(XPhoneticFirstField); phoneticLast != nil {
+		contact.PhoneticFirstName = phoneticLast.Value
+	}
+	if pronuncLast := card.Get(XPhoneticFirstField); pronuncLast != nil {
+		contact.PhoneticFirstName = pronuncLast.Value
 	}
 
 	// Gender
@@ -632,6 +687,10 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 	if org := card.Get(vcard.FieldOrganization); org != nil {
 		organization := models.Organization{
 			IsPrimary: true,
+		}
+
+		if phoneticOrg := card.Get(XPhoneticOrgField); phoneticOrg != nil {
+			organization.PhoneticName = phoneticOrg.Value
 		}
 
 		parts := strings.Split(org.Value, ";")

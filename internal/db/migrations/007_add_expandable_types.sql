@@ -17,13 +17,18 @@ INSERT INTO contact_label_types (name, category, is_system) VALUES
 ('pager', 'phone', true),
 ('voice', 'phone', true),
 ('text', 'phone', true),
+-- custom phones
+('work cell', 'phone', false),
+
 -- Email Types
 ('home', 'email', true),
 ('work', 'email', true),
 ('other', 'email', true),
+
 -- Address Types
 ('home', 'address', true),
 ('work', 'address', true),
+
 -- URL Types
 ('home', 'url', true),
 ('work', 'url', true),
@@ -60,5 +65,13 @@ ALTER TABLE emails DROP COLUMN type;
 ALTER TABLE addresses DROP COLUMN type;
 ALTER TABLE urls DROP COLUMN type;
 
--- 6. Add maiden name to contacts
-ALTER TABLE contacts ADD COLUMN IF NOT EXISTS maiden_name VARCHAR(100);
+-- 6. Add additional X fields to contacts
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS maiden_name VARCHAR(100); -- X-MAIDENNAME
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phonetic_first_name VARCHAR(100); -- X-PHONETIC-FIRST-NAME
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS pronunciation_first_name VARCHAR(100); -- X-PRONUNCIATION-FIRST-NAME
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phonetic_middle_name VARCHAR(100); -- X-PHONETIC-MIDDLE-NAME
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phonetic_last_name VARCHAR(100); -- X-PHONETIC-LAST-NAME
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS pronunciation_last_name VARCHAR(100); -- X-PRONUNCIATION-LAST-NAME
+
+-- 7. Add additional X field (X-PHONETIC-ORG) to organizations
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phonetic_name VARCHAR(100);

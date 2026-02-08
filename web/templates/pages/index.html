@@ -256,6 +256,9 @@
                         {{if .Nickname}}
                         <p class="text-4xl opacity-90 italic mb-2">"{{.Nickname}}"</p>
                         {{end}}
+                        {{if .MaidenName}}
+                        <p class="text-4xl opacity-90 italic mb-2">Maiden Name: {{.MaidenName}}</p>
+                        {{end}}
 
                         <div class="flex items-center text-2xl mb-2">
                             {{if eq .Gender "M"}}

@@ -178,8 +178,23 @@ definitions:
         items:
           $ref: '#/definitions/models.Phone'
         type: array
+      phonetic_first_name:
+        example: Par-cor
+        type: string
+      phonetic_last_name:
+        example: Par-cor
+        type: string
+      phonetic_middle_name:
+        example: Par-cor
+        type: string
       prefix:
         example: Dr.
+        type: string
+      pronunciation_first_name:
+        example: Par-cor
+        type: string
+      pronunciation_last_name:
+        example: Par-cor
         type: string
       relationships:
         items:
@@ -292,7 +307,17 @@ definitions:
         items:
           $ref: '#/definitions/models.Phone'
         type: array
+      phonetic_first_name:
+        type: string
+      phonetic_last_name:
+        type: string
+      phonetic_middle_name:
+        type: string
       prefix:
+        type: string
+      pronunciation_first_name:
+        type: string
+      pronunciation_last_name:
         type: string
       relationships:
         items:
@@ -343,8 +368,23 @@ definitions:
       notes:
         example: VIP
         type: string
+      phonetic_first_name:
+        example: Par-cor
+        type: string
+      phonetic_last_name:
+        example: Par-cor
+        type: string
+      phonetic_middle_name:
+        example: Par-cor
+        type: string
       prefix:
         example: Dr.
+        type: string
+      pronunciation_first_name:
+        example: Par-cor
+        type: string
+      pronunciation_last_name:
+        example: Par-cor
         type: string
       suffix:
         example: Jr.
@@ -426,6 +466,8 @@ definitions:
         type: boolean
       name:
         type: string
+      phonetic_name:
+        type: string
       title:
         type: string
     type: object
@@ -440,6 +482,8 @@ definitions:
         example: 1
         type: integer
       name:
+        type: string
+      phonetic_name:
         type: string
       title:
         type: string
