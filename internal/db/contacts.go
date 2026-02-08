@@ -877,9 +877,38 @@ func (d *Database) PatchContact(userID int, contactID int, patch *models.Contact
 		{patch.ExcludeFromSync, "exclude_from_sync"},
 	}
 
+	// ensure we can calculate a proper full_name based on this
+	current, err := d.GetContactByID(userID, contactID)
+	if err != nil {
+		return nil, err
+	}
+
+	if patch.Prefix != nil {
+		current.Prefix = *patch.Prefix
+	}
+	if patch.GivenName != nil {
+		current.GivenName = *patch.GivenName
+	}
+	if patch.MiddleName != nil {
+		current.MiddleName = *patch.MiddleName
+	}
+	if patch.FamilyName != nil {
+		current.FamilyName = *patch.FamilyName
+	}
+	if patch.Suffix != nil {
+		current.Suffix = *patch.Suffix
+	}
+
+	newName := current.GenerateFullName()
+
 	updates := []string{}
 	args := []interface{}{}
 	argIndex := 1
+
+	// add the computed full_name
+	updates = append(updates, fmt.Sprintf("full_name = $%d", argIndex))
+	args = append(args, newName)
+	argIndex++
 
 	// Build updates dynamically
 	for _, field := range fieldUpdates {
@@ -1194,7 +1223,7 @@ func (d *Database) getURLs(contactID int) ([]models.URL, error) {
 	var urls []models.URL
 	for rows.Next() {
 		var url models.URL
-		if err := rows.Scan(&url.ID, &url.ContactID, &url.URL, &url.Type); err != nil {
+		if err := rows.Scan(&url.ID, &url.ContactID, &url.URL, &url.Type, &url.TypeLabel); err != nil {
 			logger.Error("[DATABASE] Error scanning URLs: %v", err)
 			return nil, err
 		}
