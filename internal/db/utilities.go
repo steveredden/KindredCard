@@ -10,10 +10,12 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
+	"github.com/steveredden/KindredCard/internal/utils"
 )
 
 func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error) {
@@ -34,13 +36,20 @@ func (d *Database) GetContactsMissingGender(userID int) ([]models.Contact, error
 	contacts := []models.Contact{}
 	for rows.Next() {
 		var c models.Contact
+		var avatar_base64 sql.NullString
+		var avatar_mime_type sql.NullString
+		var family_name sql.NullString
 		err := rows.Scan(
-			&c.ID, &c.FullName, &c.GivenName, &c.FamilyName, &c.AvatarBase64, &c.AvatarMimeType,
+			&c.ID, &c.FullName, &c.GivenName, &family_name, &avatar_base64, &avatar_mime_type,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contacts: %v", err)
 			return nil, fmt.Errorf("failed to scan contacts: %w", err)
 		}
+
+		c.FamilyName = utils.ScanNullString(family_name)
+		c.AvatarBase64 = utils.ScanNullString(avatar_base64)
+		c.AvatarMimeType = utils.ScanNullString(avatar_mime_type)
 
 		contacts = append(contacts, c)
 	}
@@ -73,17 +82,24 @@ func (d *Database) GetContactsWithPhones(userID int) ([]models.Contact, error) {
 	for rows.Next() {
 		var c models.Contact
 		var p models.Phone // Temporary struct for the phone row
+		var avatarBase64 sql.NullString
+		var avatarMimeType sql.NullString
+		var family_name sql.NullString
 
 		// Scan both Contact and the specific Phone row
 		err := rows.Scan(
-			&c.ID, &c.FullName, &c.GivenName, &c.FamilyName,
+			&c.ID, &c.FullName, &c.GivenName, &family_name,
 			&p.ID, &p.Phone,
-			&c.AvatarBase64, &c.AvatarMimeType,
+			&avatarBase64, &avatarMimeType,
 		)
 		if err != nil {
 			logger.Error("[DATABASE] Error scanning contact/phone: %v", err)
 			continue
 		}
+
+		c.AvatarBase64 = utils.ScanNullString(avatarBase64)
+		c.AvatarMimeType = utils.ScanNullString(avatarMimeType)
+		c.FamilyName = utils.ScanNullString(family_name)
 
 		// Attach the single phone from this row to the contact
 		c.Phones = []models.Phone{p}
