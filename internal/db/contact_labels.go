@@ -2,12 +2,63 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/models"
 )
+
+func (d *Database) ListLabels() ([]models.ContactLabelType, error) {
+	logger.Debug("[DATABASE] Begin ListLabels()")
+
+	var labels []models.ContactLabelType
+
+	// This query aggregates counts from all 4 tables where labels are used
+	query := `
+        WITH usage_counts AS (
+            SELECT label_type_id, COUNT(*) as cnt FROM phones GROUP BY label_type_id
+            UNION ALL
+            SELECT label_type_id, COUNT(*) as cnt FROM emails GROUP BY label_type_id
+            UNION ALL
+            SELECT label_type_id, COUNT(*) as cnt FROM addresses GROUP BY label_type_id
+            UNION ALL
+            SELECT label_type_id, COUNT(*) as cnt FROM urls GROUP BY label_type_id
+        ),
+        total_counts AS (
+            SELECT label_type_id, SUM(cnt) as total FROM usage_counts GROUP BY label_type_id
+        )
+        SELECT 
+            clt.id, 
+            clt.name, 
+            clt.category, 
+            clt.is_system, 
+            COALESCE(tc.total, 0) as usage_count
+        FROM contact_label_types clt
+        LEFT JOIN total_counts tc ON clt.id = tc.label_type_id
+        ORDER BY clt.category ASC, clt.is_system DESC, clt.name ASC
+    `
+
+	rows, err := d.db.Query(query)
+	if err != nil {
+		logger.Error("[DATABASE] Error selecting labels with counts: %v", err)
+		return nil, fmt.Errorf("error executing query for ListLabels: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l models.ContactLabelType
+		err := rows.Scan(&l.ID, &l.Name, &l.Category, &l.IsSystem, &l.UsageCount)
+		if err != nil {
+			logger.Error("[DATABASE] Error scanning labels: %v", err)
+			return nil, fmt.Errorf("error scanning label row: %w", err)
+		}
+		labels = append(labels, l)
+	}
+
+	return labels, nil
+}
 
 func (d *Database) GetLabelID(name string, category string) (int, error) {
 	logger.Debug("[DATABASE] Begin GetLabelID(name:%s, category:%s)", name, category)
@@ -104,4 +155,26 @@ func (d *Database) getLabelMetadata() (
 	}
 
 	return labelMap, revMap, uiMap, nil
+}
+
+func (d *Database) DeleteContactLabel(labelID int) error {
+	var isSystem bool
+	var count int
+	err := d.db.QueryRow(`
+        SELECT is_system, 
+        (SELECT COUNT(*) FROM phones WHERE label_type_id = $1) +
+        (SELECT COUNT(*) FROM emails WHERE label_type_id = $1) +
+		(SELECT COUNT(*) FROM addresses WHERE label_type_id = $1) +
+        (SELECT COUNT(*) FROM urls WHERE label_type_id = $1) AS count
+        FROM contact_label_types WHERE id = $1`, labelID).Scan(&isSystem, &count)
+
+	if isSystem {
+		return errors.New("cannot delete system labels")
+	}
+	if count > 0 {
+		return fmt.Errorf("cannot delete label: used by %d records", count)
+	}
+
+	_, err = d.db.Exec("DELETE FROM contact_label_types WHERE id = $1", labelID)
+	return err
 }

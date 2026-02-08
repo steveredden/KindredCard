@@ -139,6 +139,9 @@ func main() {
 	web.HandleFunc("/settings/password", handler.RotatePassword).Methods("POST")
 	web.HandleFunc("/settings/delete-account", handler.DeleteAccount).Methods("DELETE")
 
+	// labels
+	web.HandleFunc("/settings/labels", handler.LabelsPage).Methods("GET")
+
 	// Utilities
 	web.HandleFunc("/utilities/gender-assignment", handler.GenderAssignmentPage).Methods("GET")
 	web.HandleFunc("/utilities/phone-formatter", handler.PhoneFormatterPage).Methods("GET")
@@ -202,6 +205,10 @@ func main() {
 
 	// Preferences / Theme
 	api.HandleFunc("/user/preferences", handler.UpdatePreferencesAPI).Methods("PUT")
+
+	// custom labels
+	api.HandleFunc("/settings/labels", handler.NewCustomLabelAPI).Methods("POST")
+	api.HandleFunc("/settings/labels/{lid:[0-9]+}", handler.DeleteCustomLabelAPI).Methods("DELETE")
 
 	// Settings: Contact Management
 	api.HandleFunc("/contacts", handler.DeleteAllContactsAPI).Methods("DELETE")

@@ -86,7 +86,7 @@ func (h *Handler) UpdateOrganizationAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get Organization ID from URL
-	organizationID, err := strconv.Atoi(mux.Vars(r)["aid"])
+	organizationID, err := strconv.Atoi(mux.Vars(r)["oid"])
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
@@ -126,7 +126,7 @@ func (h *Handler) UpdateOrganizationAPI(w http.ResponseWriter, r *http.Request) 
 //	@Failure		404				{object}	map[string]string	"Contact not found"
 //	@Failure		500				{object}	map[string]string	"Internal server error"
 //	@Security		ApiTokenAuth
-//	@Router			/api/v1/contacts/{cid}/organizations/{organizationid} [delete]
+//	@Router			/api/v1/contacts/{cid}/organizations/{oid} [delete]
 func (h *Handler) DeleteOrganizationAPI(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r)
 	if !ok {
@@ -141,10 +141,10 @@ func (h *Handler) DeleteOrganizationAPI(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Get URL ID from URL
-	organizationID, err := strconv.Atoi(mux.Vars(r)["aid"])
+	// Get Org ID from URL
+	organizationID, err := strconv.Atoi(mux.Vars(r)["oid"])
 	if err != nil {
-		http.Error(w, "Invalid URL ID", http.StatusBadRequest)
+		http.Error(w, "Invalid Organization ID", http.StatusBadRequest)
 		return
 	}
 

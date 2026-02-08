@@ -14,6 +14,7 @@ import (
 
 	"github.com/steveredden/KindredCard/internal/logger"
 	"github.com/steveredden/KindredCard/internal/middleware"
+	"github.com/steveredden/KindredCard/internal/models"
 	"github.com/steveredden/KindredCard/internal/utils"
 )
 
@@ -144,5 +145,38 @@ func (h *Handler) AddressProposalPage(w http.ResponseWriter, r *http.Request) {
 		"User":  user,
 		"Items": suggestions,
 		"Count": len(suggestions),
+	})
+}
+
+func (h *Handler) LabelsPage(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	allLabels, err := h.db.ListLabels()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	filter := r.URL.Query().Get("cat")
+	if filter == "" {
+		filter = "all"
+	}
+
+	var filteredLabels []models.ContactLabelType
+	for _, l := range allLabels {
+		if filter == "all" || l.Category == filter {
+			filteredLabels = append(filteredLabels, l)
+		}
+	}
+
+	h.renderTemplate(w, r, "custom_labels.html", map[string]interface{}{
+		"Title":         "Contact Labels",
+		"User":          user,
+		"Labels":        filteredLabels,
+		"CurrentFilter": filter,
 	})
 }

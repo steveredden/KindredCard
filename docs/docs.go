@@ -685,7 +685,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/contacts/{cid}/organizations/{organizationid}": {
+        "/api/v1/contacts/{cid}/organizations/{oid}": {
             "delete": {
                 "security": [
                     {
@@ -2299,6 +2299,145 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/settings/labels": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Get birthdays, anniversaries, and other important dates coming up for all contacts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Get upcoming events",
+                "parameters": [
+                    {
+                        "description": "label fields",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ContactLabelJSONPost"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "id of label",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/settings/labels/{lid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Removes a custom contact label using HTTP DELETE",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Removes a custom contact label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "lid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or Label ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tokens": {
             "get": {
                 "security": [
@@ -3238,6 +3377,17 @@ const docTemplate = `{
                 "suffix": {
                     "type": "string",
                     "example": "Jr."
+                }
+            }
+        },
+        "models.ContactLabelJSONPost": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

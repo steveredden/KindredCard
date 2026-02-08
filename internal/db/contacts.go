@@ -293,11 +293,6 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 	var nickname sql.NullString
 	var prefix sql.NullString
 	var suffix sql.NullString
-	var phonetic_first_name sql.NullString
-	var pronunciation_first_name sql.NullString
-	var phonetic_middle_name sql.NullString
-	var phonetic_last_name sql.NullString
-	var pronunciation_last_name sql.NullString
 
 	query := `
 		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname,
@@ -306,9 +301,7 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
 		&contact.ID, &contact.UID, &contact.GivenName, &family_name,
-		&middle_name, &prefix, &suffix, &nickname, &phonetic_first_name,
-		&pronunciation_first_name, &phonetic_middle_name, &phonetic_last_name,
-		&pronunciation_last_name,
+		&middle_name, &prefix, &suffix, &nickname,
 	)
 
 	if err != nil {
@@ -322,11 +315,6 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 	contact.Nickname = utils.ScanNullString(nickname)
 	contact.Prefix = utils.ScanNullString(prefix)
 	contact.Suffix = utils.ScanNullString(suffix)
-	contact.PhoneticFirstName = utils.ScanNullString(phonetic_first_name)
-	contact.PronunciationFirstName = utils.ScanNullString(pronunciation_first_name)
-	contact.PhoneticMiddleName = utils.ScanNullString(phonetic_middle_name)
-	contact.PhoneticLastName = utils.ScanNullString(phonetic_last_name)
-	contact.PronunciationLastName = utils.ScanNullString(pronunciation_last_name)
 
 	contact.UserID = userID
 
@@ -1278,7 +1266,7 @@ func (d *Database) getAddresses(contactID int) ([]models.Address, error) {
 }
 
 func (d *Database) getOrganizations(contactID int) ([]models.Organization, error) {
-	rows, err := d.db.Query("SELECT id, contact_id, name, title, department, is_primary FROM organizations WHERE contact_id = $1", contactID)
+	rows, err := d.db.Query("SELECT id, contact_id, name, phonetic_name, title, department, is_primary FROM organizations WHERE contact_id = $1", contactID)
 	if err != nil {
 		logger.Error("[DATABASE] Error selecting Organizations: %v", err)
 		return nil, err
@@ -1288,7 +1276,7 @@ func (d *Database) getOrganizations(contactID int) ([]models.Organization, error
 	var orgs []models.Organization
 	for rows.Next() {
 		var org models.Organization
-		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &org.Title, &org.Department, &org.IsPrimary); err != nil {
+		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &org.PhoneticName, &org.Title, &org.Department, &org.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Organizations: %v", err)
 			return nil, err
 		}

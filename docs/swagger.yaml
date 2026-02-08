@@ -390,6 +390,13 @@ definitions:
         example: Jr.
         type: string
     type: object
+  models.ContactLabelJSONPost:
+    properties:
+      category:
+        type: string
+      name:
+        type: string
+    type: object
   models.CreateAPITokenRequest:
     properties:
       expires_at:
@@ -1114,7 +1121,7 @@ paths:
       summary: Creates a website / URL associated with a contact
       tags:
       - contacts
-  /api/v1/contacts/{cid}/organizations/{organizationid}:
+  /api/v1/contacts/{cid}/organizations/{oid}:
     delete:
       consumes:
       - application/json
@@ -2173,6 +2180,96 @@ paths:
       summary: Update a phone number
       tags:
       - contacts
+  /api/v1/settings/labels:
+    post:
+      consumes:
+      - application/json
+      description: Get birthdays, anniversaries, and other important dates coming
+        up for all contacts
+      parameters:
+      - description: label fields
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContactLabelJSONPost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: id of label
+          schema:
+            items:
+              additionalProperties:
+                type: integer
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Get upcoming events
+      tags:
+      - labels
+  /api/v1/settings/labels/{lid}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a custom contact label using HTTP DELETE
+      parameters:
+      - description: Label ID
+        in: path
+        name: lid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or Label ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Label not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Removes a custom contact label
+      tags:
+      - labels
   /api/v1/tokens:
     get:
       consumes:
