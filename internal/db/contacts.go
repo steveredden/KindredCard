@@ -1276,10 +1276,12 @@ func (d *Database) getOrganizations(contactID int) ([]models.Organization, error
 	var orgs []models.Organization
 	for rows.Next() {
 		var org models.Organization
-		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &org.PhoneticName, &org.Title, &org.Department, &org.IsPrimary); err != nil {
+		var phonetic_name sql.NullString
+		if err := rows.Scan(&org.ID, &org.ContactID, &org.Name, &phonetic_name, &org.Title, &org.Department, &org.IsPrimary); err != nil {
 			logger.Error("[DATABASE] Error scanning Organizations: %v", err)
 			return nil, err
 		}
+		org.PhoneticName = utils.ScanNullString(phonetic_name)
 		orgs = append(orgs, org)
 	}
 	return orgs, nil
