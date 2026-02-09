@@ -295,8 +295,7 @@ func (d *Database) GetContactNameByID(userID int, contactID int) (*models.Contac
 	var suffix sql.NullString
 
 	query := `
-		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname,
-		  phonetic_first_name, pronunciation_first_name, phonetic_middle_name, phonetic_last_name, pronunciation_last_name
+		SELECT id, uid, given_name, family_name, middle_name, prefix, suffix, nickname
 		FROM contacts WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := d.db.QueryRow(query, contactID, userID).Scan(
