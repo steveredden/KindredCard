@@ -55,7 +55,7 @@ type Response struct {
 	XMLName  xml.Name   `xml:"DAV: response"`
 	Href     string     `xml:"DAV: href"`
 	Propstat []Propstat `xml:"DAV: propstat"`
-	Status   string     `xml:"status,omitempty"` // For deleted items (404)
+	Status   string     `xml:"DAV: status,omitempty"` // For deleted items (404)
 }
 
 type Propstat struct {
@@ -185,7 +185,7 @@ type Report struct {
 
 type AddressData struct {
 	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:carddav address-data"`
-	Value   string   `xml:",chardata"`
+	Value   string   `xml:",cdata"`
 }
 
 type SyncToken struct {

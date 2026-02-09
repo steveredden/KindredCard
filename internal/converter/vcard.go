@@ -54,25 +54,37 @@ func ContactToVCard(contact *models.Contact, labelMap map[int]models.ContactLabe
 	card.SetValue(vcard.FieldUID, contact.UID)
 
 	// Structured name (N field)
+	sanitizedFamily := SanitizeForVCard(contact.FamilyName)
+	sanitizedGiven := SanitizeForVCard(contact.GivenName)
+	sanitizedMiddle := SanitizeForVCard(contact.MiddleName)
 	name := &vcard.Name{
-		FamilyName:      contact.FamilyName,
-		GivenName:       contact.GivenName,
-		AdditionalName:  contact.MiddleName,
+		Field: &vcard.Field{
+			Params: make(vcard.Params),
+		},
+		FamilyName:      sanitizedFamily,
+		GivenName:       sanitizedGiven,
+		AdditionalName:  sanitizedMiddle,
 		HonorificPrefix: contact.Prefix,
 		HonorificSuffix: contact.Suffix,
 	}
+	name.Field.Params.Add("CHARSET", "UTF-8")
+
 	card.SetName(name)
 
 	// Name fields
 	if contact.FullName != "" {
-		card.SetValue(vcard.FieldFormattedName, contact.FullName)
-	} else {
-		card.SetValue(vcard.FieldFormattedName, contact.GenerateFullName())
+		field := &vcard.Field{
+			Value:  SanitizeForVCard(contact.FullName),
+			Params: make(vcard.Params),
+		}
+		field.Params.Add("CHARSET", "UTF-8")
+		card.Add(vcard.FieldFormattedName, field)
 	}
 
 	// Nickname
 	if contact.Nickname != "" {
-		card.SetValue(vcard.FieldNickname, contact.Nickname)
+		sanitizedNick := SanitizeForVCard(contact.Nickname)
+		card.SetValue(vcard.FieldNickname, sanitizedNick)
 	}
 
 	// Maiden Name

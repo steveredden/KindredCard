@@ -154,6 +154,20 @@ func getLabelKey(category string, name string) string {
 	return strings.ToLower(category + ":" + name)
 }
 
+func SanitizeForVCard(s string) string {
+	// Replace "Smart" punctuation with standard ASCII
+	replacer := strings.NewReplacer(
+		"\u2018", "'", // Left single quote
+		"\u2019", "'", // Right single quote (The one in O’Grady)
+		"\u201C", "\"", // Left double quote
+		"\u201D", "\"", // Right double quote
+		"\u2013", "-", // En dash
+		"\u2014", "-", // Em dash
+		"\u00a0", " ", //spaces
+	)
+	return replacer.Replace(s)
+}
+
 func FindNewLabels(card vcard.Card, revMap map[string]int) map[string][]string {
 	newLabels := make(map[string][]string)
 
