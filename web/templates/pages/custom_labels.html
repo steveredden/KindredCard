@@ -28,6 +28,7 @@
             <table class="table table-zebra w-full">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Category</th>
                         <th>Type</th>
@@ -38,6 +39,7 @@
                 <tbody>
                     {{range .Labels}}
                     <tr>
+                        <td><span class="font-mono">{{.ID}}</span></td>
                         <td><span class="font-medium text-md">{{.Name}}</span></td>
                         <td><div class="badge badge-ghost">{{.Category}}</div></td>
                         <td>
