@@ -24,11 +24,11 @@
             state: addressObj.state,
             postal_code: addressObj.postal_code,
             country: addressObj.country,
-            type: addressObj.type || ["home"],
+            label_type_id: parseInt(addressObj.label_type_id, 10),
             is_primary: addressObj.is_primary || false
         };
 
-        const res = await fetch(`/api/v1/contacts/${targetId}/address`, {
+        const res = await fetch(`/api/v1/contacts/${targetId}/addresses`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(body)
