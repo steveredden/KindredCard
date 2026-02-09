@@ -48,7 +48,13 @@ docker-login:
 	@echo "$(GITHUB_TOKEN)" | docker login $(REGISTRY) -u $(GH_USER) --password-stdin
 
 setup-buildx:
-	@docker buildx create --name kindred-builder --use || true 
+	@if ! docker buildx inspect kindred-builder > /dev/null 2>&1; then \
+		echo "🔧 Creating new buildx builder..."; \
+		docker buildx create --name kindred-builder --driver docker-container --use; \
+	else \
+		echo "✅ Using existing buildx builder..."; \
+		docker buildx use kindred-builder; \
+	fi
 	@docker buildx inspect --bootstrap
 
 release: setup-buildx docker-login
