@@ -59,6 +59,20 @@ UPDATE urls
 SET label_type_id = (SELECT id FROM contact_label_types WHERE name = urls.type[1] AND category = 'url')
 WHERE type IS NOT NULL AND array_length(type, 1) > 0;
 
+-- now do defaults for anything missing
+UPDATE phones
+SET label_type_id = (SELECT id FROM contact_label_types WHERE name = 'cell' AND category = 'phone')
+WHERE label_type_id IS NULL;
+UPDATE emails
+SET label_type_id = (SELECT id FROM contact_label_types WHERE name = 'home' AND category = 'email')
+WHERE label_type_id IS NULL;
+UPDATE addresses
+SET label_type_id = (SELECT id FROM contact_label_types WHERE name = 'home' AND category = 'address')
+WHERE label_type_id IS NULL;
+UPDATE urls
+SET label_type_id = (SELECT id FROM contact_label_types WHERE name = 'home' AND category = 'url')
+WHERE label_type_id IS NULL;
+
 -- 5. Drop the old array columns after verifying data
 ALTER TABLE phones DROP COLUMN type;
 ALTER TABLE emails DROP COLUMN type;
