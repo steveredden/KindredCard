@@ -98,7 +98,7 @@ func (d *Database) UpdateContactOtherDate(userID int, body models.ContactDateJSO
 		UPDATE other_dates
 		SET %s
 		WHERE id = $%d
-	`, strings.Join(updates, ", "), argIndex+1)
+	`, strings.Join(updates, ", "), argIndex)
 
 	_, err := d.db.Exec(query, args...)
 	if err != nil {
