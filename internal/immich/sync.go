@@ -176,8 +176,15 @@ func (s *SyncService) GetAllLinkedContacts() ([]Match, error) {
 		}
 
 		personID := utils.ExtractIDFromImmichURL(contact.URLs[0].URL)
+		if personID == "" {
+			continue
+		}
 
-		immichPersonPTR, _ := s.client.GetPerson(personID)
+		immichPersonPTR, err := s.client.GetPerson(personID)
+		if err != nil || immichPersonPTR == nil {
+			logger.Warn("[IMMICH] Could not find person %s in Immich: %v", personID, err)
+			continue
+		}
 
 		matches = append(matches, Match{
 			Contact:      contact,

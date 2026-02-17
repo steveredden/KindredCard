@@ -1518,13 +1518,13 @@ func (d *Database) GetContactsByURL(userID int, baseURL string, urlLabelID int) 
 	argIndex := 2
 
 	if baseURL != "" {
-		query += fmt.Sprintf(" and u.url LIKE $%d", argIndex)
+		query += fmt.Sprintf(" AND u.url LIKE $%d", argIndex)
 		args = append(args, baseURL+"%")
 		argIndex++
 	}
 
 	if urlLabelID > 0 {
-		query += fmt.Sprintf(" and u.label_type_id = $%d", argIndex)
+		query += fmt.Sprintf(" AND u.label_type_id = $%d", argIndex)
 		args = append(args, urlLabelID)
 	}
 
