@@ -518,6 +518,174 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/contacts/{cid}/impp": {
+            "post": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a IMPP with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / IMPP associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IMPP fields",
+                        "name": "impp",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.IMPP"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created: newID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contacts/{cid}/impp/{iid}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Associates a IMPP with a contact using HTTP POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Creates a website / IMPP associated with a contact",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "IMPP ID",
+                        "name": "iid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/contacts/{cid}/notes": {
             "put": {
                 "security": [
@@ -2044,6 +2212,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/impps/{iid}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiTokenAuth": []
+                    }
+                ],
+                "description": "Update specific fields of a impp using HTTP PATCH. Only provided fields will be updated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "Update a impp number",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "IMPP ID",
+                        "name": "iid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "IMPP fields to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.IMPPJSONPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated impp",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.IMPP"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or contact ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/organizations/{oid}": {
             "patch": {
                 "security": [
@@ -3031,6 +3284,12 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "impps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.IMPP"
+                    }
+                },
                 "last_modified_token": {
                     "type": "integer"
                 },
@@ -3226,6 +3485,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "impps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.IMPP"
+                    }
                 },
                 "maiden_name": {
                     "type": "string"
@@ -3469,6 +3734,47 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "Full name is required"
+                }
+            }
+        },
+        "models.IMPP": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "impp": {
+                    "type": "string"
+                },
+                "label_type_id": {
+                    "type": "integer"
+                },
+                "type_label": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.IMPPJSONPatch": {
+            "type": "object",
+            "properties": {
+                "contact_id": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "impp": {
+                    "type": "string",
+                    "example": "matrix:u/john:example.org"
+                },
+                "label_type_id": {
+                    "type": "integer",
+                    "example": 42
                 }
             }
         },
@@ -3763,7 +4069,7 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 42
                 },
-                "phone": {
+                "url": {
                     "type": "string",
                     "example": "https://facebook.com/kindredcard"
                 }

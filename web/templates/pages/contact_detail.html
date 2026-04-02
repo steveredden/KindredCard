@@ -786,10 +786,67 @@
                 </div>
             </div>
 
+            <!-- Instant Messaging -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Instant Messaging</h2>
+
+                    <template id="imppTypeOptionsTmpl">
+                        {{range (index $.LabelTypes "impp")}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </template>
+
+
+                    <div id="imppsList" class="space-y-3" oninput="markIMPPsChanged()" onchange="markIMPPsChanged()">
+                        {{range $index, $impp := .Contact.IMPPs}}
+                        <div class="flex gap-2 items-center impp-row" data-id="{{$impp.ID}}"
+                            data-original-impp="{{$impp.IMPP}}"
+                            data-original-type="{{$impp.Type}}"
+                        >
+                            <input type="impp" name="impp" value="{{$impp.IMPP}}" placeholder="matrix:u/john:example.org" class="input input-bordered input-sm flex-1">
+
+                            <select name="label_type_id" class="select select-bordered select-sm">
+                                {{range index $.LabelTypes "impp"}}
+                                <option value="{{.ID}}" {{if eq $impp.Type .ID}}selected{{end}}>{{.Name}}</option>
+                                {{end}}                                
+                            </select>
+
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeIMPPRow(this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
+                        </div>
+                        {{end}}
+                    </div>
+                    
+                    <div class="card-actions flex flex-row gap-2 mt-6">
+                        <button type="button" 
+                                class="btn btn-sm btn-ghost w-[70%] justify-center items-center border-dashed border-2 border-base-300" 
+                                onclick="addIMPP()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Messaging
+                        </button>
+                        
+                        <button type="button" 
+                                id="saveIMPPsBtn" 
+                                class="btn btn-primary btn-sm w-[20%]" 
+                                onclick="saveIMPPsOnly()" 
+                                disabled>
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Metadata -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <h2 class="card-title">Miscellaneous</h2>
+                    <h2 class="card-title">Metadata</h2>
                     <div class="text-sm space-y-1">
                         <div><strong>Created:</strong> {{.Contact.CreatedAt.Format "January 2, 2006"}}</div>
                         <div><strong>Updated:</strong> {{.Contact.UpdatedAt.Format "January 2, 2006"}}</div>

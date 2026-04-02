@@ -276,6 +276,7 @@ func (d *Database) GetContactByID(userID int, contactID int) (*models.Contact, e
 	contact.OtherDates, _ = d.getOtherDates(contact.ID)
 	contact.Relationships, _ = d.getAllRelationships(contact.ID)
 	contact.OtherRelationships, _ = d.getOtherRelationships(contact.ID)
+	contact.IMPPs, _ = d.getIMPPs(contact.ID)
 
 	contact.UserID = userID
 
@@ -490,6 +491,7 @@ func (d *Database) GetContactByUID(userID int, uid string, excludeFromSync bool)
 	contact.OtherDates, _ = d.getOtherDates(contact.ID)
 	contact.Relationships, _ = d.getAllRelationships(contact.ID)
 	contact.OtherRelationships, _ = d.getOtherRelationships(contact.ID)
+	contact.IMPPs, _ = d.getIMPPs(contact.ID)
 
 	return contact, nil
 }
@@ -588,6 +590,9 @@ func (d *Database) UpdateContact(userID int, contact *models.Contact) error {
 		}
 	}
 	if err := d.insertOtherRelationships(tx, contact.ID, contact.OtherRelationships); err != nil {
+		return err
+	}
+	if err := d.insertIMPPs(tx, contact.ID, contact.IMPPs); err != nil {
 		return err
 	}
 
@@ -1107,6 +1112,20 @@ func (d *Database) insertURLs(tx *sql.Tx, contactID int, urls []models.URL) erro
 	return nil
 }
 
+func (d *Database) insertIMPPs(tx *sql.Tx, contactID int, impps []models.IMPP) error {
+	for _, impp := range impps {
+		_, err := tx.Exec(
+			"INSERT INTO impps (contact_id, impp, label_type_id) VALUES ($1, $2, $3)",
+			contactID, impp.IMPP, impp.Type,
+		)
+		if err != nil {
+			logger.Error("[DATABASE] Error inserting URLs: %v", err)
+			return err
+		}
+	}
+	return nil
+}
+
 func (d *Database) insertOtherDates(tx *sql.Tx, contactID int, otherDates []models.OtherDate) error {
 	for _, otherDate := range otherDates {
 		_, err := tx.Exec(`
@@ -1311,6 +1330,33 @@ func (d *Database) getURLs(contactID int) ([]models.URL, error) {
 		urls = append(urls, url)
 	}
 	return urls, nil
+}
+
+func (d *Database) getIMPPs(contactID int) ([]models.IMPP, error) {
+	query := `
+	SELECT i.id, i.contact_id, i.impp, i.label_type_id, l.name as type_label
+	FROM impps i
+	JOIN contact_label_types l on i.label_type_id = l.id
+	WHERE contact_id = $1
+	`
+
+	rows, err := d.db.Query(query, contactID)
+	if err != nil {
+		logger.Error("[DATABASE] Error selecting IMPPs: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var impps []models.IMPP
+	for rows.Next() {
+		var impp models.IMPP
+		if err := rows.Scan(&impp.ID, &impp.ContactID, &impp.IMPP, &impp.Type, &impp.TypeLabel); err != nil {
+			logger.Error("[DATABASE] Error scanning IMPPs: %v", err)
+			return nil, err
+		}
+		impps = append(impps, impp)
+	}
+	return impps, nil
 }
 
 func (d *Database) getOtherDates(contactID int) ([]models.OtherDate, error) {

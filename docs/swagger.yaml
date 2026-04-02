@@ -146,6 +146,10 @@ definitions:
       id:
         example: 1
         type: integer
+      impps:
+        items:
+          $ref: '#/definitions/models.IMPP'
+        type: array
       last_modified_token:
         type: integer
       maiden_name:
@@ -283,6 +287,10 @@ definitions:
         type: string
       id:
         type: integer
+      impps:
+        items:
+          $ref: '#/definitions/models.IMPP'
+        type: array
       maiden_name:
         type: string
       middle_name:
@@ -452,6 +460,34 @@ definitions:
       message:
         example: Full name is required
         type: string
+    type: object
+  models.IMPP:
+    properties:
+      contact_id:
+        type: integer
+      id:
+        type: integer
+      impp:
+        type: string
+      label_type_id:
+        type: integer
+      type_label:
+        type: string
+    type: object
+  models.IMPPJSONPatch:
+    properties:
+      contact_id:
+        example: 4
+        type: integer
+      id:
+        example: 1
+        type: integer
+      impp:
+        example: matrix:u/john:example.org
+        type: string
+      label_type_id:
+        example: 42
+        type: integer
     type: object
   models.NotesJSONPut:
     properties:
@@ -649,7 +685,7 @@ definitions:
       label_type_id:
         example: 42
         type: integer
-      phone:
+      url:
         example: https://facebook.com/kindredcard
         type: string
     type: object
@@ -1011,6 +1047,115 @@ paths:
       security:
       - ApiTokenAuth: []
       summary: Removes an email associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/impp:
+    post:
+      consumes:
+      - application/json
+      description: Associates a IMPP with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: IMPP fields
+        in: body
+        name: impp
+        required: true
+        schema:
+          $ref: '#/definitions/models.IMPP'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'created: newID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / IMPP associated with a contact
+      tags:
+      - contacts
+  /api/v1/contacts/{cid}/impp/{iid}:
+    delete:
+      consumes:
+      - application/json
+      description: Associates a IMPP with a contact using HTTP POST
+      parameters:
+      - description: Contact ID
+        in: path
+        name: cid
+        required: true
+        type: integer
+      - description: IMPP ID
+        in: path
+        name: iid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Creates a website / IMPP associated with a contact
       tags:
       - contacts
   /api/v1/contacts/{cid}/notes:
@@ -2012,6 +2157,62 @@ paths:
       summary: Export all contacts as vCard
       tags:
       - export
+  /api/v1/impps/{iid}:
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of a impp using HTTP PATCH. Only provided
+        fields will be updated.
+      parameters:
+      - description: IMPP ID
+        in: path
+        name: iid
+        required: true
+        type: integer
+      - description: IMPP fields to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/models.IMPPJSONPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated impp
+          schema:
+            items:
+              $ref: '#/definitions/models.IMPP'
+            type: array
+        "400":
+          description: Invalid request body or contact ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiTokenAuth: []
+      summary: Update a impp number
+      tags:
+      - contacts
   /api/v1/organizations/{oid}:
     patch:
       consumes:

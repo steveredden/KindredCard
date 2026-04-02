@@ -195,6 +195,11 @@ func main() {
 	api.HandleFunc("/urls/{uid:[0-9]+}", handler.UpdateURLAPI).Methods("PATCH")
 	api.HandleFunc("/contacts/{cid:[0-9]+}/urls/{uid:[0-9]+}", handler.DeleteURLAPI).Methods("DELETE")
 
+	// impps
+	api.HandleFunc("/contacts/{cid:[0-9]+}/impps", handler.NewIMPPAPI).Methods("POST")
+	api.HandleFunc("/impps/{iid:[0-9]+}", handler.UpdateIMPPAPI).Methods("PATCH")
+	api.HandleFunc("/contacts/{cid:[0-9]+}/impps/{iid:[0-9]+}", handler.DeleteIMPPAPI).Methods("DELETE")
+
 	// organizations
 	api.HandleFunc("/contacts/{cid:[0-9]+}/organizations", handler.NewOrganizationAPI).Methods("POST")
 	api.HandleFunc("/organizations/{oid:[0-9]+}", handler.UpdateOrganizationAPI).Methods("PATCH")

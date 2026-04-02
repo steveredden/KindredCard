@@ -25,6 +25,8 @@ func (d *Database) ListLabels() ([]models.ContactLabelType, error) {
             SELECT label_type_id, COUNT(*) as cnt FROM addresses GROUP BY label_type_id
             UNION ALL
             SELECT label_type_id, COUNT(*) as cnt FROM urls GROUP BY label_type_id
+			UNION ALL
+            SELECT label_type_id, COUNT(*) as cnt FROM impps GROUP BY label_type_id
         ),
         total_counts AS (
             SELECT label_type_id, SUM(cnt) as total FROM usage_counts GROUP BY label_type_id
@@ -165,7 +167,8 @@ func (d *Database) DeleteContactLabel(labelID int) error {
         (SELECT COUNT(*) FROM phones WHERE label_type_id = $1) +
         (SELECT COUNT(*) FROM emails WHERE label_type_id = $1) +
 		(SELECT COUNT(*) FROM addresses WHERE label_type_id = $1) +
-        (SELECT COUNT(*) FROM urls WHERE label_type_id = $1) AS count
+        (SELECT COUNT(*) FROM urls WHERE label_type_id = $1) +
+		(SELECT COUNT(*) FROM impps WHERE label_type_id = $1) AS count
         FROM contact_label_types WHERE id = $1`, labelID).Scan(&isSystem, &count)
 
 	if isSystem {

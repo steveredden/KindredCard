@@ -753,6 +753,127 @@
     /////////////////////
 
     /////////////////////
+    // Add impp handling
+    /////////////////////
+
+    window.markIMPPsChanged = function() {
+        document.getElementById('saveIMPPsBtn').disabled = false;
+        document.getElementById('saveIMPPsBtn').classList.add('btn-pulse'); // Optional flair
+    };
+
+    // Add IMPP field
+    window.addIMPP = function() {
+        const container = document.getElementById('imppsList');
+        const optionsHtml = document.getElementById('imppTypeOptionsTmpl').innerHTML;
+        
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 items-center impp-row';
+
+        div.innerHTML = `
+            <input type="impp" name="impp" placeholder="matrix:u/john:example.org" class="input input-bordered input-sm flex-1">
+            <select name="label_type_id" class="select select-bordered">
+                ${optionsHtml}
+            </select>
+            <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="removeIMPPRow(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        
+        container.appendChild(div);
+        markIMPPsChanged();
+    };
+
+    let deletedIMPPIds = [];
+
+    window.removeIMPPRow = function(btn) {
+        const row = btn.closest('.impp-row');
+        const id = row.getAttribute('data-id');
+        
+        if (id) {
+            deletedIMPPIds.push(parseInt(id));
+        }
+        
+        row.remove();
+        markIMPPsChanged();
+    };
+
+    window.saveIMPPsOnly = async function() {
+        const btn = document.getElementById('saveIMPPsBtn');
+        const contactId = window.location.pathname.split('/').pop();
+        const imppRows = document.querySelectorAll('.impp-row');
+        
+        btn.disabled = true;
+        const requests = [];
+
+        // 1. Handle Deletions first
+        deletedIMPPIds.forEach(id => {
+            requests.push(fetch(`/api/v1/contacts/${contactId}/impps/${id}`, { method: 'DELETE' }));
+        });
+
+        // 2. Loop through rows to determine POST (new) vs PATCH (update)
+        imppRows.forEach(row => {
+            const id = row.getAttribute('data-id');
+
+            const currentIMPP = row.querySelector('[name="impp"]').value;
+            const currentType = parseInt(row.querySelector('[name="label_type_id"]').value);
+
+            const data = {
+                id: id ? parseInt(id) : null,
+                contact_id: parseInt(contactId),
+                impp: currentIMPP,
+                label_type_id: currentType
+            };
+
+            if (id) {
+                // It's an existing record - Update it if 'dirty'
+                const isDirty = 
+                    currentIMPP !== row.getAttribute('data-original-impp') ||
+                    currentType !== parseInt(row.getAttribute('data-original-type'));
+
+                if (isDirty) {
+                    requests.push(fetch(`/api/v1/impps/${id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    }));
+                }
+            } else {
+                // It's a new record - Create it
+                requests.push(fetch(`/api/v1/contacts/${contactId}/impps`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }));
+            }
+        });
+
+        // 3. Execute all requests concurrently
+        try {
+            const results = await Promise.all(requests);
+            const allOk = results.every(res => res.ok);
+
+            if (allOk) {
+                showNotification('Website records synced!', 'success');
+                deletedIMPPIds = []; // Clear the delete queue
+                setTimeout(() => location.reload(), 500);
+            } else {
+                showNotification('Some updates failed.', 'error');
+                btn.disabled = false;
+            }
+        } catch (err) {
+            console.error("Sync error:", err);
+            showNotification('Network error during sync', 'error');
+            btn.disabled = false;
+        }
+    };
+
+    /////////////////////
+    // end impp handling
+    /////////////////////
+
+    /////////////////////
     // add notes handling
     /////////////////////
 

@@ -49,6 +49,7 @@ type ContactJSON struct {
 	Addresses              []Address           `json:"addresses,omitempty"`
 	Organizations          []Organization      `json:"organizations,omitempty"`
 	URLs                   []URL               `json:"urls,omitempty"`
+	IMPPs                  []IMPP              `json:"impps,omitempty"`
 	Relationships          []Relationship      `json:"relationships,omitempty"`
 	OtherRelationships     []OtherRelationship `json:"other_relationships,omitempty"`
 	OtherDates             []OtherDateJSON     `json:"other_dates,omitempty"`
@@ -141,6 +142,7 @@ func (cj *ContactJSON) ToContact() (*Contact, error) {
 		Addresses:              cj.Addresses,
 		Organizations:          cj.Organizations,
 		URLs:                   cj.URLs,
+		IMPPs:                  cj.IMPPs,
 		Relationships:          cj.Relationships,
 		OtherRelationships:     cj.OtherRelationships,
 	}
@@ -222,6 +224,7 @@ func FromContact(contact *Contact) *ContactJSON {
 		Addresses:              contact.Addresses,
 		Organizations:          contact.Organizations,
 		URLs:                   contact.URLs,
+		IMPPs:                  contact.IMPPs,
 		Relationships:          contact.Relationships,
 		OtherRelationships:     contact.OtherRelationships,
 	}
