@@ -180,6 +180,7 @@ func FindNewLabels(card vcard.Card, revMap map[string]int) map[string][]string {
 		{vcard.FieldEmail, "email"},
 		{vcard.FieldAddress, "address"},
 		{vcard.FieldURL, "url"},
+		{vcard.FieldIMPP, "impp"},
 	}
 
 	for _, m := range mappings {
@@ -189,6 +190,17 @@ func FindNewLabels(card vcard.Card, revMap map[string]int) map[string][]string {
 
 			// 2. Fallback to Standard vCard TYPEs if no custom label
 			if label == "" {
+
+				if m.Field == vcard.FieldIMPP {
+					parts := strings.Split(field.Value, ":")
+					label = "other" // Set the default first
+
+					if len(parts) > 0 && parts[0] != "" {
+						label = parts[0]
+					}
+					break
+				}
+
 				for _, t := range field.Params.Types() {
 					t = strings.ToLower(t)
 					if t == "pref" || t == "internet" { // Skip non-label types

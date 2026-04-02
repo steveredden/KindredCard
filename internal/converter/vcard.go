@@ -23,10 +23,11 @@ import (
 )
 
 const (
-	AppleOmitYearKey    = "X-APPLE-OMIT-YEAR"
-	AppleOmitYearValue  = "1604"
-	AppleOmitYearValueI = 1604
-	AppleOmitYearPrefix = "1604-"
+	AppleOmitYearKey     = "X-APPLE-OMIT-YEAR"
+	AppleOmitYearValue   = "1604"
+	AppleOmitYearValueI  = 1604
+	AppleOmitYearPrefix  = "1604-"
+	AppleIMPPServiceType = "X-SERVICE-TYPE"
 
 	XLabelField              = "X-ABLABEL"
 	XDateField               = "X-ABDATE"
@@ -364,6 +365,35 @@ func ContactToVCard(contact *models.Contact, labelMap map[int]models.ContactLabe
 			}
 		}
 		card.Add(vcard.FieldURL, field)
+	}
+
+	// IMPPs
+	for _, impp := range contact.IMPPs {
+		field := &vcard.Field{
+			Params: make(vcard.Params),
+		}
+
+		if label, ok := labelMap[impp.Type]; ok {
+
+			if isAppleClient { //vcard 3.0
+				itemKey := "item" + strconv.Itoa(extraItemIndex)
+				extraItemIndex++
+
+				field.Group = itemKey
+				field.Value = impp.IMPP
+				field.Params.Add(AppleIMPPServiceType, impp.TypeLabel)
+				addCustomLabel(card, itemKey, label.Name) //add an X-ABLABEL custom label name
+			} else { //vcard 4.0
+				prefix := label.Name + ":"
+				imppVal := impp.IMPP
+				if strings.HasPrefix(strings.ToLower(imppVal), prefix) {
+					imppVal = imppVal[len(prefix):]
+				}
+				field.Value = fmt.Sprintf("%s:%s", impp.TypeLabel, imppVal)
+			}
+		}
+
+		card.Add(vcard.FieldIMPP, field)
 	}
 
 	// Notes
@@ -760,6 +790,40 @@ func VCardToContact(card vcard.Card, allContacts []*models.Contact, allRelations
 		}
 
 		contact.URLs = append(contact.URLs, url)
+	}
+
+	// IMPPs
+	for _, field := range card[vcard.FieldIMPP] {
+		impp := models.IMPP{IMPP: field.Value}
+
+		var labelToUse string
+
+		// check first for a custom group
+		if label := extractCustomLabel(card, field.Group); label != "" {
+			labelToUse = label
+		}
+
+		// if none, look at the standard types
+		if labelToUse == "" {
+
+			parts := strings.Split(field.Value, ":")
+			labelToUse = "other" // Set the default first
+
+			if len(parts) > 0 && parts[0] != "" {
+				labelToUse = parts[0]
+			}
+		}
+
+		key := getLabelKey("impp", labelToUse)
+		if id, ok := revMap[key]; ok {
+			impp.Type = id
+		} else {
+			// Here you could choose to auto-create the label in the DB
+			// Or default to 'other'
+			impp.Type = revMap[getLabelKey("impp", "other")]
+		}
+
+		contact.IMPPs = append(contact.IMPPs, impp)
 	}
 
 	// Notes

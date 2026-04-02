@@ -54,6 +54,7 @@ type Contact struct {
 	Organizations          []Organization      `json:"organizations,omitempty"`
 	OtherDates             []OtherDate         `json:"other_dates"`
 	URLs                   []URL               `json:"urls,omitempty"`
+	IMPPs                  []IMPP              `json:"impps",omitempty"`
 	Relationships          []Relationship      `json:"relationships,omitempty"`
 	OtherRelationships     []OtherRelationship `json:"other_relationships,omitempty"`
 	DeletedAt              *time.Time

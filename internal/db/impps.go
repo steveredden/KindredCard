@@ -10,25 +10,25 @@ import (
 	"github.com/steveredden/KindredCard/internal/utils"
 )
 
-func (d *Database) CreateContactURL(userID int, body models.URL) (int, error) {
-	logger.Debug("[DATABASE] Begin CreateContactURL(userID:%d, body:--)", userID)
+func (d *Database) CreateContactIMPP(userID int, body models.IMPP) (int, error) {
+	logger.Debug("[DATABASE] Begin CreateContactIMPP(userID:%d, body:--)", userID)
 
 	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of URL:")
+		logger.Trace("[DATABSE] Dump of IMPP:")
 		utils.Dump(body)
 	}
 
 	err := d.db.QueryRow(
-		"INSERT INTO urls (contact_id, url, label_type_id) VALUES ($1, $2, $3) RETURNING id",
-		body.ContactID, body.URL, body.Type,
+		"INSERT INTO impps (contact_id, impp, label_type_id) VALUES ($1, $2, $3) RETURNING id",
+		body.ContactID, body.IMPP, body.Type,
 	).Scan(&body.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			logger.Error("No urls inserted: %v", err)
+			logger.Error("No impps inserted: %v", err)
 			return 0, fmt.Errorf("unauthorized")
 		}
-		logger.Error("Error creating url: %v", err)
-		return 0, fmt.Errorf("failed to create url: %w", err)
+		logger.Error("Error creating impp: %v", err)
+		return 0, fmt.Errorf("failed to create impp: %w", err)
 	}
 
 	// Sync token update
@@ -44,11 +44,11 @@ func (d *Database) CreateContactURL(userID int, body models.URL) (int, error) {
 	return body.ID, nil
 }
 
-func (d *Database) UpdateContactURL(userID int, body models.URLJSONPatch) ([]models.URL, error) {
-	logger.Debug("[DATABASE] Begin UpdateContactURL(userID:%d, body:--)", userID)
+func (d *Database) UpdateContactIMPP(userID int, body models.IMPPJSONPatch) ([]models.IMPP, error) {
+	logger.Debug("[DATABASE] Begin UpdateContactIMPP(userID:%d, body:--)", userID)
 
 	if logger.GetLevel() == logger.TRACE {
-		logger.Trace("[DATABSE] Dump of URLJSONPatch:")
+		logger.Trace("[DATABSE] Dump of IMPPJSONPatch:")
 		utils.Dump(body)
 	}
 
@@ -57,9 +57,9 @@ func (d *Database) UpdateContactURL(userID int, body models.URLJSONPatch) ([]mod
 	argIdx := 1
 
 	// Conditionally append fields if they aren't nil
-	if body.URL != nil {
-		columns = append(columns, fmt.Sprintf("url = $%d", argIdx))
-		args = append(args, *body.URL)
+	if body.IMPP != nil {
+		columns = append(columns, fmt.Sprintf("impp = $%d", argIdx))
+		args = append(args, *body.IMPP)
 		argIdx++
 	}
 
@@ -69,19 +69,13 @@ func (d *Database) UpdateContactURL(userID int, body models.URLJSONPatch) ([]mod
 		argIdx++
 	}
 
-	if body.IsPrimary != nil {
-		columns = append(columns, fmt.Sprintf("is_primary = $%d", argIdx))
-		args = append(args, *body.IsPrimary)
-		argIdx++
-	}
-
-	// If nothing was sent to update, just return the current urls
+	// If nothing was sent to update, just return the current impps
 	if len(columns) == 0 {
-		return d.getURLs(*body.ContactID) // Helper to get contactID first if needed
+		return d.getIMPPs(*body.ContactID) // Helper to get contactID first if needed
 	}
 
 	query := fmt.Sprintf(`
-        UPDATE urls 
+        UPDATE impps 
         SET %s
         WHERE id = $%d 
         AND contact_id IN (SELECT id FROM contacts WHERE user_id = $%d)
@@ -98,10 +92,10 @@ func (d *Database) UpdateContactURL(userID int, body models.URLJSONPatch) ([]mod
 	if err != nil {
 		if err == sql.ErrNoRows {
 			logger.Error("No rows patched: %v", err)
-			return nil, fmt.Errorf("url record not found or unauthorized")
+			return nil, fmt.Errorf("impp record not found or unauthorized")
 		}
-		logger.Error("Error patching url: %v", err)
-		return nil, fmt.Errorf("failed to patch url: %w", err)
+		logger.Error("Error patching impp: %v", err)
+		return nil, fmt.Errorf("failed to patch impp: %w", err)
 	}
 
 	// Sync token update
@@ -114,15 +108,15 @@ func (d *Database) UpdateContactURL(userID int, body models.URLJSONPatch) ([]mod
 		logger.Warn("[DATABASE] Failed to bump contact sync token: %v", err)
 	}
 
-	return d.getURLs(contactID)
+	return d.getIMPPs(contactID)
 }
 
-func (d *Database) DeleteContactURL(userID int, contactID int, urlID int) error {
-	logger.Debug("[DATABASE] Begin DeleteContactURL(userID:%d, contactID:%d, urlID:%d)", userID, contactID, urlID)
+func (d *Database) DeleteContactIMPP(userID int, contactID int, imppID int) error {
+	logger.Debug("[DATABASE] Begin DeleteContactIMPP(userID:%d, contactID:%d, imppID:%d)", userID, contactID, imppID)
 
-	_, err := d.db.Exec("DELETE FROM urls WHERE id = $1 AND contact_id = $2", urlID, contactID)
+	_, err := d.db.Exec("DELETE FROM impps WHERE id = $1 AND contact_id = $2", imppID, contactID)
 	if err != nil {
-		logger.Error("[DATABASE] Error deleting URL: %v", err)
+		logger.Error("[DATABASE] Error deleting IMPP: %v", err)
 		return err
 	}
 
