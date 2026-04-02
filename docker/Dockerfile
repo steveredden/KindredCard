@@ -19,7 +19,7 @@ COPY tailwind.config.js ./
 RUN npm run build:css:prod
 
 # Stage 2: Build Go binary
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:1.25.8-alpine AS go-builder
 
 ARG TARGETARCH
 WORKDIR /app

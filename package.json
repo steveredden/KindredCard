@@ -1,6 +1,6 @@
 {
   "name": "kindredcard",
-  "version": "0.2.0",
+  "version": "0.6.0",
   "description": "Personal CRM for managing contacts and relationships",
   "scripts": {
     "build:css": "tailwindcss -i web/static/css/input.css -o web/static/css/output.css",
